@@ -1,0 +1,16 @@
+<sy-sheet heading="Filters" closeLabel="Close filters" [side]="true">
+  <sy-error-summary heading="Check the price range" [errors]="summary()" />
+  <sy-filter-form idPrefix="sheet" [query]="draft()" [brands]="data.brands" (changed)="edit($event)" />
+  <button footer syButton type="button" (click)="clear()">Clear</button>
+  <button
+    footer
+    syButton="primary"
+    type="button"
+    data-autofocus
+    [disabled]="!!error()"
+    [attr.aria-busy]="busy() ? 'true' : null"
+    (click)="apply()"
+  >
+    {{ label() }}
+  </button>
+</sy-sheet>

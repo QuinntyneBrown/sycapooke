@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers — Create a listing
+
+Person(seller, "Seller", "Lists an item for sale")
+System_Boundary(sycapooke, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "SellPage in @sycapooke/listings; SellingApi, ListingsApi and AuthState in @sycapooke/api")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Categories, selling options, listing create, update and publish")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Members, sessions, listings; the day's publishes are counted here")
+}
+Rel(seller, web, "Uses", "HTTPS")
+Rel(web, api, "Calls with session cookies", "JSON/HTTPS")
+Rel(api, db, "Reads and writes", "EF Core")
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Protect credentials and the supply chain
+
+Person(member, "Member", "Signs in with an email and password")
+Person(dev, "Developer", "Changes Sycapooke through pull requests")
+System(sycapooke, "Sycapooke", "Marketplace; stores only password hashes")
+System_Ext(vault, "Secret store", "Hosting platform vault <TO SUPPLY>")
+System_Ext(github, "GitHub", "Repository, Actions CI, code scanning")
+System_Ext(advisories, "Vulnerability databases", "Advisories for NuGet and npm packages")
+
+Rel(member, sycapooke, "Signs in to", "HTTPS")
+Rel(sycapooke, vault, "Loads secrets at start using workload identity", "HTTPS")
+Rel(dev, github, "Opens pull requests in")
+Rel(github, advisories, "Downloads advisories from", "HTTPS")
+Rel(github, sycapooke, "Builds and deploys")
+@enduml

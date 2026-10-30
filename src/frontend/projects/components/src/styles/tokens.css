@@ -1,0 +1,867 @@
+/* ==========================================================================
+   Design tokens — single source of truth for colour, type, space, shape,
+   elevation, motion, layout and z-order.
+
+   Three tiers:
+     1. Primitives  (--palette-*, --font-*, --size-*)  raw values, never used
+                    directly by components.
+     2. Semantic    (--color-*, --text-*, --space-*, --radius-*, --shadow-*,
+                    --duration-*, --ease-*, --z-*, --layout-*) meaning-based
+                    aliases that components consume. Themes override these.
+     3. Component   (--button-*, --field-*, ...) declared in components.css,
+                    always alias a semantic token.
+
+   Themes: light is the default (:root). Dark applies with
+   [data-theme="dark"], or automatically when the OS prefers dark and the
+   page has not forced [data-theme="light"]. High-contrast tweaks apply
+   under prefers-contrast: more and forced-colors.
+
+   Heirloom: the base scales below were harvested from docs/mocks (Oct 2026);
+   the brand block at the end re-points every semantic colour at the Sycapooke
+   palette (paper, ink, terracotta, forest, mustard) from the Sycapooke landing page.
+   Re-run scripts/check_contrast.py after any change.
+   ========================================================================== */
+
+/* Light is the default; [data-theme="light"] re-applies it inside a dark page (theme previews, forced-light regions). */
+:root,
+[data-theme='light'] {
+  /* ---------- Primitives: colour --------------------------------------- */
+  --palette-white: #ffffff;
+  --palette-black: #000000;
+
+  --palette-gray-25: #fbfbfc;
+  --palette-gray-50: #f6f7f9;
+  --palette-gray-100: #eef0f3;
+  --palette-gray-200: #dfe3e8;
+  --palette-gray-300: #c9cfd8;
+  --palette-gray-400: #a3abb8;
+  --palette-gray-500: #636c7b;
+  --palette-gray-600: #5e6675;
+  --palette-gray-700: #444b58;
+  --palette-gray-800: #2c323c;
+  --palette-gray-900: #1a1e26;
+  --palette-gray-950: #0f1216;
+
+  --palette-blue-50: #ebf2ff;
+  --palette-blue-100: #d6e3ff;
+  --palette-blue-200: #adc6ff;
+  --palette-blue-300: #8ab4ff;
+  --palette-blue-400: #5f93f7;
+  --palette-blue-500: #3b7af0;
+  --palette-blue-600: #2563eb;
+  --palette-blue-700: #1d4ed8;
+  --palette-blue-800: #1e3fae;
+  --palette-blue-900: #1b2f7a;
+  --palette-blue-950: #0f1f3d;
+
+  /* Heirloom brand: grape (accent), plus a cream canvas and a night-sky dark theme. */
+  --palette-grape-50: #f4efff;
+  --palette-grape-100: #e9dfff;
+  --palette-grape-200: #d4c1ff;
+  --palette-grape-300: #bb9dff;
+  --palette-grape-400: #9d70ff;
+  --palette-grape-500: #8247f5;
+  --palette-grape-600: #6c2fe0;
+  --palette-grape-700: #5a22c4;
+  --palette-grape-800: #46199c;
+  --palette-grape-900: #321272;
+  --palette-grape-950: #1d0b45;
+
+  --palette-cream-50: #fff9f1;
+  --palette-cream-100: #fbf1e3;
+  --palette-cream-200: #f3e4cf;
+
+  --palette-night-700: #3d3159;
+  --palette-night-800: #2b2142;
+  --palette-night-850: #241b38;
+  --palette-night-900: #1c1530;
+  --palette-night-950: #130e22;
+  --palette-night-990: #0e0a19;
+
+  /* Party pops: decorative fills for tiles, kid avatars and confetti. */
+  --palette-sun-100: #fff1c2;
+  --palette-sun-300: #ffd970;
+  --palette-sun-400: #ffc93c;
+  --palette-sun-800: #6e4a00;
+  --palette-sun-950: #332503;
+  --palette-pink-100: #ffe0ee;
+  --palette-pink-300: #ff9cc6;
+  --palette-pink-400: #ff6fa8;
+  --palette-pink-700: #c01a6b;
+  --palette-pink-800: #9c1655;
+  --palette-pink-950: #3b0d23;
+  --palette-mint-100: #d3f6e8;
+  --palette-mint-300: #7fe6c2;
+  --palette-mint-400: #3ccfa0;
+  --palette-mint-800: #0d6447;
+  --palette-mint-950: #08302a;
+  --palette-sky-100: #dbeeff;
+  --palette-sky-300: #8fd0ff;
+  --palette-sky-400: #4cb8ff;
+  --palette-sky-800: #0b5690;
+  --palette-sky-950: #0a2640;
+  --palette-orange-100: #ffe4d1;
+  --palette-orange-300: #ffb27f;
+  --palette-orange-400: #ff8a3d;
+  --palette-orange-800: #943a00;
+  --palette-orange-950: #3b1c06;
+
+  --palette-green-50: #e9f8ee;
+  --palette-green-100: #cdf0d9;
+  --palette-green-300: #7ed69a;
+  --palette-green-500: #2a8f52;
+  --palette-green-700: #1b6b3c;
+  --palette-green-900: #0f3b22;
+  --palette-green-950: #0b2918;
+
+  --palette-amber-50: #fff6e5;
+  --palette-amber-100: #ffe9c2;
+  --palette-amber-300: #f7c15c;
+  --palette-amber-500: #b26f00;
+  --palette-amber-700: #8a5300;
+  --palette-amber-900: #4d2f00;
+  --palette-amber-950: #2e1d05;
+
+  --palette-red-50: #fdecec;
+  --palette-red-100: #fbd5d4;
+  --palette-red-300: #f59b96;
+  --palette-red-500: #d93a30;
+  --palette-red-600: #c42c22;
+  --palette-red-700: #a0221b;
+  --palette-red-900: #5a1410;
+  --palette-red-950: #3a110d;
+
+  /* ---------- Primitives: typography ----------------------------------- */
+  --font-family-sans:
+    'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-family-mono: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --font-size-xs: 0.75rem; /* 12px  captions, badges */
+  --font-size-sm: 0.875rem; /* 14px  secondary text, table cells */
+  --font-size-md: 1rem; /* 16px  body */
+  --font-size-lg: 1.125rem; /* 18px  lead paragraph, large body */
+  --font-size-xl: 1.25rem; /* 20px  h4 */
+  --font-size-2xl: 1.5rem; /* 24px  h3 */
+  --font-size-3xl: 1.875rem; /* 30px  h2 */
+  --font-size-4xl: 2.25rem; /* 36px  h1 */
+  --font-size-5xl: 3rem; /* 48px  display */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-heavy: 800;
+
+  --line-height-tight: 1.2; /* display, h1-h2 */
+  --line-height-snug: 1.3; /* h3-h4 */
+  --line-height-normal: 1.5; /* body */
+  --line-height-relaxed: 1.65; /* long-form reading */
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.04em; /* all-caps labels */
+
+  /* ---------- Semantic: colour (light) --------------------------------- */
+  --color-bg-canvas: var(--palette-cream-50); /* page background */
+  --color-bg-surface: var(--palette-white); /* cards, panels, inputs */
+  --color-bg-surface-raised: var(--palette-white); /* dialogs, menus, popovers */
+  --color-bg-surface-sunken: var(--palette-cream-100); /* wells, code blocks, table headers */
+  --color-bg-subtle: var(--palette-gray-100); /* hover rows, chips */
+  --color-bg-subtle-hover: var(--palette-gray-200);
+  --color-bg-inverse: var(--palette-gray-900); /* tooltips, dark toasts */
+  --color-bg-backdrop: rgba(15, 18, 22, 0.55); /* modal scrim */
+
+  --color-fg-default: var(--palette-gray-900); /* body text */
+  --color-fg-muted: var(--palette-gray-600); /* secondary text */
+  --color-fg-subtle: var(--palette-gray-500); /* placeholders, metadata (4.5:1 on surface) */
+  --color-fg-disabled: var(--palette-gray-400); /* disabled text; exempt from contrast */
+  --color-fg-inverse: var(--palette-white); /* text on inverse/accent backgrounds */
+  --color-fg-link: var(--palette-grape-700);
+  --color-fg-link-hover: var(--palette-grape-800);
+
+  --color-border-default: var(--palette-cream-200); /* dividers, card edges (decorative) */
+  --color-border-strong: var(--palette-gray-500); /* form control edges (>= 3:1) */
+  --color-border-inverse: var(--palette-gray-700);
+
+  --color-accent: var(--palette-grape-600); /* primary actions, selected states */
+  --color-accent-hover: var(--palette-grape-700);
+  --color-accent-active: var(--palette-grape-800);
+  --color-accent-subtle: var(--palette-grape-50); /* selected row, accent chip background */
+  --color-accent-subtle-hover: var(--palette-grape-100);
+  --color-fg-on-accent: var(--palette-white);
+  --color-fg-accent: var(--palette-grape-700); /* accent-coloured text on surfaces */
+
+  --color-focus-ring: var(--palette-grape-600);
+  --color-focus-ring-offset: var(--color-bg-surface);
+
+  --color-info-bg: var(--palette-blue-50);
+  --color-info-fg: var(--palette-blue-800);
+  --color-info-border: var(--palette-blue-300);
+  --color-info-icon: var(--palette-blue-600);
+  --color-info-solid: var(--palette-blue-600);
+
+  --color-success-bg: var(--palette-green-50);
+  --color-success-fg: var(--palette-green-700);
+  --color-success-border: var(--palette-green-300);
+  --color-success-icon: var(--palette-green-500);
+  --color-success-solid: var(--palette-green-700);
+
+  --color-warning-bg: var(--palette-amber-50);
+  --color-warning-fg: var(--palette-amber-700);
+  --color-warning-border: var(--palette-amber-300);
+  --color-warning-icon: var(--palette-amber-500);
+  --color-warning-solid: var(--palette-amber-700);
+
+  --color-danger-bg: var(--palette-red-50);
+  --color-danger-fg: var(--palette-red-700);
+  --color-danger-border: var(--palette-red-300);
+  --color-danger-icon: var(--palette-red-500);
+  --color-danger-solid: var(--palette-red-600); /* destructive buttons */
+  --color-danger-solid-hover: var(--palette-red-700);
+  --color-fg-on-danger: var(--palette-white);
+
+  /* ---------- Semantic: typography roles ------------------------------- */
+  --text-display: var(--font-weight-heavy) var(--font-size-5xl) / var(--line-height-tight) var(--font-family-display);
+  --text-h1: var(--font-weight-heavy) var(--font-size-4xl) / var(--line-height-tight) var(--font-family-display);
+  --text-h2: var(--font-weight-bold) var(--font-size-3xl) / var(--line-height-tight) var(--font-family-display);
+  --text-h3: var(--font-weight-bold) var(--font-size-2xl) / var(--line-height-snug) var(--font-family-display);
+  --text-h4: var(--font-weight-bold) var(--font-size-xl) / var(--line-height-snug) var(--font-family-display);
+  --text-body-lg: var(--font-weight-regular) var(--font-size-lg) / var(--line-height-normal) var(--font-family-sans);
+  --text-body: var(--font-weight-regular) var(--font-size-md) / var(--line-height-normal) var(--font-family-sans);
+  --text-body-sm: var(--font-weight-regular) var(--font-size-sm) / var(--line-height-normal) var(--font-family-sans);
+  --text-caption: var(--font-weight-regular) var(--font-size-xs) / var(--line-height-normal) var(--font-family-sans);
+  --text-label: var(--font-weight-semibold) var(--font-size-sm) / var(--line-height-normal) var(--font-family-sans);
+  --text-overline: var(--font-weight-semibold) var(--font-size-xs) / var(--line-height-normal) var(--font-family-sans);
+  --text-code: var(--font-weight-regular) var(--font-size-sm) / var(--line-height-normal) var(--font-family-mono);
+
+  /* ---------- Semantic: spacing (4px base) ----------------------------- */
+  --space-0: 0;
+  --space-0-5: 0.125rem; /* 2px  hairline gaps */
+  --space-1: 0.25rem; /* 4px  icon-to-label */
+  --space-2: 0.5rem; /* 8px  inside chips, between inline items */
+  --space-3: 0.75rem; /* 12px compact padding */
+  --space-4: 1rem; /* 16px default padding, stack gap */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px card padding, section gap (mobile) */
+  --space-8: 2rem; /* 32px section gap */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px page section spacing */
+  --space-16: 4rem; /* 64px hero spacing */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+
+  /* ---------- Semantic: layout ----------------------------------------- */
+  --layout-breakpoint-sm: 40rem; /* 640px  large phones */
+  --layout-breakpoint-md: 48rem; /* 768px  tablets */
+  --layout-breakpoint-lg: 64rem; /* 1024px small laptops */
+  --layout-breakpoint-xl: 80rem; /* 1280px desktops */
+  --layout-breakpoint-2xl: 96rem; /* 1536px wide screens */
+
+  --layout-columns: 4; /* grid columns at the current breakpoint */
+  --layout-gutter: var(--space-4); /* gap between columns */
+  --layout-margin: var(--space-4); /* page edge to content */
+  --layout-container-max: 80rem; /* 1280px */
+  --layout-measure: 65ch; /* max line length for prose */
+  --layout-sidebar-width: 16rem; /* 256px */
+  --layout-topbar-height: 4rem; /* 64px */
+  --layout-bottom-nav-height: 4.5rem; /* 72px mobile tab bar */
+  --layout-aside-width: 22rem; /* 352px right-hand column in .split */
+
+  /* Illustration sizes: emoji art, mascot and empty-state artwork */
+  --size-illustration-sm: 2.25rem; /* 36px  mascot in chat */
+  --size-illustration-md: 4rem; /* 64px  media tiles, invitation */
+  --size-illustration-lg: 6rem; /* 96px  hero gallery tile */
+  --size-illustration-xl: 10rem; /* 160px landing and status pages */
+
+  /* ---------- Semantic: shape ------------------------------------------ */
+  --radius-xs: 0.125rem; /* 2px  checkbox */
+  --radius-sm: 0.5rem; /* 8px  compact controls */
+  --radius-md: 0.875rem; /* 14px inputs, menus, wells */
+  --radius-lg: 1.25rem; /* 20px cards, dialogs */
+  --radius-xl: 1.75rem; /* 28px sheets, hero panels */
+  --radius-full: 9999px; /* pills, avatars */
+
+  --border-width-hairline: 1px;
+  --border-width-thick: 2px;
+
+  /* ---------- Semantic: elevation -------------------------------------- */
+  --shadow-color: 20 25 35;
+  --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.08); /* cards */
+  --shadow-2:
+    0 2px 6px rgb(var(--shadow-color) / 0.1), 0 1px 2px rgb(var(--shadow-color) / 0.06); /* raised cards, dropdowns */
+  --shadow-3:
+    0 8px 24px rgb(var(--shadow-color) / 0.14), 0 2px 6px rgb(var(--shadow-color) / 0.08); /* popovers, menus */
+  --shadow-4:
+    0 20px 48px rgb(var(--shadow-color) / 0.22), 0 4px 12px rgb(var(--shadow-color) / 0.1); /* dialogs, sheets */
+  --shadow-focus: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-focus-ring);
+
+  /* ---------- Semantic: motion ----------------------------------------- */
+  --duration-instant: 0ms;
+  --duration-fast: 120ms; /* hover, colour changes */
+  --duration-base: 200ms; /* reveal, menus, tooltips */
+  --duration-slow: 320ms; /* dialogs, sheets, page transitions */
+  --duration-deliberate: 500ms; /* progress, skeleton shimmer cycles */
+  --duration-spin: 800ms; /* one turn of a spinner (status loop) */
+  --duration-loop: 1.4s; /* shimmer, typing dots, pulse, indeterminate bar (status loops) */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---------- Semantic: z-order ---------------------------------------- */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-sticky: 100;
+  --z-dropdown: 1000;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-toast: 1500;
+  --z-tooltip: 1600;
+
+  /* ---------- Semantic: interaction ------------------------------------ */
+  --target-min: 1.5rem; /* 24px  WCAG 2.2 AA minimum target size */
+  --target-comfortable: 2.75rem; /* 44px recommended touch target */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --control-height-sm: 2rem; /* 32px */
+  --control-height-md: 2.5rem; /* 40px */
+  --control-height-lg: 3rem; /* 48px */
+
+  /* ---------- Semantic: party pops (decorative, Heirloom-specific) --------- */
+  --color-pop-sun-bg: var(--palette-sun-100);
+  --color-pop-sun-fg: var(--palette-sun-800);
+  --color-pop-sun-solid: var(--palette-sun-400);
+  --color-pop-pink-bg: var(--palette-pink-100);
+  --color-pop-pink-fg: var(--palette-pink-800);
+  --color-pop-pink-solid: var(--palette-pink-400);
+  --color-pop-mint-bg: var(--palette-mint-100);
+  --color-pop-mint-fg: var(--palette-mint-800);
+  --color-pop-mint-solid: var(--palette-mint-400);
+  --color-pop-sky-bg: var(--palette-sky-100);
+  --color-pop-sky-fg: var(--palette-sky-800);
+  --color-pop-sky-solid: var(--palette-sky-400);
+  --color-pop-orange-bg: var(--palette-orange-100);
+  --color-pop-orange-fg: var(--palette-orange-800);
+  --color-pop-orange-solid: var(--palette-orange-400);
+  --color-pop-grape-bg: var(--palette-grape-100);
+  --color-pop-grape-fg: var(--palette-grape-800);
+  --color-pop-grape-solid: var(--palette-grape-400);
+  --color-hero-from: var(--palette-grape-600);
+  --color-hero-to: var(--palette-pink-700);
+  --color-fg-on-hero: var(--palette-white);
+  --color-accent-press: var(--palette-grape-800);
+  --shadow-press: 0 0.25rem 0 var(--color-accent-press); /* chunky "pressable" lip under primary buttons */
+
+  color-scheme: light;
+}
+
+/* Responsive layout tokens: columns, gutters and margins grow with the viewport. */
+@media (min-width: 48rem) {
+  :root,
+  [data-theme] {
+    --layout-columns: 8;
+    --layout-gutter: var(--space-6);
+    --layout-margin: var(--space-8);
+  }
+}
+
+@media (min-width: 64rem) {
+  :root,
+  [data-theme] {
+    --layout-columns: 12;
+    --layout-gutter: var(--space-8);
+    --layout-margin: var(--space-12);
+  }
+}
+
+/* ---------- Dark theme ----------------------------------------------------- */
+[data-theme='dark'] {
+  --color-bg-canvas: var(--palette-night-950);
+  --color-bg-surface: var(--palette-night-900);
+  --color-bg-surface-raised: var(--palette-night-850);
+  --color-bg-surface-sunken: var(--palette-night-990);
+  --color-bg-subtle: var(--palette-night-800);
+  --color-bg-subtle-hover: var(--palette-night-700);
+  --color-bg-inverse: var(--palette-gray-100);
+  --color-bg-backdrop: rgba(0, 0, 0, 0.65);
+
+  --color-fg-default: #f1ecfa;
+  --color-fg-muted: #c2b9d6;
+  --color-fg-subtle: #a69cbd;
+  --color-fg-disabled: var(--palette-gray-600);
+  --color-fg-inverse: var(--palette-gray-900);
+  --color-fg-link: var(--palette-grape-300);
+  --color-fg-link-hover: var(--palette-grape-200);
+
+  --color-border-default: var(--palette-night-700);
+  --color-border-strong: #958ab0;
+  --color-border-inverse: var(--palette-gray-300);
+
+  --color-accent: var(--palette-grape-300);
+  --color-accent-hover: var(--palette-grape-200);
+  --color-accent-active: var(--palette-grape-100);
+  --color-accent-subtle: var(--palette-grape-950);
+  --color-accent-subtle-hover: var(--palette-grape-900);
+  --color-fg-on-accent: var(--palette-grape-950);
+  --color-fg-accent: var(--palette-grape-300);
+
+  --color-focus-ring: var(--palette-grape-300);
+
+  --color-info-bg: var(--palette-blue-950);
+  --color-info-fg: var(--palette-blue-200);
+  --color-info-border: var(--palette-blue-800);
+  --color-info-icon: var(--palette-blue-300);
+  --color-info-solid: var(--palette-blue-300);
+
+  --color-success-bg: var(--palette-green-950);
+  --color-success-fg: var(--palette-green-300);
+  --color-success-border: var(--palette-green-700);
+  --color-success-icon: var(--palette-green-300);
+  --color-success-solid: var(--palette-green-300);
+
+  --color-warning-bg: var(--palette-amber-950);
+  --color-warning-fg: var(--palette-amber-300);
+  --color-warning-border: var(--palette-amber-700);
+  --color-warning-icon: var(--palette-amber-300);
+  --color-warning-solid: var(--palette-amber-300);
+
+  --color-danger-bg: var(--palette-red-950);
+  --color-danger-fg: var(--palette-red-300);
+  --color-danger-border: var(--palette-red-700);
+  --color-danger-icon: var(--palette-red-300);
+  --color-danger-solid: var(--palette-red-300);
+  --color-danger-solid-hover: var(--palette-red-100);
+  --color-fg-on-danger: var(--palette-red-950);
+
+  --color-pop-sun-bg: var(--palette-sun-950);
+  --color-pop-sun-fg: var(--palette-sun-300);
+  --color-pop-pink-bg: var(--palette-pink-950);
+  --color-pop-pink-fg: var(--palette-pink-300);
+  --color-pop-mint-bg: var(--palette-mint-950);
+  --color-pop-mint-fg: var(--palette-mint-300);
+  --color-pop-sky-bg: var(--palette-sky-950);
+  --color-pop-sky-fg: var(--palette-sky-300);
+  --color-pop-orange-bg: var(--palette-orange-950);
+  --color-pop-orange-fg: var(--palette-orange-300);
+  --color-pop-grape-bg: var(--palette-grape-950);
+  --color-pop-grape-fg: var(--palette-grape-200);
+  --color-hero-from: var(--palette-grape-800);
+  --color-hero-to: var(--palette-pink-800);
+  --color-accent-press: var(--palette-grape-500);
+  --shadow-press: 0 0.25rem 0 var(--color-accent-press);
+  --color-focus-ring-offset: var(--color-bg-surface);
+  --shadow-focus: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-focus-ring);
+  --shadow-color: 0 0 0;
+  --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.4);
+  --shadow-2: 0 2px 6px rgb(var(--shadow-color) / 0.45), 0 1px 2px rgb(var(--shadow-color) / 0.3);
+  --shadow-3: 0 8px 24px rgb(var(--shadow-color) / 0.5), 0 2px 6px rgb(var(--shadow-color) / 0.35);
+  --shadow-4: 0 20px 48px rgb(var(--shadow-color) / 0.6), 0 4px 12px rgb(var(--shadow-color) / 0.4);
+
+  color-scheme: dark;
+}
+
+/* Follow the OS preference unless the page has explicitly chosen light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg-canvas: var(--palette-night-950);
+    --color-bg-surface: var(--palette-night-900);
+    --color-bg-surface-raised: var(--palette-night-850);
+    --color-bg-surface-sunken: var(--palette-night-990);
+    --color-bg-subtle: var(--palette-night-800);
+    --color-bg-subtle-hover: var(--palette-night-700);
+    --color-bg-inverse: var(--palette-gray-100);
+    --color-bg-backdrop: rgba(0, 0, 0, 0.65);
+    --color-fg-default: #f1ecfa;
+    --color-fg-muted: #c2b9d6;
+    --color-fg-subtle: #a69cbd;
+    --color-fg-disabled: var(--palette-gray-600);
+    --color-fg-inverse: var(--palette-gray-900);
+    --color-fg-link: var(--palette-grape-300);
+    --color-fg-link-hover: var(--palette-grape-200);
+    --color-border-default: var(--palette-night-700);
+    --color-border-strong: #958ab0;
+    --color-border-inverse: var(--palette-gray-300);
+    --color-accent: var(--palette-grape-300);
+    --color-accent-hover: var(--palette-grape-200);
+    --color-accent-active: var(--palette-grape-100);
+    --color-accent-subtle: var(--palette-grape-950);
+    --color-accent-subtle-hover: var(--palette-grape-900);
+    --color-fg-on-accent: var(--palette-grape-950);
+    --color-fg-accent: var(--palette-grape-300);
+    --color-focus-ring: var(--palette-grape-300);
+    --color-info-bg: var(--palette-blue-950);
+    --color-info-fg: var(--palette-blue-200);
+    --color-info-border: var(--palette-blue-800);
+    --color-info-icon: var(--palette-blue-300);
+    --color-info-solid: var(--palette-blue-300);
+    --color-success-bg: var(--palette-green-950);
+    --color-success-fg: var(--palette-green-300);
+    --color-success-border: var(--palette-green-700);
+    --color-success-icon: var(--palette-green-300);
+    --color-success-solid: var(--palette-green-300);
+    --color-warning-bg: var(--palette-amber-950);
+    --color-warning-fg: var(--palette-amber-300);
+    --color-warning-border: var(--palette-amber-700);
+    --color-warning-icon: var(--palette-amber-300);
+    --color-warning-solid: var(--palette-amber-300);
+    --color-danger-bg: var(--palette-red-950);
+    --color-danger-fg: var(--palette-red-300);
+    --color-danger-border: var(--palette-red-700);
+    --color-danger-icon: var(--palette-red-300);
+    --color-danger-solid: var(--palette-red-300);
+    --color-danger-solid-hover: var(--palette-red-100);
+    --color-fg-on-danger: var(--palette-red-950);
+
+    --color-pop-sun-bg: var(--palette-sun-950);
+    --color-pop-sun-fg: var(--palette-sun-300);
+    --color-pop-pink-bg: var(--palette-pink-950);
+    --color-pop-pink-fg: var(--palette-pink-300);
+    --color-pop-mint-bg: var(--palette-mint-950);
+    --color-pop-mint-fg: var(--palette-mint-300);
+    --color-pop-sky-bg: var(--palette-sky-950);
+    --color-pop-sky-fg: var(--palette-sky-300);
+    --color-pop-orange-bg: var(--palette-orange-950);
+    --color-pop-orange-fg: var(--palette-orange-300);
+    --color-pop-grape-bg: var(--palette-grape-950);
+    --color-pop-grape-fg: var(--palette-grape-200);
+    --color-hero-from: var(--palette-grape-800);
+    --color-hero-to: var(--palette-pink-800);
+    --color-accent-press: var(--palette-grape-500);
+    --shadow-press: 0 0.25rem 0 var(--color-accent-press);
+    --color-focus-ring-offset: var(--color-bg-surface);
+    --shadow-focus: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-focus-ring);
+    --shadow-color: 0 0 0;
+    --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.4);
+    --shadow-2: 0 2px 6px rgb(var(--shadow-color) / 0.45), 0 1px 2px rgb(var(--shadow-color) / 0.3);
+    --shadow-3: 0 8px 24px rgb(var(--shadow-color) / 0.5), 0 2px 6px rgb(var(--shadow-color) / 0.35);
+    --shadow-4: 0 20px 48px rgb(var(--shadow-color) / 0.6), 0 4px 12px rgb(var(--shadow-color) / 0.4);
+    color-scheme: dark;
+  }
+}
+
+/* ---------- Preference overrides ------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+    --duration-slow: 0.01ms;
+    --duration-deliberate: 0.01ms;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-border-default: var(--color-border-strong);
+    --color-fg-muted: var(--color-fg-default);
+    --color-fg-subtle: var(--color-fg-muted);
+  }
+}
+
+/* Windows High Contrast / forced colours: hand control to system colours. */
+@media (forced-colors: active) {
+  :root {
+    --color-focus-ring: Highlight;
+    --color-border-default: CanvasText;
+    --color-border-strong: CanvasText;
+  }
+}
+
+/* ==========================================================================
+   Heirloom brand palette.
+
+   Sycapooke's look is the Heirloom design system, extracted from the
+   Sycapooke landing page (Magic Patterns, Oct 2026): Paper #F6F0E4 (page),
+   Cream #FBF7EF (surfaces, hover), Ink #2B2118 (text, dark surfaces),
+   Muted #665748 (secondary text), Line #E0D4BE (borders), Terracotta #A04228
+   (primary: tag logo, buttons, links; hover #85341E), Forest #2F4A3A (secondary:
+   bands, dark surfaces) and Mustard #C9962E (highlights, accent rules).
+   This block adds those scales and points the semantic colour tokens at them;
+   type, space, shape, elevation and motion stay Heirloom's. Terracotta 600
+   carries cream button text (5.9:1); terracotta text and links use 700 so they
+   meet WCAG 2.2 AA on paper (7.3:1). Mustard 500 is a fill only; mustard text
+   uses 700 (4.9:1 on paper).
+   ========================================================================== */
+
+:root,
+[data-theme='light'] {
+  --palette-paper-25: #fdfbf7;
+  --palette-paper-50: #fbf7ef; /* Cream: surfaces, hover fills */
+  --palette-paper-100: #f6f0e4; /* Paper: page background */
+  --palette-paper-200: #efe6d4;
+  --palette-paper-300: #e0d4be; /* Line: borders, dividers */
+  --palette-paper-400: #cbbb9e;
+
+  --palette-ink-200: #d6c9b9;
+  --palette-ink-300: #a08f7e;
+  --palette-ink-400: #7d6b59;
+  --palette-ink-500: #665748; /* Muted: secondary text */
+  --palette-ink-600: #51433a;
+  --palette-ink-700: #3d3028;
+  --palette-ink-800: #2b2118; /* Ink: text, dark surfaces */
+  --palette-ink-850: #221a12;
+  --palette-ink-900: #1b150f;
+  --palette-ink-950: #140f0a;
+  --palette-ink-990: #0d0a06;
+
+  --palette-terracotta-50: #fbf1ec;
+  --palette-terracotta-100: #f5ded3; /* soft surfaces, tags */
+  --palette-terracotta-200: #ebbfab;
+  --palette-terracotta-300: #de9a7e;
+  --palette-terracotta-400: #cb7455;
+  --palette-terracotta-500: #b5553b;
+  --palette-terracotta-600: #a04228; /* Terracotta: primary, tag logo, buttons */
+  --palette-terracotta-700: #85341e; /* button hover; terracotta text and links (AA on paper) */
+  --palette-terracotta-800: #6b2a18;
+  --palette-terracotta-900: #4f1f12;
+  --palette-terracotta-950: #33140b;
+
+  --palette-forest-50: #eef3ef;
+  --palette-forest-100: #d9e4dc;
+  --palette-forest-200: #b5cbbc;
+  --palette-forest-300: #8eae99;
+  --palette-forest-400: #628a70;
+  --palette-forest-500: #466754;
+  --palette-forest-600: #2f4a3a; /* Forest: bands, secondary surfaces */
+  --palette-forest-700: #263c2f;
+  --palette-forest-800: #1e3026;
+  --palette-forest-900: #15231b;
+  --palette-forest-950: #0e1712;
+
+  --palette-mustard-50: #fbf5e6;
+  --palette-mustard-100: #f5e7c2;
+  --palette-mustard-300: #e6c878;
+  --palette-mustard-400: #d9b24e;
+  --palette-mustard-500: #c9962e; /* Mustard: highlight fills, accent rules */
+  --palette-mustard-600: #a97b22;
+  --palette-mustard-700: #86611a; /* mustard text (AA on paper) */
+  --palette-mustard-800: #644811;
+  --palette-mustard-950: #2e2108;
+
+  /* Heirloom's cream and sun primitives are Sycapooke's paper and mustard. */
+  --palette-cream-50: var(--palette-paper-50);
+  --palette-cream-100: var(--palette-paper-100);
+  --palette-cream-200: var(--palette-paper-200);
+  --palette-sun-100: var(--palette-mustard-100);
+  --palette-sun-300: var(--palette-mustard-300);
+  --palette-sun-400: var(--palette-mustard-400);
+  --palette-sun-800: var(--palette-mustard-800);
+  --palette-sun-950: var(--palette-mustard-950);
+
+  /* Logo (brand kit): a terracotta price tag with a cream dashed inner line, a paper hole,
+     an ink string and a Fraunces italic "S", beside the Fraunces italic wordmark. The tag keeps
+     its colours in both themes; string and wordmark follow the text colour. */
+  --font-family-logo: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --color-logo-tag: var(--palette-terracotta-600);
+  --color-logo-tag-line: var(--palette-paper-50);
+  --color-logo-tag-hole: var(--palette-paper-100);
+  --color-logo-tag-letter: var(--palette-paper-50);
+  --color-logo-string: var(--color-fg-default);
+  --color-logo-wordmark: var(--color-fg-default);
+
+  /* Semantic colour (light) */
+  --color-bg-canvas: var(--palette-paper-100);
+  --color-bg-surface: var(--palette-paper-50);
+  --color-bg-surface-raised: var(--palette-paper-25);
+  --color-bg-surface-sunken: var(--palette-paper-200);
+  --color-bg-subtle: var(--palette-paper-50);
+  --color-bg-subtle-hover: var(--palette-paper-200);
+  --color-bg-inverse: var(--palette-ink-800);
+
+  --color-fg-default: var(--palette-ink-800);
+  --color-fg-muted: var(--palette-ink-500);
+  --color-fg-subtle: var(--palette-ink-600);
+  --color-fg-disabled: var(--palette-ink-300);
+  --color-fg-link: var(--palette-terracotta-700);
+  --color-fg-link-hover: var(--palette-terracotta-800);
+
+  --color-border-default: var(--palette-paper-300);
+  --color-border-strong: var(--palette-ink-400);
+  --color-border-inverse: var(--palette-ink-600);
+
+  --color-accent: var(--palette-terracotta-600);
+  --color-accent-hover: var(--palette-terracotta-700);
+  --color-accent-active: var(--palette-terracotta-800);
+  --color-accent-subtle: var(--palette-terracotta-100);
+  --color-accent-subtle-hover: var(--palette-terracotta-200);
+  --color-fg-on-accent: var(--palette-paper-50);
+  --color-fg-accent: var(--palette-terracotta-700);
+  --color-focus-ring: var(--palette-terracotta-600);
+  --color-accent-press: var(--palette-terracotta-800);
+
+  --color-pop-pink-bg: var(--palette-terracotta-100);
+  --color-pop-pink-fg: var(--palette-terracotta-800);
+  --color-pop-grape-bg: var(--palette-forest-100);
+  --color-pop-grape-fg: var(--palette-forest-800);
+  --color-pop-sun-bg: var(--palette-mustard-100);
+  --color-pop-sun-fg: var(--palette-mustard-800);
+  --color-hero-from: var(--palette-terracotta-600);
+  --color-hero-to: var(--palette-forest-700);
+}
+
+[data-theme='dark'] {
+  --color-bg-canvas: var(--palette-ink-950);
+  --color-bg-surface: var(--palette-ink-900);
+  --color-bg-surface-raised: var(--palette-ink-850);
+  --color-bg-surface-sunken: var(--palette-ink-990);
+  --color-bg-subtle: var(--palette-ink-800);
+  --color-bg-subtle-hover: var(--palette-ink-700);
+  --color-bg-inverse: var(--palette-paper-100);
+
+  --color-fg-default: var(--palette-paper-50);
+  --color-fg-muted: var(--palette-paper-300);
+  --color-fg-subtle: var(--palette-paper-400);
+  --color-fg-disabled: var(--palette-ink-600);
+  --color-fg-inverse: var(--palette-ink-800);
+  --color-fg-link: var(--palette-mustard-300);
+  --color-fg-link-hover: var(--palette-mustard-100);
+
+  --color-border-default: var(--palette-ink-700);
+  --color-border-strong: var(--palette-ink-400);
+  --color-border-inverse: var(--palette-ink-300);
+
+  --color-accent: var(--palette-terracotta-400);
+  --color-accent-hover: var(--palette-terracotta-300);
+  --color-accent-active: var(--palette-terracotta-200);
+  --color-accent-subtle: var(--palette-terracotta-950);
+  --color-accent-subtle-hover: var(--palette-terracotta-900);
+  --color-fg-on-accent: var(--palette-ink-950);
+  --color-fg-accent: var(--palette-terracotta-300);
+  --color-focus-ring: var(--palette-terracotta-300);
+  --color-accent-press: var(--palette-terracotta-700);
+
+  --color-pop-pink-bg: var(--palette-terracotta-950);
+  --color-pop-pink-fg: var(--palette-terracotta-200);
+  --color-pop-grape-bg: var(--palette-forest-950);
+  --color-pop-grape-fg: var(--palette-forest-200);
+  --color-pop-sun-bg: var(--palette-mustard-950);
+  --color-pop-sun-fg: var(--palette-mustard-300);
+  --color-hero-from: var(--palette-terracotta-800);
+  --color-hero-to: var(--palette-forest-800);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg-canvas: var(--palette-ink-950);
+    --color-bg-surface: var(--palette-ink-900);
+    --color-bg-surface-raised: var(--palette-ink-850);
+    --color-bg-surface-sunken: var(--palette-ink-990);
+    --color-bg-subtle: var(--palette-ink-800);
+    --color-bg-subtle-hover: var(--palette-ink-700);
+    --color-bg-inverse: var(--palette-paper-100);
+
+    --color-fg-default: var(--palette-paper-50);
+    --color-fg-muted: var(--palette-paper-300);
+    --color-fg-subtle: var(--palette-paper-400);
+    --color-fg-disabled: var(--palette-ink-600);
+    --color-fg-inverse: var(--palette-ink-800);
+    --color-fg-link: var(--palette-mustard-300);
+    --color-fg-link-hover: var(--palette-mustard-100);
+
+    --color-border-default: var(--palette-ink-700);
+    --color-border-strong: var(--palette-ink-400);
+    --color-border-inverse: var(--palette-ink-300);
+
+    --color-accent: var(--palette-terracotta-400);
+    --color-accent-hover: var(--palette-terracotta-300);
+    --color-accent-active: var(--palette-terracotta-200);
+    --color-accent-subtle: var(--palette-terracotta-950);
+    --color-accent-subtle-hover: var(--palette-terracotta-900);
+    --color-fg-on-accent: var(--palette-ink-950);
+    --color-fg-accent: var(--palette-terracotta-300);
+    --color-focus-ring: var(--palette-terracotta-300);
+    --color-accent-press: var(--palette-terracotta-700);
+
+    --color-pop-pink-bg: var(--palette-terracotta-950);
+    --color-pop-pink-fg: var(--palette-terracotta-200);
+    --color-pop-grape-bg: var(--palette-forest-950);
+    --color-pop-grape-fg: var(--palette-forest-200);
+    --color-pop-sun-bg: var(--palette-mustard-950);
+    --color-pop-sun-fg: var(--palette-mustard-300);
+    --color-hero-from: var(--palette-terracotta-800);
+    --color-hero-to: var(--palette-forest-800);
+  }
+}
+
+/* ==========================================================================
+   Sycapooke layout tokens.
+
+   Sycapooke keeps the 12L layout and components (by way of TuTuMuch) and takes
+   its whole look (colour, type, shape, elevation, motion) from the Heirloom
+   design system above. The tokens below name things only the 12L layout uses;
+   each one aliases a Heirloom token, so Heirloom stays the single source of the look.
+   ========================================================================== */
+
+:root,
+[data-theme='light'] {
+  /* 12L primitive names mapped onto Heirloom's palette. */
+  --palette-stone-300: var(--palette-ink-200);
+  --palette-stone-400: var(--palette-ink-300);
+  --palette-stone-500: var(--palette-ink-400);
+  --palette-stone-550: var(--palette-ink-500);
+  --palette-stone-600: var(--palette-ink-600);
+  --palette-stone-700: var(--palette-ink-700);
+
+  --palette-signal-300: var(--palette-terracotta-300);
+  --palette-signal-500: var(--palette-terracotta-600);
+  --palette-red-800: var(--palette-red-700);
+
+  /* Listing photo wells: Heirloom's warm tints. */
+  --photo-bg-1: var(--palette-paper-200);
+  --photo-bg-2: var(--palette-forest-100);
+  --photo-bg-3: var(--palette-mustard-100);
+  --photo-bg-4: var(--palette-terracotta-100);
+  --photo-bg-5: var(--palette-paper-300);
+  --photo-bg-6: var(--palette-mustard-50);
+
+  --font-weight-black: var(--font-weight-heavy);
+  --letter-spacing-display: var(--letter-spacing-tight);
+
+  /* Heirloom shapes are rounded, so the 12L 45° chamfer is switched off. */
+  --chamfer: 0px;
+
+  /* Brand mark, current-page bar and vintage tag flag. */
+  --color-brand: var(--color-accent);
+
+  /* Showcase: the marketing hero and closing band. Forest in both themes, with cream text,
+     mustard headline emphasis and terracotta, forest and mustard shapes. */
+  --color-showcase-start: var(--palette-forest-800);
+  --color-showcase-end: var(--palette-forest-600);
+  --color-showcase-subtle: var(--palette-forest-700);
+  --color-fg-showcase: var(--palette-paper-50); /* 14.5:1 on start, 9.0:1 on end */
+  --color-fg-showcase-muted: var(--palette-forest-200); /* 9.6:1 on start, 6.0:1 on end */
+  --color-fg-showcase-accent: var(--palette-mustard-300); /* 9.3:1 on start, 5.8:1 on end; headline emphasis */
+  --color-shape-brand: var(--palette-terracotta-500); /* decorative shapes only, never behind text */
+  --color-shape-tone: var(--palette-forest-400);
+  --color-shape-light: var(--palette-mustard-400);
+  --gradient-showcase: linear-gradient(
+    135deg,
+    var(--color-showcase-start) 0%,
+    var(--palette-forest-700) 55%,
+    var(--color-showcase-end) 100%
+  );
+  --duration-drift: 24s; /* decorative shape drift; stopped under prefers-reduced-motion */
+
+  /* Status icons on inverse surfaces (toasts). */
+  --color-inverse-info: var(--palette-blue-300);
+  --color-inverse-success: var(--palette-green-300);
+  --color-inverse-warning: var(--palette-amber-300);
+  --color-inverse-danger: var(--palette-red-300);
+}
+
+[data-theme='dark'] {
+  --color-inverse-info: var(--palette-blue-700);
+  --color-inverse-success: var(--palette-green-700);
+  --color-inverse-warning: var(--palette-amber-700);
+  --color-inverse-danger: var(--palette-red-700);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-inverse-info: var(--palette-blue-700);
+    --color-inverse-success: var(--palette-green-700);
+    --color-inverse-warning: var(--palette-amber-700);
+    --color-inverse-danger: var(--palette-red-700);
+  }
+}

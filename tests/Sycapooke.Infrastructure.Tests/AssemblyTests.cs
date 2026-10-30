@@ -1,0 +1,10 @@
+namespace Sycapooke.Infrastructure.Tests;
+
+public sealed class AssemblyTests
+{
+    [Fact]
+    public void Marker_type_belongs_to_the_Infrastructure_assembly()
+    {
+        Assert.Equal("Sycapooke.Infrastructure", typeof(InfrastructureAssembly).Assembly.GetName().Name);
+    }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+<rect width="800" height="1000" fill="#F6F0E4"/>
+<circle cx="400" cy="380" r="260" fill="#FBF7EF"/>
+<path d="M160 1000 Q170 720 400 700 Q630 720 640 1000 Z" fill="#2F4A3A"/>
+<path d="M300 760 L400 900 L500 760 Z" fill="#FBF7EF"/>
+<circle cx="400" cy="440" r="130" fill="#E9BFAE" stroke="#2B2118" stroke-width="5"/>
+<path d="M270 420 Q270 260 400 270 Q530 260 530 420 Q500 340 400 350 Q300 340 270 420 Z" fill="#C9CCD1" stroke="#2B2118" stroke-width="5" stroke-linejoin="round"/>
+<circle cx="355" cy="440" r="30" fill="none" stroke="#2B2118" stroke-width="5"/><circle cx="445" cy="440" r="30" fill="none" stroke="#2B2118" stroke-width="5"/><path d="M385 440 L415 440" stroke="#2B2118" stroke-width="5"/>
+<path d="M360 510 Q400 540 440 510" fill="none" stroke="#2B2118" stroke-width="5" stroke-linecap="round"/>
+<path d="M520 820 L600 820 Q604 870 560 876 L540 876 Q516 870 520 820 Z" fill="#FFFFFF" stroke="#2B2118" stroke-width="5" stroke-linejoin="round"/>
+<path d="M600 832 Q630 834 626 856 Q622 870 598 866" fill="none" stroke="#2B2118" stroke-width="5" stroke-linecap="round"/>
+<circle cx="560" cy="848" r="6" fill="#A04228"/>
+<text x="400" y="960" text-anchor="middle" font-family="Georgia, serif" font-size="26" fill="#FBF7EF">founder photo placeholder · /media/sycapooke-founder.jpg</text>
+</svg>

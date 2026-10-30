@@ -1,0 +1,36 @@
+/* Application-level styles. Tokens and component styles come from @sycapooke/components (angular.json). */
+
+/* Fraunces (display and logo face) and Source Sans 3 (body), the Heirloom typefaces, self-hosted
+   under the SIL Open Font License (public/fonts/Fraunces-OFL.txt, public/fonts/SourceSans3-OFL.txt).
+   Both are variable fonts: one file per style covers every weight. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/fraunces-italic-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('/fonts/source-sans-3-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('/fonts/source-sans-3-italic-latin.woff2') format('woff2');
+}

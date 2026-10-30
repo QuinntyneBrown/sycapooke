@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Manage my listings
+
+Person(seller, "Seller", "Reviews all of their own listings")
+System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
+System_Ext(email, "Email provider", "Delivers draft expiry reminders")
+
+Rel(seller, sycapooke, "Lists and filters own listings using", "HTTPS")
+Rel(sycapooke, email, "Sends draft expiry reminder via", "Outbox, HTTPS")
+Rel(email, seller, "Delivers reminder to", "Email")
+@enduml

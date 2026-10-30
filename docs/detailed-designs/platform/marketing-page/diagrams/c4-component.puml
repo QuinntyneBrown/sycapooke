@@ -1,0 +1,34 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Marketing page (/welcome)
+
+Person(visitor, "Visitor or member", "Shopper or seller deciding whether Sycapooke is for them")
+System_Boundary(app, "sycapooke application (projects/sycapooke)") {
+  Component(routes, "app.routes.ts", "Angular router", "Lazy-loads @sycapooke/marketing at welcome")
+  Component(shell, "AppShellComponent", "Shell", "data.shell 'marketing': top bar, main.marketing without container, footer")
+  Component(media, "public/media/", "Static files", "sycapooke-hero.jpg, sycapooke-founder.jpg, sycapooke-share.jpg, ATTRIBUTION.md")
+}
+System_Boundary(mkt, "@sycapooke/marketing") {
+  Component(page, "WelcomePage", "Standalone component", "Copy, CTA targets from AuthState and the route title")
+}
+System_Boundary(cmp, "@sycapooke/components") {
+  Component(hero, "sy-marketing-hero", "Component", "Forest showcase band with the hero photo; closing variant")
+  Component(band, "sy-feature-band + sy-steps", "Components", "Shopper, seller, how-it-works and Our story bands")
+  Component(quote, "sy-quote", "Component", "Founder quote with attribution and the founder photo")
+  Component(footer, "sy-footer", "Component", "About Sycapooke link to /welcome")
+}
+System_Boundary(api, "@sycapooke/api") {
+  Component(auth, "AuthState", "Signal store", "member(): null for a visitor")
+}
+
+Rel(visitor, routes, "Opens /welcome or follows About Sycapooke")
+Rel(routes, page, "loadChildren")
+Rel(shell, footer, "Renders")
+Rel(page, hero, "Composes")
+Rel(page, band, "Composes")
+Rel(band, quote, "Our story body")
+Rel(page, auth, "Reads member()")
+Rel(hero, media, "GET /media/sycapooke-hero.jpg")
+Rel(quote, media, "GET /media/sycapooke-founder.jpg")
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Seller payouts
+
+Person(seller, "Seller", "Member who sells items")
+System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
+System_Ext(pay, "Payment provider", "Hosted payout onboarding, connected accounts, payouts, signed webhooks")
+Rel(seller, sycapooke, "Views earnings, fees and payouts using")
+Rel(seller, pay, "Completes payout onboarding on", "Provider-hosted page")
+Rel(sycapooke, pay, "Creates onboarding links and transfers payouts via", "HTTPS API")
+Rel(pay, sycapooke, "Reports account and payout status to", "Signed webhook")
+@enduml

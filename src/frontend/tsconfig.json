@@ -1,0 +1,65 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "paths": {
+      "@sycapooke/api": ["./projects/api/src/public-api.ts"],
+      "@sycapooke/components": ["./projects/components/src/public-api.ts"],
+      "@sycapooke/accounts": ["./projects/accounts/src/public-api.ts"],
+      "@sycapooke/catalog": ["./projects/catalog/src/public-api.ts"],
+      "@sycapooke/listings": ["./projects/listings/src/public-api.ts"],
+      "@sycapooke/orders": ["./projects/orders/src/public-api.ts"],
+      "@sycapooke/reviews": ["./projects/reviews/src/public-api.ts"],
+      "@sycapooke/privacy": ["./projects/privacy/src/public-api.ts"],
+      "@sycapooke/marketing": ["./projects/marketing/src/public-api.ts"]
+    },
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "strict": true
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/sycapooke/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/api/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/components/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/accounts/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/catalog/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/listings/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/orders/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/reviews/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/privacy/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/marketing/tsconfig.lib.json"
+    }
+  ]
+}

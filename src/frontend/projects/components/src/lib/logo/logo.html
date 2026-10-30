@@ -1,0 +1,37 @@
+<a
+  class="logo"
+  [class.logo--sm]="size() === 'sm'"
+  [class.logo--lg]="size() === 'lg'"
+  [class.logo--light]="variant() === 'light'"
+  routerLink="/"
+  aria-label="Sycapooke home"
+>
+  <svg class="logo__tag" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+    <path
+      class="logo__string"
+      d="M15.5 22.5 C10 16, 5 11, 9.5 5.5 C12.5 2, 17 4, 15 8"
+      fill="none"
+      stroke-width="1.6"
+      stroke-linecap="round"
+    />
+    <g transform="rotate(-12 26 26)">
+      <path class="logo__tag-face" d="M19 10 H39 a4 4 0 0 1 4 4 V38 a4 4 0 0 1 -4 4 H19 L9 26 Z" />
+      <path
+        class="logo__tag-line"
+        d="M20.2 13 H38.5 a1.5 1.5 0 0 1 1.5 1.5 V37.5 a1.5 1.5 0 0 1 -1.5 1.5 H20.2 L12.6 26 Z"
+        fill="none"
+        stroke-opacity="0.55"
+        stroke-width="0.9"
+        stroke-dasharray="1.6 1.6"
+      />
+      <circle class="logo__tag-hole" cx="17" cy="26" r="2.6" />
+      <text class="logo__tag-letter" x="30.5" y="33.5" text-anchor="middle" font-size="21">S</text>
+    </g>
+  </svg>
+  <span class="logo__text" aria-hidden="true">
+    <span class="logo__wordmark">Sycapooke</span>
+    @if (showTagline()) {
+      <span class="logo__tagline">Treasures with a story</span>
+    }
+  </span>
+</a>

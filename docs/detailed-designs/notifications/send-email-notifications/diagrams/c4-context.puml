@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title System Context — Send email notifications
+
+Person(member, "Member", "Buyer or seller who receives email about account, listing and order events")
+System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
+System_Ext(email, "Email provider", "Transactional and marketing email delivery")
+
+Rel(member, sycapooke, "Triggers events and follows deep links into", "HTTPS")
+Rel(sycapooke, email, "Hands rendered emails to", "HTTPS API")
+Rel(email, member, "Delivers email to", "SMTP")
+@enduml

@@ -1,0 +1,68 @@
+<sy-marketing-hero
+  headingId="welcome-title"
+  eyebrow="Jewelry · Clothing · Housewares · Electronics"
+  lede="Sycapooke is the marketplace made only for vintage — for families downsizing a lifetime of treasures, and the people who’ll love them next."
+>
+  <ng-container title>A home for the things that <em>mattered.</em></ng-container>
+  <ng-container actions>
+    <a syButton="primary" size="lg" routerLink="/">Shop the catalog</a>
+    <a syButton size="lg" [routerLink]="sellHref()">Start selling</a>
+  </ng-container>
+  <img
+    media
+    class="welcome__photo"
+    src="/media/sycapooke-hero.jpg"
+    width="928"
+    height="1152"
+    alt="A brass lamp, pearl necklace, tweed jacket, rotary telephone and teacup arranged on an old oak dresser"
+  />
+</sy-marketing-hero>
+
+<sy-feature-band
+  headingId="shoppers-title"
+  eyebrow="For shoppers"
+  heading="Every piece is at least 20 years old."
+  [points]="shopperPoints"
+>
+  <a syButton="primary" routerLink="/" actions>Browse the catalog</a>
+</sy-feature-band>
+
+<sy-feature-band
+  headingId="sellers-title"
+  eyebrow="For sellers"
+  heading="Downsizing? Let your treasures find their next home."
+  tone="surface"
+  [points]="sellerPoints"
+>
+  <a syButton="primary" [routerLink]="sellHref()" actions>List your first item</a>
+</sy-feature-band>
+
+<sy-feature-band headingId="how-title" eyebrow="How it works" heading="Three steps. That’s it." [stacked]="true">
+  <sy-steps [steps]="steps" />
+</sy-feature-band>
+
+<sy-feature-band headingId="story-title" eyebrow="Our story" heading="sy·ca·pooke" [stacked]="true">
+  <div class="welcome__story">
+    <sy-quote [text]="founderQuote" cite="Founder, age 70, grandmother of five" />
+    <img
+      class="welcome__photo welcome__founder"
+      src="/media/sycapooke-founder.jpg"
+      width="928"
+      height="1152"
+      loading="lazy"
+      alt="Our founder, smiling in her living room and holding a framed family photograph"
+    />
+  </div>
+</sy-feature-band>
+
+<sy-marketing-hero
+  variant="closing"
+  headingId="closing-title"
+  lede="New treasures arrive daily, every one at least 20 years old."
+>
+  <ng-container title>Treasures with a <em>story.</em></ng-container>
+  <ng-container actions>
+    <a syButton="primary" size="lg" routerLink="/">Shop the catalog</a>
+    <a syButton size="lg" [routerLink]="sellHref()">Start selling</a>
+  </ng-container>
+</sy-marketing-hero>

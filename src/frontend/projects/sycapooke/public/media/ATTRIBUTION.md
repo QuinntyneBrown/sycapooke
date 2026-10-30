@@ -1,0 +1,7 @@
+# Media attribution
+
+| File                    | Source                                                                                                                                                                                                                           | Licence                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `sycapooke-hero.jpg`    | Generated image from the Sycapooke landing page design (Magic Patterns, project `vintage-marketplace-landing-page-451`, Oct 2026): a brass lamp, pearl necklace, tweed jacket, rotary telephone and teacup on an old oak dresser | AI-generated for this project; no third-party rights |
+| `sycapooke-founder.jpg` | Generated image from the same design: the founder in her living room holding a framed family photograph                                                                                                                          | AI-generated for this project; no third-party rights |
+| `sycapooke-share.jpg`   | Rendered from `sycapooke-hero.jpg` and the Heirloom logo by `docs/design-system/_build/render_assets.mjs`                                                                                                                        | Same as above                                        |

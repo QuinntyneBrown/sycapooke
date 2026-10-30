@@ -1,0 +1,39 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components — Set up the workspace
+
+Container_Boundary(web, "Sycapooke Web (src/frontend)") {
+  Component(app, "projects/sycapooke", "Application", "AppComponent, AppShellComponent, HomePlaceholderPage, app.routes.ts")
+  Component(feat, "projects/accounts … privacy", "Six feature libraries", "Empty lazy route tables")
+  Component(apilib, "projects/api", "Library @sycapooke/api", "provideApi(), API_BASE_URL")
+  Component(comps, "projects/components", "Library @sycapooke/components", "tokens.css, components.css, sy-skip-link, sy-logo, sy-top-bar, sy-footer, sy-toast-region")
+  Component(e2e, "e2e/", "Playwright", "shell.page.ts, shell.spec.ts")
+}
+Container_Boundary(be, "Sycapooke API (src/backend)") {
+  Component(apiproj, "Sycapooke.Api", "ASP.NET Core", "HealthController: GET /api/health")
+  Component(appproj, "Sycapooke.Application", "Class library", "Marker only")
+  Component(dom, "Sycapooke.Domain", "Class library", "Marker only")
+  Component(infra, "Sycapooke.Infrastructure", "Class library", "Marker only")
+  Component(worker, "Sycapooke.Worker", "Worker service", "Empty hosted service")
+  Component(mig, "Sycapooke.Migrator", "Console", "No migrations yet")
+}
+Container_Boundary(t, "tests/") {
+  Component(apitests, "Sycapooke.Api.Tests", "xUnit", "HealthEndpointTests, StatelessApiTests (L2-060)")
+  Component(other, "Sycapooke.*.Tests", "xUnit", "One smoke test each")
+}
+Rel(app, feat, "loadChildren")
+Rel(app, comps, "Shell components")
+Rel(app, apilib, "provideApi()")
+Rel(feat, apilib, "Imports")
+Rel(feat, comps, "Imports")
+Rel(e2e, app, "Loads /")
+Rel(apiproj, appproj, "References")
+Rel(apiproj, infra, "References")
+Rel(appproj, dom, "References")
+Rel(infra, appproj, "References")
+Rel(worker, infra, "References")
+Rel(mig, infra, "References")
+Rel(apitests, apiproj, "WebApplicationFactory, NetArchTest")
+Rel(other, dom, "References each project")
+@enduml

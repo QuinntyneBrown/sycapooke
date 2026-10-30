@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <UserSecretsId>dotnet-Sycapooke.Worker-9b947c82-0c58-484e-94e0-172ee96cf8c6</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sycapooke.Application\Sycapooke.Application.csproj" />
+    <ProjectReference Include="..\Sycapooke.Infrastructure\Sycapooke.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
