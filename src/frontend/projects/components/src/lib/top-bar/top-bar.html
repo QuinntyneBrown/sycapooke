@@ -26,7 +26,8 @@
       @for (item of categories; track item.path) {
         <a
           class="nav-link"
-          [routerLink]="item.path"
+          [routerLink]="origin ? null : item.path"
+          [attr.href]="href(item.path)"
           routerLinkActive
           #rla="routerLinkActive"
           [attr.aria-current]="rla.isActive ? 'page' : null"
@@ -70,7 +71,8 @@
         <a
           syButton="primary"
           class="topbar__sell"
-          routerLink="/sell"
+          [routerLink]="origin ? null : '/sell'"
+          [attr.href]="href('/sell')"
           routerLinkActive
           #sell="routerLinkActive"
           [attr.aria-current]="sell.isActive ? 'page' : null"
@@ -78,13 +80,16 @@
         >
         <a
           class="avatar avatar--sm topbar__avatar"
-          routerLink="/account"
+          [routerLink]="origin ? null : '/account'"
+          [attr.href]="href('/account')"
           [attr.aria-label]="'Your account, ' + member.displayName"
           >{{ initials() }}</a
         >
       } @else {
-        <a class="topbar__link" routerLink="/sign-in">Sign in</a>
-        <a syButton="primary" class="topbar__sell" routerLink="/sell">Start selling</a>
+        <a class="topbar__link" [routerLink]="origin ? null : '/sign-in'" [attr.href]="href('/sign-in')">Sign in</a>
+        <a syButton="primary" class="topbar__sell" [routerLink]="origin ? null : '/sell'" [attr.href]="href('/sell')"
+          >Start selling</a
+        >
       }
     </div>
   }

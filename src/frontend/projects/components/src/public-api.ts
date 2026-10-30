@@ -1,4 +1,5 @@
 export { AlertComponent, type AlertTone } from './lib/alert/alert';
+export { APP_ORIGIN, externalHref, provideAppOrigin } from './lib/app-origin';
 export { BuyBarComponent } from './lib/buy-bar/buy-bar';
 export { ButtonDirective } from './lib/button/button';
 export { CenterStateComponent } from './lib/center-state/center-state';

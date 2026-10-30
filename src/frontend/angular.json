@@ -105,6 +105,10 @@
                 {
                   "replace": "projects/sycapooke/src/app/app.routes.ts",
                   "with": "projects/sycapooke/src/app/app.routes.marketing.ts"
+                },
+                {
+                  "replace": "projects/sycapooke/src/environments/environment.ts",
+                  "with": "projects/sycapooke/src/environments/environment.marketing.ts"
                 }
               ]
             }

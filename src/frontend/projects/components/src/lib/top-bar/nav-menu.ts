@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { APP_ORIGIN, externalHref } from '../app-origin';
 import { DIALOG_DATA, DialogRef } from '../dialog/dialog-ref';
 import { SheetComponent } from '../sheet/sheet';
 
@@ -23,7 +24,9 @@ export interface NavMenuLink {
         <ul class="menu-sheet__links" role="list">
           @for (item of links; track item.path) {
             <li>
-              <a [routerLink]="item.path" (click)="ref.close()">{{ item.label }}</a>
+              <a [routerLink]="origin ? null : item.path" [attr.href]="href(item.path)" (click)="ref.close()">{{
+                item.label
+              }}</a>
             </li>
           }
         </ul>
@@ -35,4 +38,9 @@ export interface NavMenuLink {
 export class NavMenuComponent {
   readonly links = inject<readonly NavMenuLink[]>(DIALOG_DATA);
   readonly ref = inject(DialogRef);
+  readonly origin = inject(APP_ORIGIN);
+
+  href(path: string): string | null {
+    return externalHref(this.origin, path);
+  }
 }

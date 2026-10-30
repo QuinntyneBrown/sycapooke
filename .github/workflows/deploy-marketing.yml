@@ -1,7 +1,8 @@
-name: Deploy
+name: Deploy marketing
 
-# Deploys every push to main once CI (npm run verify) has passed on it (ADR platform/0012, L2-084).
-# Run by hand with an older commit SHA to roll back (L2-086).
+# Deploys the marketing site (www.<SITE_HOST>) on every push to main once CI (npm run verify) has passed on it,
+# independently of the application (ADR platform/0015, L2-084, L2-087). Run by hand with an older commit SHA to
+# roll back (L2-086).
 on:
   workflow_run:
     workflows: [CI]
@@ -15,7 +16,7 @@ on:
         default: ""
 
 concurrency:
-  group: deploy-production
+  group: deploy-marketing
   cancel-in-progress: false
 
 permissions: {}
@@ -34,26 +35,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: api
-            file: deploy/backend.Dockerfile
-            context: src/backend
-            target: api
-          - name: worker
-            file: deploy/backend.Dockerfile
-            context: src/backend
-            target: worker
-          - name: migrator
-            file: deploy/backend.Dockerfile
-            context: src/backend
-            target: migrator
-          - name: web
-            file: deploy/web/Dockerfile
-            context: .
-            target: ""
     steps:
       - name: Check deploy SHA
         run: '[[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "ref must be a full commit SHA"; exit 1; }'
@@ -68,15 +49,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.file }}
-          target: ${{ matrix.target }}
+          context: .
+          file: deploy/marketing/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/sycapooke-${{ matrix.name }}:${{ env.DEPLOY_SHA }}
-            ${{ env.IMAGE_PREFIX }}/sycapooke-${{ matrix.name }}:latest
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+            ${{ env.IMAGE_PREFIX }}/sycapooke-marketing:${{ env.DEPLOY_SHA }}
+            ${{ env.IMAGE_PREFIX }}/sycapooke-marketing:latest
+          cache-from: type=gha,scope=marketing
+          cache-to: type=gha,mode=max,scope=marketing
 
   deploy:
     needs: build
@@ -100,36 +80,31 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
-      - name: Copy compose file
-        run: scp deploy/docker-compose.yml "azureuser@${DEPLOY_HOST}:/opt/sycapooke/docker-compose.yml"
+      - name: Copy compose file and edge config
+        run: |
+          ssh "azureuser@${DEPLOY_HOST}" mkdir -p /opt/sycapooke/edge
+          scp deploy/docker-compose.yml "azureuser@${DEPLOY_HOST}:/opt/sycapooke/docker-compose.yml"
+          scp deploy/edge/Caddyfile "azureuser@${DEPLOY_HOST}:/opt/sycapooke/edge/Caddyfile"
       - name: Log in to the registry
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: printf '%s' "$GHCR_TOKEN" | ssh "azureuser@${DEPLOY_HOST}" docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-      - name: Migrate and restart
+      - name: Restart the marketing site
         run: |
           ssh "azureuser@${DEPLOY_HOST}" bash -s <<'REMOTE'
             set -euo pipefail
             cd /opt/sycapooke
             trap 'docker logout ghcr.io >/dev/null' EXIT
-            sed -i '/^IMAGE_TAG=/d' .env && echo "IMAGE_TAG=${{ env.DEPLOY_SHA }}" >> .env
-            sed -i '/^SITE_ADDRESS=/d' .env && printf 'SITE_ADDRESS=%s, www.%s, uat.%s\n' "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" >> .env
-            docker compose pull --quiet
-            docker compose run --rm -T migrator < /dev/null
-            docker compose up -d --remove-orphans
+            sed -i '/^MARKETING_TAG=/d' .env && echo "MARKETING_TAG=${{ env.DEPLOY_SHA }}" >> .env
+            sed -i '/^SITE_ADDRESS=/d' .env && printf 'SITE_ADDRESS=%s, www.%s, app.%s\n' "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" >> .env
+            docker compose pull --quiet marketing edge
+            docker compose up -d --no-deps marketing edge
             docker image prune -af --filter "until=72h" >/dev/null
           REMOTE
-      - name: Smoke test
+      - name: Smoke test marketing
         run: |
           for i in $(seq 1 20); do
-            curl -fsS "https://${SITE_HOST}/api/health" && exit 0
+            curl -fsS "https://www.${SITE_HOST}/" | grep -q "Sycapooke" && exit 0
             sleep 6
           done
-          echo "health check failed" && exit 1
-      - name: Smoke test UAT
-        run: |
-          for i in $(seq 1 20); do
-            curl -fsS -o /dev/null "https://uat.${SITE_HOST}/" && exit 0
-            sleep 6
-          done
-          echo "uat check failed" && exit 1
+          echo "marketing check failed" && exit 1

@@ -1,39 +1,71 @@
 <footer class="footer">
+  '
   <div class="footer__inner">
+    '
     <div class="footer__brand">
-      <sy-logo variant="light" />
+      ' <sy-logo variant="light" />'
       <p>
-        The marketplace made only for vintage: every piece at least 20 years old, listed by a real person with a real
-        story.
+        ' The marketplace made only for vintage: every piece at least 20 years old, listed by a real person with a real'
+        story.'
       </p>
+      '
     </div>
+    '
     <nav class="footer__col" aria-labelledby="footer-shop">
+      '
       <h2 id="footer-shop">Shop</h2>
+      '
       <ul>
-        <li><a routerLink="/jewelry">Jewelry</a></li>
-        <li><a routerLink="/clothing">Clothing</a></li>
-        <li><a routerLink="/housewares">Housewares</a></li>
-        <li><a routerLink="/electronics">Electronics</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/jewelry'" [attr.href]="href('/jewelry')">Jewelry</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/clothing'" [attr.href]="href('/clothing')">Clothing</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/housewares'" [attr.href]="href('/housewares')">Housewares</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/electronics'" [attr.href]="href('/electronics')">Electronics</a></li>
+        '
       </ul>
+      '
     </nav>
+    '
     <nav class="footer__col" aria-labelledby="footer-sell">
+      '
       <h2 id="footer-sell">Sell</h2>
+      '
       <ul>
-        <li><a routerLink="/sell">Start selling</a></li>
-        <li><a routerLink="/rules">Marketplace rules</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/sell'" [attr.href]="href('/sell')">Start selling</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/rules'" [attr.href]="href('/rules')">Marketplace rules</a></li>
+        '
       </ul>
+      '
     </nav>
+    '
     <nav class="footer__col" aria-labelledby="footer-about">
+      '
       <h2 id="footer-about">Sycapooke</h2>
+      '
       <ul>
+        '
         <li><a routerLink="/welcome">About Sycapooke</a></li>
-        <li><a routerLink="/privacy">Privacy</a></li>
-        <li><a routerLink="/terms">Terms</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/privacy'" [attr.href]="href('/privacy')">Privacy</a></li>
+        '
+        <li><a [routerLink]="origin ? null : '/terms'" [attr.href]="href('/terms')">Terms</a></li>
+        '
         <li><button class="footer__link" type="button" (click)="cookieSettings.emit()">Cookie settings</button></li>
+        '
       </ul>
+      '
     </nav>
+    '
   </div>
+  '
   <div class="footer__bottom">
-    <span>© {{ year }} Sycapooke. Made with love by a grandmother and her family.</span>
+    ' <span>© {{ year }} Sycapooke. Made with love by a grandmother and her family.</span>'
   </div>
+  '
 </footer>
+'

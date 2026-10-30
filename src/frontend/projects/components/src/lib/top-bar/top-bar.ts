@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
+import { APP_ORIGIN, externalHref } from '../app-origin';
 import { ButtonDirective } from '../button/button';
 import { LogoComponent } from '../logo/logo';
 import { SheetService } from '../sheet/sheet-service';
@@ -39,6 +40,8 @@ export class TopBarComponent {
   readonly searched = output<string>();
 
   private readonly sheets = inject(SheetService);
+  /** Empty in the application; the app host in the marketing build, where every link leaves the site. */
+  readonly origin = inject(APP_ORIGIN);
 
   readonly searchOpen = signal(false);
   readonly menuOpen = signal(false);
@@ -62,8 +65,18 @@ export class TopBarComponent {
     if (this.searchOpen()) setTimeout(() => document.getElementById('q')?.focus());
   }
 
+  /** The absolute app URL for a path in the marketing build, or null so the router link applies. */
+  href(path: string): string | null {
+    return externalHref(this.origin, path);
+  }
+
   submit(event: Event, term: string): void {
     event.preventDefault();
-    this.searched.emit(term.trim().slice(0, TopBarComponent.maxSearchLength));
+    const query = term.trim().slice(0, TopBarComponent.maxSearchLength);
+    if (this.origin) {
+      window.location.assign(`${this.origin}/?q=${encodeURIComponent(query)}`);
+      return;
+    }
+    this.searched.emit(query);
   }
 }

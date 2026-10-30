@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { AuthState } from '@sycapooke/api';
 import {
+  APP_ORIGIN,
   ButtonDirective,
+  externalHref,
   DialogService,
   FeatureBandComponent,
   FeaturePoint,
@@ -41,9 +43,17 @@ import { PitchVideoDialog } from './pitch-video-dialog';
 })
 export class WelcomePage {
   private readonly auth = inject(AuthState);
+  /** Empty in the application; the app host in the marketing build, so the calls to action leave the site. */
+  readonly origin = inject(APP_ORIGIN);
   private readonly dialogs = inject(DialogService);
 
-  readonly sellHref = computed(() => (this.auth.member() ? '/sell' : '/join'));
+  readonly sellPath = computed(() => (this.auth.member() ? '/sell' : '/join'));
+  /** Router link inside the application (null in the marketing build). */
+  readonly sellHref = computed(() => (this.origin ? null : this.sellPath()));
+  /** Absolute app URL in the marketing build (null in the application). */
+  readonly sellExternal = computed(() => externalHref(this.origin, this.sellPath()));
+  readonly catalogHref = this.origin ? null : '/';
+  readonly catalogExternal = externalHref(this.origin, '/');
 
   readonly shopperPoints: FeaturePoint[] = [
     { title: 'Four focused categories', text: 'Jewelry, clothing, housewares and electronics. No clutter.' },

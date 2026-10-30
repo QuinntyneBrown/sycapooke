@@ -1,0 +1,21 @@
+# The edge: terminates TLS for every site host and routes by host to the two web services, which are
+# deployed independently (ADR platform/0015). SITE_ADDRESS lists every host Caddy holds a certificate for:
+# "<apex>, www.<apex>, app.<apex>".
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	# The bare domain redirects to the canonical marketing host.
+	@apex host {$APEX_HOST:sycapooke.com}
+	redir @apex https://{$MARKETING_HOST:www.sycapooke.com}{uri} permanent
+
+	# The full application (its own Caddy proxies /api and /photos to the API).
+	@app host {$APP_HOST:app.sycapooke.com}
+	handle @app {
+		reverse_proxy app:80
+	}
+
+	# Every other host is the marketing site.
+	handle {
+		reverse_proxy marketing:80
+	}
+}

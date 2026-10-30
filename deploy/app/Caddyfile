@@ -1,0 +1,20 @@
+# The full application: the production Angular build served on port 80 behind the edge (deploy/edge/Caddyfile),
+# with /api and /photos proxied to the API container.
+:80 {
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle /photos/* {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		# index.html and SPA routes must revalidate so a deploy shows up at once; hashed assets can be cached.
+		@entry not path *.js *.css *.png *.jpg *.svg *.ico *.webp *.mp4 *.webm *.vtt *.woff2
+		header @entry Cache-Control "no-cache"
+		root * /srv/app
+		try_files {path} /index.html
+		file_server
+	}
+}

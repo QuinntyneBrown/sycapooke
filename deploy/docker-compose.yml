@@ -1,6 +1,7 @@
 # Production stack for one small Linux host (1 to 2 GB RAM plus the 2 GB swap file, ADR platform/0012).
-# Copied to /opt/sycapooke on the server by the deploy workflow.
-# Secrets and settings come from /opt/sycapooke/.env (see .env.example).
+# Copied to /opt/sycapooke on the server by both deploy workflows (ADR platform/0015): deploy-marketing.yml moves
+# MARKETING_TAG and restarts only `marketing`; deploy-app.yml moves APP_TAG, migrates and restarts `api`, `worker`
+# and `app`. Secrets and settings come from /opt/sycapooke/.env (see .env.example).
 
 # Rotated logs so the small disk never fills.
 x-logging: &logging
@@ -10,10 +11,10 @@ x-logging: &logging
     max-file: "3"
 
 services:
-  web:
-    image: ${IMAGE_PREFIX}/sycapooke-web:${IMAGE_TAG:-latest}
+  edge:
+    image: caddy:2-alpine
     restart: unless-stopped
-    mem_limit: 128m
+    mem_limit: 64m
     logging: *logging
     ports:
       - "80:80"
@@ -22,13 +23,26 @@ services:
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
     volumes:
+      - ./edge/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+
+  marketing:
+    image: ${IMAGE_PREFIX}/sycapooke-marketing:${MARKETING_TAG:-latest}
+    restart: unless-stopped
+    mem_limit: 64m
+    logging: *logging
+
+  app:
+    image: ${IMAGE_PREFIX}/sycapooke-app:${APP_TAG:-latest}
+    restart: unless-stopped
+    mem_limit: 64m
+    logging: *logging
     depends_on:
       - api
 
   api:
-    image: ${IMAGE_PREFIX}/sycapooke-api:${IMAGE_TAG:-latest}
+    image: ${IMAGE_PREFIX}/sycapooke-api:${APP_TAG:-latest}
     restart: unless-stopped
     mem_limit: 512m
     logging: *logging
@@ -44,7 +58,7 @@ services:
       retries: 3
 
   worker:
-    image: ${IMAGE_PREFIX}/sycapooke-worker:${IMAGE_TAG:-latest}
+    image: ${IMAGE_PREFIX}/sycapooke-worker:${APP_TAG:-latest}
     restart: unless-stopped
     mem_limit: 384m
     logging: *logging
@@ -55,7 +69,7 @@ services:
       - photos:/data/photos
 
   migrator:
-    image: ${IMAGE_PREFIX}/sycapooke-migrator:${IMAGE_TAG:-latest}
+    image: ${IMAGE_PREFIX}/sycapooke-migrator:${APP_TAG:-latest}
     mem_limit: 384m
     logging: *logging
     env_file: .env
