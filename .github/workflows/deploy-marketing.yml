@@ -99,6 +99,7 @@ jobs:
             sed -i '/^SITE_ADDRESS=/d' .env && printf 'SITE_ADDRESS=%s, www.%s, app.%s\n' "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" >> .env
             docker compose pull --quiet marketing edge
             docker compose up -d --no-deps marketing edge
+            docker compose exec -T edge caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
             docker image prune -af --filter "until=72h" >/dev/null
           REMOTE
       - name: Smoke test marketing

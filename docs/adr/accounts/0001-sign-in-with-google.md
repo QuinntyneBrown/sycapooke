@@ -9,7 +9,7 @@
 
 Members join and sign in with an email and a password (`L2-001`, `L2-006`). The owner wants
 "Continue with Google" on `/sign-in` and `/join` of the full application (`L2-088`), on
-`https://uat.sycapooke.com` ([ADR platform/0013](../platform/0013-uat-host-in-the-production-web-image.md))
+`https://app.sycapooke.com` ([ADR platform/0015](../platform/0015-separate-marketing-and-application-deployments.md))
 and locally, without weakening the session model of [ADR platform/0005](../platform/0005-session-cookies-with-jwt-access-and-rotating-refresh-tokens.md),
 the planned `script-src 'self'` of `L2-048`, the cookie rules of `L2-056` or the statelessness
 of `L2-060`. Google is an external system, so tests must never reach it (`AGENTS.md`).
@@ -70,8 +70,8 @@ of `L2-060`. Google is an external system, so tests must never reach it (`AGENTS
   render and every Google endpoint answers `404 GOOGLE_NOT_CONFIGURED`. The redirect URI is
   `{scheme}://{host}/api/auth/google/callback` built from the request (the scheme from
   `X-Forwarded-Proto` behind Caddy), or `Auth:Google:RedirectUri` when set; it is never built
-  from `App:BaseUrl`, which is the marketing host. The Google client's authorised origin and
-  redirect URI are `https://uat.sycapooke.com` and the local development origin only.
+  from `App:BaseUrl`. The Google client's authorised origin and
+  redirect URI are `https://app.sycapooke.com` and the local development origin only.
 - **Abuse limits.** The Google endpoints take the per-IP sign-in limits of `L2-007` and
   `L2-051` when those are built; no sign-in endpoint is limited today, and the Google ones
   join the same deferred item rather than getting a limiter of their own.
@@ -114,6 +114,6 @@ of `L2-060`. Google is an external system, so tests must never reach it (`AGENTS
 
 - [sign-in-with-google design](../../detailed-designs/accounts/sign-in-with-google/README.md)
 - [ADR platform/0005](../platform/0005-session-cookies-with-jwt-access-and-rotating-refresh-tokens.md)
-- [ADR platform/0013](../platform/0013-uat-host-in-the-production-web-image.md)
+- [ADR platform/0015](../platform/0015-separate-marketing-and-application-deployments.md)
 - [ADR privacy/0001](../privacy/0001-cookie-consent-in-the-browser-and-a-placeholder-analytics-provider.md)
 - Google, "Sign in with Google branding guidelines"

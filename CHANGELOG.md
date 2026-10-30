@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-10-30
+
+### Added
+
+- `app.sycapooke.com` serves the full application from its own `sycapooke-app` image, and `www.sycapooke.com` the marketing site from its own `sycapooke-marketing` image, behind an `edge` Caddy service (the official image with `deploy/edge/Caddyfile`) that terminates TLS for the apex, `www` and `app` hosts, redirects the apex to `www` and routes by host ([ADR platform/0015](docs/adr/platform/0015-separate-marketing-and-application-deployments.md), `L2-084` to `L2-087`).
+- Two deploy workflows, `deploy-marketing.yml` and `deploy-app.yml`, each started by a green `CI` run for a push to `main` or by hand with a commit SHA, each with its own concurrency group, image tag (`MARKETING_TAG`, `APP_TAG`) and smoke test; the app workflow alone runs the migrator and restarts `api`, `worker` and `app`.
+- `provideAppOrigin` / `APP_ORIGIN` / `externalHref` in `@sycapooke/components`: the marketing build (`environment.marketing.ts`, `appOrigin: 'https://app.sycapooke.com'`) renders the top bar, nav menu, footer and welcome-page calls to action as absolute links into the application, and its search sends the visitor to `https://app.sycapooke.com/?q=…`; the application build keeps router links.
+- `DeploymentPipelineTests` covers both workflows, the compose stack and the three Caddyfiles.
+
+### Changed
+
+- `docs/deployment.md`, the deploy-to-production design and diagrams, `L2-084` to `L2-087` and the Google sign-in docs describe the two hosts and workflows; `App__BaseUrl` and the Google OAuth origin and redirect URI are on `app.sycapooke.com`.
+
+### Removed
+
+- The `uat.sycapooke.com` host, the single `sycapooke-web` image, `deploy/web/`, `deploy.yml`, `IMAGE_TAG` and `npm run build:web` ([ADR platform/0013](docs/adr/platform/0013-uat-host-in-the-production-web-image.md) is superseded).
+
 ## [0.2.0] — 2026-10-30
 
 ### Added

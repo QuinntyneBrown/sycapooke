@@ -4,7 +4,7 @@
 
 Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. Members join and sign in with an email and a password ([sign-up-and-sign-in](../sign-up-and-sign-in/README.md)). This feature adds "Continue with Google" to `/sign-in` and `/join` of the full application: a member linked to a Google account signs in with one press, a verified member whose email matches links and signs in, and a new person finishes joining with a display name, the age confirmation and the terms, with no password and no verification email, because Google has verified the email. The result is the same session as a password sign-in (`L2-008`), returned to the same `returnUrl` (`L2-006`).
 
-The feature sits in the accounts subsystem (`L1-001`, `L1-002`) and realises `L2-088`. It works on `https://uat.sycapooke.com` and locally ([ADR platform/0013](../../../adr/platform/0013-uat-host-in-the-production-web-image.md)); the marketing host `www.sycapooke.com` has no sign-in. The decisions are recorded in [ADR accounts/0001](../../../adr/accounts/0001-sign-in-with-google.md).
+The feature sits in the accounts subsystem (`L1-001`, `L1-002`) and realises `L2-088`. It works on `https://app.sycapooke.com` and locally ([ADR platform/0015](../../../adr/platform/0015-separate-marketing-and-application-deployments.md)); the marketing host `www.sycapooke.com` has no sign-in. The decisions are recorded in [ADR accounts/0001](../../../adr/accounts/0001-sign-in-with-google.md).
 
 Terms used in this design:
 

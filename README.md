@@ -180,7 +180,7 @@ Backend tests use in-memory substitutes and never connect to a real database. Pl
 
 ## Deployment
 
-Every push to `main` deploys to `https://www.sycapooke.com` (the marketing page) and `https://uat.sycapooke.com` (the full application, on the same API and database) once CI's `npm run verify` passes: the Deploy workflow builds the four images (`sycapooke-api`, `sycapooke-worker`, `sycapooke-migrator`, `sycapooke-web`), pushes them to GitHub Container Registry, migrates the database, restarts the Docker Compose stack on one small Azure Linux VM and checks `/api/health` and the UAT host. Run the Deploy workflow by hand with an older commit SHA to roll back. See [docs/deployment.md](docs/deployment.md) and ADR platform/0012.
+Every push to `main` deploys `https://www.sycapooke.com` (the marketing site) and `https://app.sycapooke.com` (the full application) once CI's `npm run verify` passes, through two independent workflows on one small Azure Linux VM: *Deploy marketing* builds `sycapooke-marketing`, pushes it to GitHub Container Registry, restarts the `marketing` service and checks `https://www.sycapooke.com/`; *Deploy app* builds `sycapooke-api`, `sycapooke-worker`, `sycapooke-migrator` and `sycapooke-app`, migrates the database, restarts the application services and checks `/api/health` and `/` on the app host. An `edge` Caddy service terminates TLS and routes by host. Each workflow moves only its own image tag, so run either by hand with an older commit SHA to roll that site back on its own. See [docs/deployment.md](docs/deployment.md), ADR platform/0012 and ADR platform/0015.
 
 ## API reference
 

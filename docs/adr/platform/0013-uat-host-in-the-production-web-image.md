@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-26
 **Category:** platform
-**Status:** Accepted
+**Status:** Superseded by [ADR platform/0015](0015-separate-marketing-and-application-deployments.md) (2026-10-30: the marketing site and the application are separate images and workflows, and the `uat` host is retired in favour of `app.sycapooke.com`)
 **Deciders:** Quinntyne Brown (product owner)
 
 ## Context

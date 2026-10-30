@@ -6,7 +6,8 @@ The hours assume an intermediate developer who knows GitHub Actions and Docker C
 not yet the Sycapooke codebase. They cover the workflow and deploy files, the static tests
 and the docs, and exclude requirements, design and creating the Azure resources, secrets
 and DNS, which the owner does by hand. They assume the port of 12L's `deploy/` and
-workflows from commit `f453ab3`. Tests are static file checks only; no Docker or database.
+workflows from commit `f453ab3`, then the split into separate marketing and application
+deployments (commit `a857747`). Tests are static file checks only; no Docker or database.
 [Detailed design](../../detailed-designs/platform/deploy-to-production/README.md)
 
 ## Full design
@@ -20,7 +21,8 @@ workflows from commit `f453ab3`. Tests are static file checks only; no Docker or
 | `DeploymentPipelineTests` (trigger, migrate line, permissions, limits, logs, cache header) | 3 |
 | `docs/deployment.md`: rollback, cost, building from scratch; README and CHANGELOG | 3 |
 | First production deploy and rollback rehearsal, checked by hand | 2 |
-| **Total** | **16** |
+| Split the marketing site and the application: `edge`, `marketing` and `app` services, two workflows and tags, the application origin for cross-host links, tests and docs (ADR platform/0015, `L2-087`) | 4 |
+| **Total** | **20** |
 
 ## Minimal scope
 
@@ -34,3 +36,4 @@ the cache header, without the CI gate, limits or tests. Minimal total: **5** hou
 | CI gate | A red `main` can still deploy | 2 |
 | Memory limits and log rotation | One service can starve the VM or fill its disk | 2 |
 | Static tests | A regression in the pipeline files is caught only in production | 3 |
+| Separate deployments | A broken application build or migration blocks marketing changes; every deploy restarts everything | 4 |

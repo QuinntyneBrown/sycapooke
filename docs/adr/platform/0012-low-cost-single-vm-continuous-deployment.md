@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-26
 **Category:** platform
-**Status:** Accepted
+**Status:** Accepted (amended by [ADR platform/0015](0015-separate-marketing-and-application-deployments.md): the single `web` image and `deploy.yml` described below became the `edge`, `marketing` and `app` services and two workflows; the hosting, gate, secrets and rollback decisions stand)
 **Deciders:** Quinntyne Brown (product owner)
 
 ## Context
