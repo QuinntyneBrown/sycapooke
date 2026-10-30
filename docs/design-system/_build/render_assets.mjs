@@ -23,7 +23,7 @@ const plain = (inner, bg = 'transparent') => `<!doctype html><html><body style="
 
 // logo.png / logo-dark.png at 2x of 520x112 → 1040x224
 await shot(plain(svg('logo.svg').replace('width="520" height="112"', 'width="1040" height="224"')), 1040, 224, join(ds, 'logo.png'), { omitBackground: true });
-await shot(plain(svg('logo-dark.svg').replace('width="520" height="112"', 'width="1040" height="224"'), '#2b2118'), 1040, 224, join(ds, 'logo-dark.png'));
+await shot(plain(svg('logo-dark.svg').replace('width="520" height="112"', 'width="1040" height="224"')), 1040, 224, join(ds, 'logo-dark.png'), { omitBackground: true });
 // app icon 512, 180 (apple touch), 64 + 32 + 16 for the favicon
 for (const [size, out] of [
   [512, join(ds, 'app-icon.png')],

@@ -169,8 +169,10 @@ def ic(name: str, cls: str = "icon", label: str | None = None) -> str:
 
 # The Sycapooke logo supplied by the owner (docs/design-system/assets/logo.png, copied to
 # docs/mocks/assets/logo.png). Decorative: the surrounding link carries aria-label "Sycapooke home".
-LOGO_IMG = '<img src="../../assets/logo.png" alt="" width="1040" height="224">'
-# The light export (cream wordmark) for the ink footer.
+# Theme-aware: the ink export shows in light mode, the cream export in dark mode (ui.css swaps them).
+LOGO_IMG = ('<img class="logo__img--on-light" src="../../assets/logo.png" alt="" width="1040" height="224">'
+            '<img class="logo__img--on-dark" src="../../assets/logo-dark.png" alt="" width="1040" height="224">')
+# The cream export alone, for the ink footer in both themes.
 LOGO_IMG_LIGHT = '<img src="../../assets/logo-dark.png" alt="" width="1040" height="224">'
 
 

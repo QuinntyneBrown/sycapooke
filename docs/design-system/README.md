@@ -39,7 +39,9 @@ A terracotta price tag (`--color-logo-tag`) with a cream dashed inner line (`--c
 (`--color-logo-tag-hole`), an ink string (`--color-logo-string`) and a Fraunces italic "S" (`--color-logo-tag-letter`),
 beside the Fraunces italic wordmark "Sycapooke" (`--color-logo-wordmark`, `--font-family-logo`). The tag keeps its
 colours in both themes; the string and wordmark follow the text colour, or cream on the showcase. `sy-logo` draws it;
-`assets/logo.svg` / `logo.png` (and the `-dark` pair) are the exports, and the app icon and favicon are the tag alone.
+`assets/logo.svg` / `logo.png` (ink wordmark, for light surfaces) and the transparent `-dark` pair (cream wordmark, for dark
+surfaces) are the exports; static pages show both and `components.css` swaps them by theme. The app icon and favicon
+are the tag alone.
 
 ## Foundations
 

@@ -71,7 +71,7 @@ docs/mocks/
   assets/items/*.svg   product illustrations used as listing photos
   assets/hero.svg      placeholder for the welcome hero photo (/media/sycapooke-hero.jpg in the app)
   assets/founder.svg   placeholder for the founder photo (/media/sycapooke-founder.jpg in the app)
-  assets/logo.png      the Sycapooke logo
+  assets/logo.png      the Sycapooke logo (ink wordmark; logo-dark.png is the cream one, swapped in for dark mode)
   _build/mk.py         shell, components and helpers
   _build/data.py       cast and catalog
   _build/screens_*.py  one module per area: catalog, accounts, selling, orders, system
