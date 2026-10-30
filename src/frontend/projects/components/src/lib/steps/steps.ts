@@ -6,7 +6,7 @@ export interface Step {
   text: string;
 }
 
-/** Numbered steps on a red top rule, titles as h3 (design system: Steps). */
+/** A numbered list: an outlined serif number circle beside each h3 title and its line (design system: Steps). */
 @Component({
   selector: 'sy-steps',
   templateUrl: './steps.html',

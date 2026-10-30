@@ -15,7 +15,7 @@ export class MemberProfilePage {
     this.header = page.locator('.profile-head');
     this.stats = page.locator('.stats');
     this.forSale = page.getByRole('region', { name: 'For sale' });
-    this.cards = this.forSale.locator('.listing-card');
+    this.cards = this.forSale.locator('.listing-card__title a');
     this.reviews = page.getByRole('region', { name: 'Reviews' });
     this.loadMore = page.getByRole('button', { name: /Load more/ });
   }

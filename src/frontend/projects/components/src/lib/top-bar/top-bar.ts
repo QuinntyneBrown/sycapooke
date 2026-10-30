@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { ButtonDirective } from '../button/button';
-import { IconComponent } from '../icon/icon';
 import { LogoComponent } from '../logo/logo';
 import { SheetService } from '../sheet/sheet-service';
 import { NavMenuComponent } from './nav-menu';
@@ -13,16 +12,17 @@ export interface TopBarMember {
 }
 
 /**
- * App-shell top bar in its guest and member states (design system: Top bar). The application
- * passes the member from AuthState and the current keyword, and navigates on (searched). Under
- * 1280px the inline category links give way to the menu button, which opens the navigation menu
- * sheet listing every category. Under 992px the
- * search button reveals the search form. The admin variant (admin shell) shows only the logo, the
- * "Admin" label and the signed-in member's initials.
+ * App-shell top bar in its guest and member states (design system: Top bar): the logo, pill
+ * category links, the search well, then "Sign in" as a plain link and the primary "Start selling"
+ * pill (a member sees a primary "Sell" pill and their avatar). The application passes the member from
+ * AuthState and the current keyword, and navigates on (searched). Under 1280px the inline
+ * category links give way to the menu button, which opens the navigation menu sheet listing every
+ * category. Under 992px the search button reveals the search well. The admin variant (admin
+ * shell) shows only the logo, the "Admin" label and the signed-in member's initials.
  */
 @Component({
   selector: 'sy-top-bar',
-  imports: [RouterLink, RouterLinkActive, ButtonDirective, IconComponent, LogoComponent],
+  imports: [RouterLink, RouterLinkActive, ButtonDirective, LogoComponent],
   templateUrl: './top-bar.html',
   styleUrl: './top-bar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

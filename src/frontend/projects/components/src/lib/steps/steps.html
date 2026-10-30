@@ -1,8 +1,10 @@
 <ol class="steps">
   @for (step of steps(); track step.title) {
     <li class="steps__item">
-      <h3 class="steps__title">{{ step.title }}</h3>
-      <p class="steps__text">{{ step.text }}</p>
+      <div class="steps__body">
+        <h3 class="steps__title">{{ step.title }}</h3>
+        <p class="steps__text">{{ step.text }}</p>
+      </div>
     </li>
   }
 </ol>

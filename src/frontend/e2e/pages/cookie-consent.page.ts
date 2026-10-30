@@ -19,10 +19,7 @@ export class CookieConsentPage {
     this.accept = this.banner.getByRole('button', { name: 'Accept analytics' });
     this.necessaryOnly = this.banner.getByRole('button', { name: 'Necessary only' });
     this.bannerSettings = this.banner.getByRole('button', { name: 'Cookie settings' });
-    this.footerSettings = page
-      .getByRole('contentinfo')
-      .getByRole('navigation', { name: 'Footer' })
-      .getByRole('button', { name: 'Cookie settings' });
+    this.footerSettings = page.getByRole('contentinfo').getByRole('button', { name: 'Cookie settings' });
     this.dialog = page.getByRole('dialog', { name: 'Cookie settings' });
     this.necessary = this.dialog.getByRole('switch', { name: 'Strictly necessary' });
     this.analytics = this.dialog.getByRole('switch', { name: 'Analytics' });

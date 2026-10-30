@@ -17,19 +17,20 @@ with the owner's logo ([`docs/design-system/assets/logo.png`](../design-system/a
 
 | Colour | In the mocks |
 | --- | --- |
-| Terracotta | Primary: primary buttons, the current-page bar, the "Vintage" tag, links (terracotta 700). |
-| Forest | Secondary: showcase bands and secondary accents. |
-| Mustard | Highlights and emphasis on ink. |
-| Paper and Cream | The page canvas and surfaces. |
-| Ink | Text and the inverse toast; the dark theme is an ink night with cream text and mustard links. |
+| Terracotta | Primary: primary buttons, prices, heading emphasis, links (terracotta 700), the sell and closing bands of the marketing page. |
+| Forest | Secondary: eyebrows and stat labels, the forest card, the inverse button's hover. |
+| Mustard | The quote rule. |
+| Paper and Cream | The page canvas; cream surfaces, photo wells, the search well and the story band. |
+| Ink | Text, the footer and inverse buttons; the dark theme is an ink night with cream text and mustard links. |
 
-From Heirloom: rounded display and body type (system rounded stacks, no web fonts), pill buttons,
-chips, badges, tags and switches, 20px corners on cards and listing photos, soft shadows and
-quick motion that stops under reduced motion. Photo wells use Heirloom's party-pop tints.
+From the Magic Patterns landing page, and nothing else: Fraunces 600 headings over Source Sans 3,
+flat pill buttons that only change colour on hover, a cream search well with the one shadow,
+bare listing cards (a square cream photo well, a category pill, a round save button, a serif
+title and a terracotta price), dashed empty states, ringed step numbers, italic serif stats,
+0.375rem / 1rem / 2rem corners, flat bands and an ink footer. Nothing lifts, presses or drifts.
 
 Principles: lots of white space, one primary action per screen, short real copy
-and nothing that fills space. Product photos keep a light pastel backdrop in both
-themes, the way real photos would.
+and nothing that fills space. Product photos sit on cream in both themes.
 
 ## Cast and catalog
 

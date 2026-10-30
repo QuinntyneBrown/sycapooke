@@ -4,17 +4,12 @@
 .topbar__avatar {
   text-decoration: none;
 }
+/* Under 62rem the search button reveals the search well under the bar. */
 @media (max-width: 61.99rem) {
   .topbar .search.search--open {
-    display: block;
+    display: flex;
     position: absolute;
-    inset: 100% 0 auto;
+    inset: calc(100% + var(--space-3)) var(--layout-margin) auto;
     max-width: none;
-    padding: var(--space-3) var(--layout-margin);
-    background: var(--color-bg-canvas);
-    border-bottom: 1px solid var(--color-border-default);
-  }
-  .topbar .search.search--open .icon {
-    left: calc(var(--layout-margin) + var(--space-3));
   }
 }

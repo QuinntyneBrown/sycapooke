@@ -266,12 +266,6 @@
       "note": "field error text on page"
     },
     {
-      "fg": "--color-danger-solid",
-      "bg": "--color-bg-surface",
-      "min": 3,
-      "note": "invalid input border"
-    },
-    {
       "fg": "--color-success-fg",
       "bg": "--color-bg-surface",
       "min": 4.5,
@@ -398,18 +392,6 @@
       "note": "text on grape (forest) pop tile, chip, avatar and tally"
     },
     {
-      "fg": "--color-fg-on-hero",
-      "bg": "--color-hero-from",
-      "min": 4.5,
-      "note": "hero text at gradient start"
-    },
-    {
-      "fg": "--color-fg-on-hero",
-      "bg": "--color-hero-to",
-      "min": 4.5,
-      "note": "hero text at gradient end"
-    },
-    {
       "fg": "--color-fg-muted",
       "bg": "--color-accent-subtle",
       "min": 4.5,
@@ -452,46 +434,58 @@
       "note": "Sycapooke: terracotta link on a cream well"
     },
     {
-      "fg": "--color-fg-showcase",
-      "bg": "--color-showcase-start",
+      "fg": "--color-fg-on-terracotta",
+      "bg": "--color-band-terracotta",
       "min": 4.5,
-      "note": "marketing: cream showcase text on the forest gradient's dark end"
+      "note": "Sycapooke: cream on the terracotta sell and closing bands"
     },
     {
-      "fg": "--color-fg-showcase",
-      "bg": "--color-showcase-end",
+      "fg": "--color-fg-on-terracotta-muted",
+      "bg": "--color-band-terracotta",
       "min": 4.5,
-      "note": "marketing: cream showcase text on the forest gradient's light end"
+      "note": "Sycapooke: muted cream (85%) on the terracotta band"
     },
     {
-      "fg": "--color-fg-showcase-muted",
-      "bg": "--color-showcase-start",
+      "fg": "--color-fg-on-forest",
+      "bg": "--color-band-forest",
       "min": 4.5,
-      "note": "marketing: showcase lede and eyebrow (dark end)"
+      "note": "Sycapooke: cream on the forest card and the inverse button hover"
     },
     {
-      "fg": "--color-fg-showcase-muted",
-      "bg": "--color-showcase-end",
+      "fg": "--color-fg-on-forest-muted",
+      "bg": "--color-band-forest",
       "min": 4.5,
-      "note": "marketing: showcase lede and eyebrow (light end)"
+      "note": "Sycapooke: muted cream on forest"
     },
     {
-      "fg": "--color-fg-showcase-accent",
-      "bg": "--color-showcase-start",
+      "fg": "--color-fg-on-ink",
+      "bg": "--color-band-ink",
       "min": 4.5,
-      "note": "marketing: mustard headline emphasis on the forest showcase"
+      "note": "Sycapooke: cream on the ink footer and inverse buttons"
     },
     {
-      "fg": "--color-fg-showcase-accent",
-      "bg": "--color-showcase-end",
+      "fg": "--color-fg-on-ink-muted",
+      "bg": "--color-band-ink",
+      "min": 4.5,
+      "note": "Sycapooke: muted cream (70%) on the ink footer"
+    },
+    {
+      "fg": "--color-fg-forest",
+      "bg": "--color-bg-canvas",
+      "min": 4.5,
+      "note": "Sycapooke: forest label and eyebrow on paper"
+    },
+    {
+      "fg": "--color-fg-forest",
+      "bg": "--color-bg-surface",
+      "min": 4.5,
+      "note": "Sycapooke: forest label on cream"
+    },
+    {
+      "fg": "--color-fg-default",
+      "bg": "--color-bg-canvas",
       "min": 3,
-      "note": "marketing: mustard headline emphasis on the light end, display size only (large text)"
-    },
-    {
-      "fg": "--color-showcase-start",
-      "bg": "--color-fg-showcase",
-      "min": 4.5,
-      "note": "marketing: forest primary button label on cream, on the showcase"
+      "note": "Sycapooke: secondary button border and the avatar ring on paper (1.4.11)"
     }
   ]
 }

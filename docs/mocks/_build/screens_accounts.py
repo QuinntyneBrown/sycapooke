@@ -478,7 +478,7 @@ def profile(handle: str, keys, *, own: bool = False, reviews=None, listings_coun
     else:
         act = ""
     sales = p["sales"]
-    stats = (f'<div class="stats"><div class="stat"><span class="stat__value">{sales}</span><span class="stat__label">Sales</span></div>'
+    stats = (f'<div class="stats stats--compact"><div class="stat"><span class="stat__value">{sales}</span><span class="stat__label">Sales</span></div>'
              f'<div class="stat"><span class="stat__value">{p["since"]}</span><span class="stat__label">Member since</span></div></div>')
     headh = (f'<section class="profile-head">{avatar(handle, "avatar--xl")}<div class="profile-head__body"><h1>{handle}</h1>'
              f'<span class="text-muted" style="display: inline-flex; gap: var(--space-1); align-items: center;">{ic("map-pin", "icon icon--sm")}{p["city"]}</span>{rating(handle)}{bio}</div>'

@@ -194,7 +194,8 @@ test.describe('search and filter catalog', () => {
     await filters.toggle.click();
 
     await expect.poll(async () => (await filters.sheetRoot.boundingBox())?.x).toBe(0);
-    expect((await filters.sheetRoot.boundingBox())?.width).toBe(384);
+    const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    expect((await filters.sheetRoot.boundingBox())?.width).toBe(24 * rem);
     await filters.sheetClose.click();
     await expect(filters.sheetRoot).toBeHidden();
   });

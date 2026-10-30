@@ -23,7 +23,7 @@ export class ShellPage {
   }
 
   footerLink(name: string): Locator {
-    return this.footer.getByRole('navigation', { name: 'Footer' }).getByRole('link', { name });
+    return this.footer.getByRole('link', { name });
   }
 
   async hasHorizontalScroll(): Promise<boolean> {

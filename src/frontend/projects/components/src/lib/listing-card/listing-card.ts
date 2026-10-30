@@ -26,9 +26,10 @@ export interface ListingCardView {
 }
 
 /**
- * One listing in a grid: cover photo with the size tag, brand, title, condition and price, and a
- * "Reserved" stamp when the item is in a checkout (design system: Listing card). Text is bound
- * as text, never as HTML.
+ * One listing in a grid (design system: Listing card): a square cream photo well carrying the
+ * category pill, or a "Reserved" pill when the item is in a checkout; then the serif title, whose
+ * link is stretched over the whole card, the brand and condition line, and the terracotta serif
+ * price. Text is bound as text, never as HTML.
  */
 @Component({
   selector: 'sy-listing-card',
@@ -43,5 +44,5 @@ export class ListingCardComponent {
   readonly priority = input(false);
 
   /** The width a card fills at each breakpoint, so a 375 px phone picks the 400 w version. */
-  readonly sizes = '(min-width: 1200px) 270px, (min-width: 992px) 23vw, (min-width: 768px) 31vw, 50vw';
+  readonly sizes = '(min-width: 1200px) 23vw, (min-width: 992px) 31vw, (min-width: 576px) 48vw, 100vw';
 }

@@ -47,8 +47,13 @@ def chip(label: str) -> str:
 
 
 def hero() -> str:
+    """Catalog hero on paper: serif display with italic terracotta emphasis, the lede and the search well with its primary pill."""
+    search = (f'<form class="search" role="search" action="{P("catalog", "search")}"><label class="visually-hidden" for="hero-q">Search Sycapooke</label>'
+              f'{ic("search")}<input class="input" id="hero-q" name="q" type="search" placeholder="Try “pearl necklace” or “tea set”">'
+              f'{btn("Search", "primary", attrs="type=\"submit\"")}</form>')
     return ('<section class="hero" aria-labelledby="hero-title"><h1 class="display" id="hero-title">Treasures with a <em>story.</em></h1>'
-            '<p class="lead">Jewelry, clothing, housewares and electronics, every piece at least 20 years old and listed by a real person.</p></section>')
+            '<p class="lead">Jewelry, clothing, housewares and electronics, every piece at least 20 years old and listed by a real person.</p>'
+            f'{search}</section>')
 
 
 def catalog_page(grid: str, *, head: str | None = None, count: str = "1,284 items", chips: str = "", side=None, after_grid: str = "",

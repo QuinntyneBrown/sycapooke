@@ -1,7 +1,10 @@
+<ng-template #title><ng-content select="[title]" /></ng-template>
 <section
   class="feature-band"
-  [class.feature-band--surface]="tone() === 'surface'"
+  [class.feature-band--sell]="tone() === 'sell'"
+  [class.feature-band--story]="tone() === 'story'"
   [class.feature-band--stacked]="stacked()"
+  [class.feature-band--closing]="closing()"
   [attr.aria-labelledby]="headingId()"
 >
   <div class="feature-band__inner">
@@ -9,7 +12,16 @@
       @if (eyebrow()) {
         <p class="feature-band__eyebrow">{{ eyebrow() }}</p>
       }
-      <h2 class="feature-band__title" [id]="headingId()">{{ heading() }}</h2>
+      <h2 class="feature-band__title" [id]="headingId()">
+        @if (heading()) {
+          {{ heading() }}
+        } @else {
+          <ng-container [ngTemplateOutlet]="title" />
+        }
+      </h2>
+      @if (lede()) {
+        <p class="feature-band__lede">{{ lede() }}</p>
+      }
       <div class="feature-band__actions"><ng-content select="[actions]" /></div>
     </div>
     <div>

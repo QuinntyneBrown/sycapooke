@@ -169,12 +169,14 @@ def ic(name: str, cls: str = "icon", label: str | None = None) -> str:
 
 # The Sycapooke logo supplied by the owner (docs/design-system/assets/logo.png, copied to
 # docs/mocks/assets/logo.png). Decorative: the surrounding link carries aria-label "Sycapooke home".
-LOGO_IMG = '<img src="../../assets/logo.png" alt="" width="1200" height="274">'
+LOGO_IMG = '<img src="../../assets/logo.png" alt="" width="1040" height="224">'
+# The light export (cream wordmark) for the ink footer.
+LOGO_IMG_LIGHT = '<img src="../../assets/logo-dark.png" alt="" width="1040" height="224">'
 
 
-def logo(href: str | None = None, cls: str = "") -> str:
+def logo(href: str | None = None, cls: str = "", light: bool = False) -> str:
     href = href or P("catalog")
-    return f'<a class="logo {cls}" href="{href}" aria-label="Sycapooke home">{LOGO_IMG}</a>'
+    return f'<a class="logo {cls}" href="{href}" aria-label="Sycapooke home">{LOGO_IMG_LIGHT if light else LOGO_IMG}</a>'
 
 
 # ---------------------------------------------------------------------------
@@ -210,27 +212,35 @@ def size_tag(item: dict | str, cls: str = "") -> str:
     return f'<span class="size-tag {cls}" aria-label="Size: {esc(s)}"><b>{esc(label)}</b></span>'
 
 
-def photo(key: str, cls: str = "", tag: bool = True, stamp: str | None = None, alt: str | None = None, n: int = 1, tone: int | None = None) -> str:
+def photo(key: str, cls: str = "", tag: bool = True, stamp: str | None = None, alt: str | None = None, n: int = 1, tone: int | None = None,
+          pill: str | None = None, save: bool = False) -> str:
+    """A square cream photo well. `pill` puts a category pill top-left (a Reserved/Sold `stamp` takes its place);
+    `save` is accepted and ignored (no saved-items feature). `tone` is accepted for older callers and ignored: wells are cream."""
     it = ITEMS[key]
     alt = alt if alt is not None else (f"Photo {n} of {it['title']}, {it['circa']}")
-    t = tone or it["tone"]
     st = ""
     if stamp:
         st = f'<span class="photo__stamp{" photo__stamp--sold" if stamp == "Sold" else ""}">{stamp}</span>'
-    tg = size_tag(it) if tag else ""
-    return (f'<div class="photo photo--{t} {cls}"><img src="{A}items/{it["img"]}.svg" alt="{esc(alt)}" width="160" height="160" loading="lazy">'
-            f'{st}{tg}</div>')
+    elif pill:
+        st = f'<span class="size-tag">{esc(pill)}</span>'
+    tg = size_tag(it) if tag and not pill and not stamp else ""
+    sv = ""  # the landing page's save heart is not a product feature (ADR general/0005)
+    return (f'<div class="photo {cls}"><img src="{A}items/{it["img"]}.svg" alt="{esc(alt)}" width="160" height="160" loading="lazy">'
+            f'{st}{tg}{sv}</div>')
 
 
 def listing_card(key: str, href: str | None = None, stamp: str | None = None) -> str:
+    """Listing card (design system: Listing card): cream image well with the category pill,
+    then a serif title that is the card's link, era · place, and the terracotta price beside the seller."""
     it = ITEMS[key]
     stamp = stamp if stamp is not None else (it.get("status") if it.get("status") in ("Reserved", "Sold") else None)
     href = href or P("listing-detail")
-    return (f'<li><a class="listing-card" href="{href}">{photo(key, stamp=stamp)}'
-            f'<div class="listing-card__meta"><span class="listing-card__brand">{esc(it["brand"])} · {esc(it["circa"])}</span>'
-            f'<span class="listing-card__title">{esc(it["title"])}</span>'
-            f'<span class="listing-card__foot"><span class="listing-card__condition">{esc(it["cond"])}</span>'
-            f'<span class="price">{price(it["price"])}</span></span></div></a></li>')
+    place = PEOPLE[it["seller"]]["city"]
+    return (f'<li><article class="listing-card">{photo(key, tag=False, stamp=stamp, pill=it["cat"], save=True)}'
+            f'<div class="listing-card__body"><h3 class="listing-card__title"><a href="{href}">{esc(it["title"])}</a></h3>'
+            f'<p class="listing-card__meta">{esc(it["circa"])} · {esc(place)}</p>'
+            f'<div class="listing-card__foot"><span class="price">{price(it["price"])}</span>'
+            f'<span class="listing-card__seller">{esc(it["seller"])}</span></div></div></article></li>')
 
 
 def listing_grid(keys, **kw) -> str:
@@ -239,8 +249,8 @@ def listing_grid(keys, **kw) -> str:
 
 def skeleton_grid(n: int = 8) -> str:
     card = ('<li><div class="listing-card" aria-hidden="true"><span class="skeleton skeleton--photo"></span>'
-            '<div class="listing-card__meta"><span class="skeleton skeleton--text" style="width: 40%;"></span>'
-            '<span class="skeleton skeleton--text" style="width: 85%;"></span><span class="skeleton skeleton--text" style="width: 55%;"></span></div></div></li>')
+            '<div class="listing-card__body"><span class="skeleton skeleton--text" style="width: 85%;"></span>'
+            '<span class="skeleton skeleton--text" style="width: 40%;"></span><span class="skeleton skeleton--text" style="width: 55%;"></span></div></div></li>')
     return f'<ul class="listing-grid" role="list" aria-busy="true" aria-label="Loading listings">{card * n}</ul>'
 
 
@@ -428,18 +438,18 @@ def topbar(pg: Page) -> str:
     nav = "".join(
         f'<a class="nav-link" href="{nav_href(k)}"{" aria-current=\"page\"" if pg.nav == k else ""}>{label}</a>' for k, label in NAV)
     search = (f'<form class="search" role="search" action="{P("catalog", "search")}"><label class="visually-hidden" for="q">Search Sycapooke</label>'
-              f'{ic("search")}<input class="input" id="q" name="q" type="search" placeholder="Search makers, eras and treasures"></form>')
+              f'{ic("search")}<input class="input" id="q" name="q" type="search" placeholder="Try “pearl necklace” or “tea set”"></form>')
     if pg.user == "guest":
-        right = (f'<a class="btn btn--ghost btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
-                 f'<a class="btn btn--ghost topbar__sell" href="{P("sell")}">Sell</a>'
-                 f'<a class="btn" href="{P("sign-in")}">Sign in</a>')
+        right = (f'<a class="btn btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
+                 f'<a class="topbar__link" href="{P("sign-in")}">Sign in</a>'
+                 f'<a class="btn btn--primary topbar__sell" href="{P("sell")}">Start selling</a>')
     else:
         who = PEOPLE[ME]
         sell_cur = ' aria-current="page"' if pg.nav == "sell" else ""
-        right = (f'<a class="btn btn--ghost btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
-                 f'<a class="nav-link topbar__sell" href="{P("sell")}"{sell_cur}>{ic("plus")}Sell</a>'
+        right = (f'<a class="btn btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
+                 f'<a class="btn btn--primary topbar__sell" href="{P("sell")}"{sell_cur}>Sell</a>'
                  f'<a class="avatar avatar--sm" href="{P("account")}" aria-label="Your account, {esc(who["name"])}" style="text-decoration: none;">{who["initials"]}</a>')
-    return (f'<header class="topbar"><button class="btn btn--ghost btn--icon topbar__menu" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">{ic("menu")}</button>'
+    return (f'<header class="topbar"><button class="btn btn--icon topbar__menu" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">{ic("menu")}</button>'
             f'{logo()}<nav class="topbar__nav" aria-label="Primary">{nav}</nav><span class="topbar__spacer"></span>{search}'
             f'<div class="topbar__actions">{right}</div></header>')
 
@@ -460,9 +470,17 @@ def account_nav(active: str) -> str:
 
 
 def footer() -> str:
-    return (f'<footer class="footer">{logo(cls="logo--sm")}<nav aria-label="Footer"><a href="{P("rules")}">Marketplace rules</a>'
-            f'<a href="{P("privacy")}">Privacy</a><a href="{P("terms")}">Terms</a><a href="{P("welcome")}">About Sycapooke</a><a href="{D("cookie-settings")}">Cookie settings</a></nav>'
-            f'<span>© 2026 Sycapooke</span></footer>')
+    """Footer (design system: Footer): ink with cream text; the brand column, three link columns with serif headings,
+    and a bottom bar over a faint cream rule."""
+    cats = "".join(f'<li><a href="{nav_href(k)}">{label}</a></li>' for k, label in NAV)
+    return (f'<footer class="footer"><div class="footer__inner"><div class="footer__brand">{logo(light=True)}'
+            '<p>The marketplace made only for vintage: every piece at least 20 years old, listed by a real person with a real story.</p></div>'
+            f'<nav class="footer__col" aria-labelledby="footer-shop"><h2 id="footer-shop">Shop</h2><ul>{cats}</ul></nav>'
+            f'<nav class="footer__col" aria-labelledby="footer-sell"><h2 id="footer-sell">Sell</h2><ul><li><a href="{P("sell")}">Start selling</a></li>'
+            f'<li><a href="{P("rules")}">Marketplace rules</a></li></ul></nav>'
+            f'<nav class="footer__col" aria-labelledby="footer-about"><h2 id="footer-about">Sycapooke</h2><ul><li><a href="{P("welcome")}">About Sycapooke</a></li>'
+            f'<li><a href="{P("privacy")}">Privacy</a></li><li><a href="{P("terms")}">Terms</a></li><li><a href="{D("cookie-settings")}">Cookie settings</a></li></ul></nav></div>'
+            f'<div class="footer__bottom"><span>© 2026 Sycapooke. Made with love by a grandmother and her family.</span></div></footer>')
 
 
 def page_body(pg: Page) -> str:

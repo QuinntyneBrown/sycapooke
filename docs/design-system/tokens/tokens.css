@@ -146,19 +146,21 @@
   --font-size-3xl: 1.875rem; /* 30px  h2 */
   --font-size-4xl: 2.25rem; /* 36px  h1 */
   --font-size-5xl: 3rem; /* 48px  display */
+  --font-size-6xl: 3.75rem; /* 60px  hero h1 from md */
+  --font-size-7xl: 4.5rem; /* 72px  hero h1 from lg */
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  --font-weight-heavy: 800;
+  --font-weight-heavy: 700; /* Heirloom has no 800; headings are 600 */
 
   --line-height-tight: 1.2; /* display, h1-h2 */
   --line-height-snug: 1.3; /* h3-h4 */
   --line-height-normal: 1.5; /* body */
   --line-height-relaxed: 1.65; /* long-form reading */
 
-  --letter-spacing-tight: -0.01em;
+  --letter-spacing-tight: -0.025em; /* tracking-tight */
   --letter-spacing-normal: 0;
   --letter-spacing-wide: 0.04em; /* all-caps labels */
 
@@ -222,11 +224,11 @@
   --color-fg-on-danger: var(--palette-white);
 
   /* ---------- Semantic: typography roles ------------------------------- */
-  --text-display: var(--font-weight-heavy) var(--font-size-5xl) / var(--line-height-tight) var(--font-family-display);
-  --text-h1: var(--font-weight-heavy) var(--font-size-4xl) / var(--line-height-tight) var(--font-family-display);
-  --text-h2: var(--font-weight-bold) var(--font-size-3xl) / var(--line-height-tight) var(--font-family-display);
-  --text-h3: var(--font-weight-bold) var(--font-size-2xl) / var(--line-height-snug) var(--font-family-display);
-  --text-h4: var(--font-weight-bold) var(--font-size-xl) / var(--line-height-snug) var(--font-family-display);
+  --text-display: var(--font-weight-semibold) var(--font-size-5xl) / var(--line-height-tight) var(--font-family-display);
+  --text-h1: var(--font-weight-semibold) var(--font-size-4xl) / var(--line-height-tight) var(--font-family-display);
+  --text-h2: var(--font-weight-semibold) var(--font-size-3xl) / var(--line-height-tight) var(--font-family-display);
+  --text-h3: var(--font-weight-semibold) var(--font-size-2xl) / var(--line-height-snug) var(--font-family-display);
+  --text-h4: var(--font-weight-semibold) var(--font-size-xl) / var(--line-height-snug) var(--font-family-display);
   --text-body-lg: var(--font-weight-regular) var(--font-size-lg) / var(--line-height-normal) var(--font-family-sans);
   --text-body: var(--font-weight-regular) var(--font-size-md) / var(--line-height-normal) var(--font-family-sans);
   --text-body-sm: var(--font-weight-regular) var(--font-size-sm) / var(--line-height-normal) var(--font-family-sans);
@@ -264,7 +266,7 @@
   --layout-container-max: 80rem; /* 1280px */
   --layout-measure: 65ch; /* max line length for prose */
   --layout-sidebar-width: 16rem; /* 256px */
-  --layout-topbar-height: 4rem; /* 64px */
+  --layout-topbar-height: 5rem; /* 80px (h-20) */
   --layout-bottom-nav-height: 4.5rem; /* 72px mobile tab bar */
   --layout-aside-width: 22rem; /* 352px right-hand column in .split */
 
@@ -275,36 +277,34 @@
   --size-illustration-xl: 10rem; /* 160px landing and status pages */
 
   /* ---------- Semantic: shape ------------------------------------------ */
-  --radius-xs: 0.125rem; /* 2px  checkbox */
-  --radius-sm: 0.5rem; /* 8px  compact controls */
-  --radius-md: 0.875rem; /* 14px inputs, menus, wells */
-  --radius-lg: 1.25rem; /* 20px cards, dialogs */
-  --radius-xl: 1.75rem; /* 28px sheets, hero panels */
+  --radius-xs: 0.25rem; /* 4px  checkbox */
+  --radius-sm: 0.375rem; /* 6px  focus outlines, compact controls (rounded-md) */
+  --radius-md: 0.375rem; /* 6px  inputs, menus, wells (rounded-md) */
+  --radius-lg: 1rem; /* 16px cards, photo wells, dialogs (rounded-2xl) */
+  --radius-xl: 2rem; /* 32px large photos, sheets (rounded-[2rem]) */
   --radius-full: 9999px; /* pills, avatars */
 
   --border-width-hairline: 1px;
   --border-width-thick: 2px;
 
   /* ---------- Semantic: elevation -------------------------------------- */
-  --shadow-color: 20 25 35;
-  --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.08); /* cards */
-  --shadow-2:
-    0 2px 6px rgb(var(--shadow-color) / 0.1), 0 1px 2px rgb(var(--shadow-color) / 0.06); /* raised cards, dropdowns */
-  --shadow-3:
-    0 8px 24px rgb(var(--shadow-color) / 0.14), 0 2px 6px rgb(var(--shadow-color) / 0.08); /* popovers, menus */
-  --shadow-4:
-    0 20px 48px rgb(var(--shadow-color) / 0.22), 0 4px 12px rgb(var(--shadow-color) / 0.1); /* dialogs, sheets */
+  --shadow-color: 0 0 0;
+  /* Heirloom has one shadow (shadow-sm, on the search field); every level aliases it. */
+  --shadow-1: 0 1px 2px 0 rgb(var(--shadow-color) / 0.05);
+  --shadow-2: var(--shadow-1);
+  --shadow-3: var(--shadow-1);
+  --shadow-4: var(--shadow-1);
   --shadow-focus: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-focus-ring);
 
   /* ---------- Semantic: motion ----------------------------------------- */
   --duration-instant: 0ms;
-  --duration-fast: 120ms; /* hover, colour changes */
+  --duration-fast: 150ms; /* hover, colour changes (duration-150) */
   --duration-base: 200ms; /* reveal, menus, tooltips */
-  --duration-slow: 320ms; /* dialogs, sheets, page transitions */
+  --duration-slow: 300ms; /* image zoom, dialogs, sheets (duration-300) */
   --duration-deliberate: 500ms; /* progress, skeleton shimmer cycles */
   --duration-spin: 800ms; /* one turn of a spinner (status loop) */
   --duration-loop: 1.4s; /* shimmer, typing dots, pulse, indeterminate bar (status loops) */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-standard: cubic-bezier(0, 0, 0.2, 1); /* ease-out */
   --ease-enter: cubic-bezier(0, 0, 0, 1);
   --ease-exit: cubic-bezier(0.3, 0, 1, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -324,7 +324,7 @@
   --target-min: 1.5rem; /* 24px  WCAG 2.2 AA minimum target size */
   --target-comfortable: 2.75rem; /* 44px recommended touch target */
   --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
+  --focus-ring-offset: 4px; /* outline-offset-4 */
   --control-height-sm: 2rem; /* 32px */
   --control-height-md: 2.5rem; /* 40px */
   --control-height-lg: 3rem; /* 48px */
@@ -351,8 +351,6 @@
   --color-hero-from: var(--palette-grape-600);
   --color-hero-to: var(--palette-pink-700);
   --color-fg-on-hero: var(--palette-white);
-  --color-accent-press: var(--palette-grape-800);
-  --shadow-press: 0 0.25rem 0 var(--color-accent-press); /* chunky "pressable" lip under primary buttons */
 
   color-scheme: light;
 }
@@ -449,15 +447,13 @@
   --color-pop-grape-fg: var(--palette-grape-200);
   --color-hero-from: var(--palette-grape-800);
   --color-hero-to: var(--palette-pink-800);
-  --color-accent-press: var(--palette-grape-500);
-  --shadow-press: 0 0.25rem 0 var(--color-accent-press);
   --color-focus-ring-offset: var(--color-bg-surface);
   --shadow-focus: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-focus-ring);
   --shadow-color: 0 0 0;
-  --shadow-1: 0 1px 2px rgb(var(--shadow-color) / 0.4);
-  --shadow-2: 0 2px 6px rgb(var(--shadow-color) / 0.45), 0 1px 2px rgb(var(--shadow-color) / 0.3);
-  --shadow-3: 0 8px 24px rgb(var(--shadow-color) / 0.5), 0 2px 6px rgb(var(--shadow-color) / 0.35);
-  --shadow-4: 0 20px 48px rgb(var(--shadow-color) / 0.6), 0 4px 12px rgb(var(--shadow-color) / 0.4);
+  --shadow-1: 0 1px 2px 0 rgb(var(--shadow-color) / 0.4);
+  --shadow-2: var(--shadow-1);
+  --shadow-3: var(--shadow-1);
+  --shadow-4: var(--shadow-1);
 
   color-scheme: dark;
 }
@@ -528,8 +524,6 @@
     --color-pop-grape-fg: var(--palette-grape-200);
     --color-hero-from: var(--palette-grape-800);
     --color-hero-to: var(--palette-pink-800);
-    --color-accent-press: var(--palette-grape-500);
-    --shadow-press: 0 0.25rem 0 var(--color-accent-press);
     --color-focus-ring-offset: var(--color-bg-surface);
     --shadow-focus: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-focus-ring);
     --shadow-color: 0 0 0;
@@ -688,7 +682,6 @@
   --color-fg-on-accent: var(--palette-paper-50);
   --color-fg-accent: var(--palette-terracotta-700);
   --color-focus-ring: var(--palette-terracotta-600);
-  --color-accent-press: var(--palette-terracotta-800);
 
   --color-pop-pink-bg: var(--palette-terracotta-100);
   --color-pop-pink-fg: var(--palette-terracotta-800);
@@ -729,7 +722,6 @@
   --color-fg-on-accent: var(--palette-ink-950);
   --color-fg-accent: var(--palette-terracotta-300);
   --color-focus-ring: var(--palette-terracotta-300);
-  --color-accent-press: var(--palette-terracotta-700);
 
   --color-pop-pink-bg: var(--palette-terracotta-950);
   --color-pop-pink-fg: var(--palette-terracotta-200);
@@ -771,7 +763,6 @@
     --color-fg-on-accent: var(--palette-ink-950);
     --color-fg-accent: var(--palette-terracotta-300);
     --color-focus-ring: var(--palette-terracotta-300);
-    --color-accent-press: var(--palette-terracotta-700);
 
     --color-pop-pink-bg: var(--palette-terracotta-950);
     --color-pop-pink-fg: var(--palette-terracotta-200);
@@ -824,24 +815,20 @@
   /* Brand mark, current-page bar and vintage tag flag. */
   --color-brand: var(--color-accent);
 
-  /* Showcase: the marketing hero and closing band. Forest in both themes, with cream text,
-     mustard headline emphasis and terracotta, forest and mustard shapes. */
-  --color-showcase-start: var(--palette-forest-800);
-  --color-showcase-end: var(--palette-forest-600);
-  --color-showcase-subtle: var(--palette-forest-700);
-  --color-fg-showcase: var(--palette-paper-50); /* 14.5:1 on start, 9.0:1 on end */
-  --color-fg-showcase-muted: var(--palette-forest-200); /* 9.6:1 on start, 6.0:1 on end */
-  --color-fg-showcase-accent: var(--palette-mustard-300); /* 9.3:1 on start, 5.8:1 on end; headline emphasis */
-  --color-shape-brand: var(--palette-terracotta-500); /* decorative shapes only, never behind text */
-  --color-shape-tone: var(--palette-forest-400);
-  --color-shape-light: var(--palette-mustard-400);
-  --gradient-showcase: linear-gradient(
-    135deg,
-    var(--color-showcase-start) 0%,
-    var(--palette-forest-700) 55%,
-    var(--color-showcase-end) 100%
-  );
-  --duration-drift: 24s; /* decorative shape drift; stopped under prefers-reduced-motion */
+  /* Bands (landing page): the hero sits on paper; the sell band is terracotta with cream text;
+     the story band is cream with a line rule; the footer is ink. No gradients, no shapes. */
+  --color-fg-forest: var(--palette-forest-600); /* eyebrows and stat labels (text-forest) */
+  --color-rule-mustard: var(--palette-mustard-500); /* quote and section rules (border-mustard) */
+  --color-band-terracotta: var(--palette-terracotta-600);
+  --color-fg-on-terracotta: var(--palette-paper-50);
+  --color-fg-on-terracotta-muted: rgb(251 247 239 / 0.85);
+  --color-band-forest: var(--palette-forest-600);
+  --color-fg-on-forest: var(--palette-paper-50);
+  --color-fg-on-forest-muted: rgb(251 247 239 / 0.85);
+  --color-band-ink: var(--palette-ink-800);
+  --color-fg-on-ink: var(--palette-paper-50);
+  --color-fg-on-ink-muted: rgb(251 247 239 / 0.7);
+  --color-border-on-ink: rgb(251 247 239 / 0.15);
 
   /* Status icons on inverse surfaces (toasts). */
   --color-inverse-info: var(--palette-blue-300);
@@ -851,6 +838,7 @@
 }
 
 [data-theme='dark'] {
+  --color-fg-forest: var(--palette-forest-300);
   --color-inverse-info: var(--palette-blue-700);
   --color-inverse-success: var(--palette-green-700);
   --color-inverse-warning: var(--palette-amber-700);
@@ -859,6 +847,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    --color-fg-forest: var(--palette-forest-300);
     --color-inverse-info: var(--palette-blue-700);
     --color-inverse-success: var(--palette-green-700);
     --color-inverse-warning: var(--palette-amber-700);

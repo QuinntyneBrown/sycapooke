@@ -3,9 +3,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { IconComponent, IconName } from '../icon/icon';
 
 /**
- * An empty or failed region inside a page: icon, heading, projected text and an actions row
- * (design system: Empty state). The error tone is compact; `compact` makes any tone compact,
- * for an empty section inside a page. Project the actions with `actions`.
+ * An empty or failed region inside a page: a dashed rounded well with a muted icon, a serif
+ * heading, the projected text and an actions row (design system: Empty state). The error tone is
+ * compact; `compact` makes any tone compact, for an empty section inside a page. Project the
+ * actions with `actions`.
  */
 @Component({
   selector: 'sy-empty-state',

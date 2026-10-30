@@ -25,6 +25,20 @@
     <p class="lead">
       Jewelry, clothing, housewares and electronics, every piece at least 20 years old and listed by a real person.
     </p>
+    <form class="search" role="search" (submit)="searchFor($event, heroTerm.value)">
+      <label class="visually-hidden" for="hero-q">Search for a treasure</label>
+      <sy-icon name="search" />
+      <input
+        #heroTerm
+        class="input"
+        id="hero-q"
+        name="q"
+        type="search"
+        placeholder="Try “pearl necklace” or “tea set”"
+        autocomplete="off"
+      />
+      <button syButton="primary" type="submit">Search</button>
+    </form>
   </section>
 }
 <div class="catalog-layout">

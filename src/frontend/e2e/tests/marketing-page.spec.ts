@@ -1,8 +1,7 @@
 // Acceptance Test
 // Traces to: L2-078, L2-079, L2-080, L2-081, L2-082, L2-083
 // Description: The public marketing page at /welcome: sections and CTA targets for visitors and
-// members, the footer link, reduced motion, heading order, title, meta description and
-// link-preview tags. The share image comes from the static build.
+// members, the footer link, heading order, title, meta description and link-preview tags. The share image comes from the static build.
 
 import { expect, marcus, serveCatalog, signInAs, test } from '../fixtures';
 import { ShellPage } from '../pages/shell.page';
@@ -63,31 +62,6 @@ test.describe('marketing page', () => {
     expect(levels.filter((level) => level === 1)).toHaveLength(1);
     levels.forEach((level, i) => i > 0 && expect(level - levels[i - 1]).toBeLessThanOrEqual(1));
     expect(await new ShellPage(page).hasHorizontalScroll()).toBe(false);
-  });
-
-  test('decorative shapes are hidden and stop moving under reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    const welcome = new WelcomePage(page);
-    await welcome.goto();
-
-    const shapes = welcome.main.locator('.shapes').first();
-    await expect(shapes).toHaveAttribute('aria-hidden', 'true');
-    const animations = await welcome.main
-      .locator('.shapes__shape')
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName));
-    expect(animations.length).toBeGreaterThan(0);
-    expect(animations.every((name) => name === 'none')).toBe(true);
-  });
-
-  test('the shapes drift when motion is allowed', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await new WelcomePage(page).goto();
-
-    const name = await page
-      .locator('.shapes__shape')
-      .first()
-      .evaluate((el) => getComputedStyle(el).animationName);
-    expect(name).toBe('shape-drift');
   });
 
   test('the footer links to the marketing page', async ({ page }) => {

@@ -52,7 +52,7 @@
           } @else if (ended()) {
             <sy-alert tone="info" heading="Refunded in full">{{ refund() }}</sy-alert>
             @if (order.cancellation?.note; as note) {
-              <sy-quote [text]="note" [cite]="order.sellerDisplayName" />
+              <sy-quote size="sm" [text]="note" [cite]="order.sellerDisplayName" />
             }
             @if (order.status === 'Cancelled') {
               <div class="cluster">

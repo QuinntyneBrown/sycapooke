@@ -1,4 +1,4 @@
-<a class="listing-card" [routerLink]="card().href">
+<article class="listing-card">
   <div class="photo">
     @if (card().photo; as photo) {
       <picture>
@@ -18,15 +18,17 @@
     }
     @if (card().reserved) {
       <span class="photo__stamp">Reserved</span>
+    } @else {
+      <sy-size-tag [label]="card().sizeLabel" />
     }
-    <sy-size-tag [label]="card().sizeLabel" />
   </div>
-  <div class="listing-card__meta">
-    <span class="listing-card__brand">{{ card().brand }}</span>
-    <span class="listing-card__title">{{ card().title }}</span>
-    <span class="listing-card__foot"
-      ><span class="listing-card__condition">{{ card().condition }}</span
-      ><span class="price">{{ card().price }}</span></span
-    >
+  <div class="listing-card__body">
+    <h3 class="listing-card__title">
+      <a [routerLink]="card().href">{{ card().title }}</a>
+    </h3>
+    <p class="listing-card__meta">{{ card().brand }} · {{ card().condition }}</p>
+    <div class="listing-card__foot">
+      <span class="price">{{ card().price }}</span>
+    </div>
   </div>
-</a>
+</article>

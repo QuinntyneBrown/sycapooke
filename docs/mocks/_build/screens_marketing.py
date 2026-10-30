@@ -3,6 +3,10 @@
 Copy rules (ADR general/0005): headlines of 3 to 6 words, one supporting line, scannable
 points; everything is vintage (at least 20 years old) and the copy never promises anything
 newer. The copy is identical to the app's WelcomePage (src/frontend/projects/marketing/src/lib/welcome/).
+
+Look (Heirloom, from the landing page): the hero sits on paper beside the hero photo; the
+For sellers band and the closing band are terracotta with cream text and ink buttons; Our
+story is a cream band under a line rule; everything else is paper. No shapes, no gradients.
 """
 from mk import *
 
@@ -23,26 +27,19 @@ QUOTE = ("It’s the made-up word I whispered to my son when he was a baby. When
 FOUNDER = "Founder, age 70, grandmother of five"
 
 
-def shapes(quiet: bool = False) -> str:
-    q = " shapes--quiet" if quiet else ""
-    return (f'<div class="shapes{q}" aria-hidden="true"><span class="shapes__shape shapes__shape--brand"></span>'
-            '<span class="shapes__shape shapes__shape--tone"></span><span class="shapes__shape shapes__shape--light"></span>'
-            '<span class="shapes__stripes"></span></div>')
-
-
 def seller_href(member: bool) -> str:
     return P("sell") if member else P("register")
 
 
 def hero_photo() -> str:
-    """The hero photo slot: /media/sycapooke-hero.jpg in the app, a placeholder illustration here."""
+    """The hero photo slot: /media/sycapooke-hero.jpg in the app, a placeholder illustration here. 4:5, 2rem corners, no frame."""
     return (f'<figure class="marketing-hero__photo"><img src="{A}hero.svg" alt="A brooch, a teacup and a transistor radio laid out on a linen cloth" '
-            'width="1200" height="900"></figure>')
+            'width="1200" height="1500"></figure>')
 
 
 def hero(member: bool) -> str:
     actions = btn("Shop the catalog", "primary lg", P("catalog")) + btn("Start selling", "lg", seller_href(member))
-    return (f'<section class="marketing-hero" aria-labelledby="welcome-title">{shapes()}<div class="marketing-hero__inner">'
+    return (f'<section class="marketing-hero" aria-labelledby="welcome-title"><div class="marketing-hero__inner">'
             '<div><p class="marketing-hero__eyebrow">Jewelry · Clothing · Housewares · Electronics</p>'
             '<h1 class="marketing-hero__title" id="welcome-title">A home for the things that <em>mattered.</em></h1>'
             '<p class="marketing-hero__lede">Sycapooke is the marketplace made only for vintage — for families downsizing a lifetime of treasures, and the people who’ll love them next.</p>'
@@ -55,30 +52,31 @@ def points(items) -> str:
         f'<li class="feature-band__point"><strong>{t}</strong><span>{d}</span></li>' for t, d in items) + "</ul>"
 
 
-def band(bid: str, eyebrow: str, title: str, body: str, action: str = "", mod: str = "") -> str:
+def band(bid: str, eyebrow: str, title: str, body: str, action: str = "", mod: str = "", lede: str = "") -> str:
     a = f'<div class="feature-band__actions">{action}</div>' if action else ""
+    e = f'<p class="feature-band__eyebrow">{eyebrow}</p>' if eyebrow else ""
+    l = f'<p class="feature-band__lede">{lede}</p>' if lede else ""
+    b = f'<div>{body}</div>' if body else ""
     return (f'<section class="feature-band {mod}" aria-labelledby="{bid}"><div class="feature-band__inner">'
-            f'<div><p class="feature-band__eyebrow">{eyebrow}</p><h2 class="feature-band__title" id="{bid}">{title}</h2>{a}</div>'
-            f'<div>{body}</div></div></section>')
+            f'<div>{e}<h2 class="feature-band__title" id="{bid}">{title}</h2>{l}{a}</div>'
+            f'{b}</div></section>')
 
 
 def steps() -> str:
     return '<ol class="steps">' + "".join(
-        f'<li class="steps__item"><h3 class="steps__title">{t}</h3><p class="steps__text">{d}</p></li>' for t, d in STEPS) + "</ol>"
+        f'<li class="steps__item"><div class="steps__body"><h3 class="steps__title">{t}</h3><p class="steps__text">{d}</p></div></li>' for t, d in STEPS) + "</ol>"
 
 
 def story() -> str:
-    """Our story: the founder's quote beside the founder photo (/media/sycapooke-founder.jpg in the app)."""
-    return (f'<div class="story"><blockquote class="quote quote--story"><p>“{QUOTE}”</p><cite>{FOUNDER}</cite></blockquote>'
+    """Our story: the founder's quote (mustard rule) beside the founder photo (/media/sycapooke-founder.jpg in the app)."""
+    return (f'<div class="story"><blockquote class="quote"><p>“{QUOTE}”</p><cite>{FOUNDER}</cite></blockquote>'
             f'<figure class="story__photo"><img src="{A}founder.svg" alt="The founder at her kitchen table, a teacup in hand" width="800" height="1000"></figure></div>')
 
 
 def closing(member: bool) -> str:
-    actions = btn("Shop the catalog", "primary lg", P("catalog"))
-    return (f'<section class="marketing-hero marketing-hero--closing" aria-labelledby="closing-title">{shapes(quiet=True)}'
-            '<div class="marketing-hero__inner"><div><h2 class="marketing-hero__title" id="closing-title">Treasures with a <em>story.</em></h2>'
-            f'<p class="marketing-hero__lede">New treasures arrive daily, every one at least 20 years old.</p>'
-            f'<div class="marketing-hero__actions">{actions}</div></div></div></section>')
+    """The closing call to action is the terracotta band with an ink button."""
+    return band("closing-title", "", "Treasures with a <em>story.</em>", "", btn("Shop the catalog", "inverse lg", P("catalog")),
+                "feature-band--sell feature-band--stacked feature-band--closing", lede="New treasures arrive daily, every one at least 20 years old.")
 
 
 def welcome(member: bool) -> Page:
@@ -86,9 +84,9 @@ def welcome(member: bool) -> Page:
             + band("shoppers-title", "For shoppers", "Every piece is at least 20 years old.", points(SHOPPER_POINTS),
                    btn("Browse the catalog", "primary", P("catalog")))
             + band("sellers-title", "For sellers", "Downsizing? Let your treasures find their next home.", points(SELLER_POINTS),
-                   btn("List your first item", "primary", seller_href(member)), "feature-band--surface")
+                   btn("List your first item", "inverse", seller_href(member)), "feature-band--sell")
             + band("how-title", "How it works", "Three steps. That’s it.", steps(), mod="feature-band--stacked")
-            + band("story-title", "Our story", "sy·ca·pooke", story(), mod="feature-band--stacked")
+            + band("story-title", "Our story", "sy·ca·pooke", story(), mod="feature-band--story feature-band--stacked")
             + closing(member))
     return Page(main=main, user="member" if member else "guest", main_class="marketing")
 
@@ -96,10 +94,10 @@ def welcome(member: bool) -> Page:
 wl = screen("welcome", "page", "Treasures with a story", route="/welcome", reqs=["L2-078", "L2-079", "L2-083"], na=STATIC_NA)
 
 
-@wl.state("default", "Signed out: hero with the hero photo, shoppers, sellers, three steps, our story and a closing CTA; Start selling goes to /join.")
+@wl.state("default", "Signed out: hero on paper with the hero photo, shoppers, the terracotta sellers band, three steps, the cream Our story band and the terracotta closing CTA; Start selling goes to /join.")
 def _():
     pg = welcome(False)
-    pg.notes = note("Shapes drift slowly; prefers-reduced-motion stops them. The hero and founder photos are /media/sycapooke-hero.jpg and /media/sycapooke-founder.jpg in the app.",
+    pg.notes = note("Flat bands: paper, terracotta (sellers, closing) and cream (story). Nothing decorative moves. The hero and founder photos are /media/sycapooke-hero.jpg and /media/sycapooke-founder.jpg in the app.",
                     "top: 6rem; right: 1rem;")
     return pg
 

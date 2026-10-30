@@ -13,7 +13,7 @@ The page, components and tests are built; the hero, founder and share photos are
 | Work item | Hours |
 |-----------|------:|
 | `marketing` library skeleton, lazy route, `marketing` shell, title and meta description | 4 |
-| `sy-marketing-hero` with the hero photo media slot, showcase tokens | 6 |
+| `sy-marketing-hero` on paper with the hero photo media slot; the terracotta and cream band tones | 6 |
 | `sy-feature-band`, `sy-steps` and the page copy with CTA targets | 5 |
 | `sy-quote` and the Our story band with the founder photo | 2 |
 | Footer link, hero, founder and share images with `ATTRIBUTION.md` | 1 |

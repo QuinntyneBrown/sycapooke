@@ -80,7 +80,7 @@
           } @else {
             @if (requested() && sale.cancellationRequest; as request) {
               @if (request.message) {
-                <sy-quote [text]="request.message" [cite]="sale.buyerDisplayName" />
+                <sy-quote size="sm" [text]="request.message" [cite]="sale.buyerDisplayName" />
               }
               <div class="cluster">
                 <button syButton="primary" type="button" (click)="respond()">Respond</button>

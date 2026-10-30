@@ -31,7 +31,7 @@ reproduction or "vintage-style" goods. The vintage rule, the domain, the API and
 do not change.
 
 The advertising placements shown on the Sycapooke landing page (sponsored slots between the
-listings) are **not** a product feature. They are deferred and do not appear in the copy, the
+listings) and the save heart on its listing cards (a saved-items list) are **not** product features. They are deferred and do not appear in the copy, the
 specs, the designs or the mocks.
 
 ## Options Considered

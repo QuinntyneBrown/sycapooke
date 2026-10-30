@@ -5,16 +5,19 @@
 Sycapooke is a marketplace made only for vintage: jewelry, clothing, housewares and
 electronics, every piece at least 20 years old and listed by a real person with a real story.
 This feature, part of the `platform` subsystem, adds a public marketing page at `/welcome`
-that sells Sycapooke to shoppers and sellers: a hero with the hero photo, four feature bands
-(shoppers, sellers, how it works and the founder's story), and a closing hero. Anyone can open
+that sells Sycapooke to shoppers and sellers: a hero on paper with the hero photo, four feature
+bands (shoppers on paper, sellers on terracotta, how it works on paper and the founder's story
+on cream) and a closing terracotta band. Anyone can open
 it, signed in or not. It refines `L1-020` through `L2-078`, `L2-079` and `L2-083`; `L2-080`
 to `L2-082` (the former video dialog) are retired and never reused.
 
 Terms used below:
 
-- **showcase** — the forest surface with a gradient used by the hero and the closing band;
-  forest in both themes, with cream text and mustard headline emphasis
-  ([design system](../../../design-system/components/marketing-hero.html))
+- **band** — one flat, full-width colour from the landing page: paper (the hero, For shoppers,
+  How it works), cream under a line rule (Our story), or terracotta with cream text and ink
+  buttons (For sellers and the closing call to action). The terracotta band keeps its colours
+  in both themes. No gradient, no shapes
+  ([design system](../../../design-system/components/feature-band.html))
 - **hero photo** — `/media/sycapooke-hero.jpg`, the photograph in the hero's media slot
 - **founder photo** — `/media/sycapooke-founder.jpg`, shown beside the founder's quote in
   the Our story band
@@ -42,33 +45,35 @@ says every piece is at least 20 years old and promises nothing newer
 
 | Component | Inputs and outputs | Notes |
 |---|---|---|
-| `sy-marketing-hero` | `eyebrow`, `lede`, `variant: 'hero' \| 'closing'`, `headingId`; slots `[title]`, `[actions]`, `[media]` | h1 in the hero, h2 in the closing band; re-points semantic tokens to the showcase; the hero's media slot holds the hero photo |
-| `sy-feature-band` | `eyebrow`, `heading`, `headingId`, `points`, `tone: 'default' \| 'surface'`, `stacked`; slots `[actions]`, body | Section labelled by its h2 |
+| `sy-marketing-hero` | `eyebrow`, `lede`, `headingId`; slots `[title]`, `[actions]`, `[media]` | The h1 band on paper; the media slot holds the hero photo (4:5, 2rem corners, no frame) |
+| `sy-feature-band` | `eyebrow`, `heading`, `headingId`, `lede`, `points`, `tone: 'default' \| 'sell' \| 'story'`, `stacked`; slots `[actions]`, body | Section labelled by its h2; `sell` is the terracotta band (cream text, `syButton="inverse"` actions), `story` the cream band under a line rule; the closing call to action is `sell` + `stacked` with a lede |
 | `sy-steps` | `steps: { title, text }[]` | Ordered list, h3 titles |
 | `sy-quote` | `cite`, `photo`, `photoAlt`; body | `<blockquote>` with a `<figcaption>` attribution and the founder photo; the photo is not decorative and carries its own alt text |
 
 ### Feature (`@sycapooke/marketing`)
 
 - **`WelcomePage`** — static copy, composed top to bottom:
-  1. `sy-marketing-hero` — eyebrow "Jewelry · Clothing · Housewares · Electronics", h1
+  1. `sy-marketing-hero` (paper) — eyebrow "Jewelry · Clothing · Housewares · Electronics", h1
      "A home for the things that *mattered.*", lede "Sycapooke is the marketplace made only
      for vintage — for families downsizing a lifetime of treasures, and the people who’ll love
      them next.", primary action "Shop the catalog" → `/`, secondary "Start selling" →
      `sellHref`; the hero photo in the media slot.
-  2. `sy-feature-band` For shoppers — heading "Every piece is at least 20 years old.", points
-     Four focused categories / Listed by a real person / Honest condition; action "Browse the
-     catalog" → `/`.
-  3. `sy-feature-band` For sellers (`surface`) — heading "Downsizing? Let your treasures find
-     their next home.", points Big buttons, clear steps / A real person to call
-     1-800-555-0123; action "List your first item" → `sellHref`.
-  4. `sy-feature-band` How it works (`stacked`) — heading "Three steps. That’s it." with
+  2. `sy-feature-band` For shoppers (paper) — heading "Every piece is at least 20 years old.",
+     points Four focused categories / Listed by a real person / Honest condition; action
+     "Browse the catalog" → `/`.
+  3. `sy-feature-band` For sellers (`tone="sell"`, terracotta) — heading "Downsizing? Let your
+     treasures find their next home.", points Big buttons, clear steps / A real person to call
+     1-800-555-0123; inverse action "List your first item" → `sellHref`.
+  4. `sy-feature-band` How it works (`stacked`, paper) — heading "Three steps. That’s it." with
      `sy-steps` List it / Sell it / Get paid.
-  5. `sy-feature-band` Our story (`stacked`) — heading "sy·ca·pooke" with `sy-quote`: “It’s
-     the made-up word I whispered to my son when he was a baby. When it came time to clear out
-     our family home, I realized every teacup and brooch deserved that same word — and someone
-     who’d see it too.” — Founder, age 70, grandmother of five; and the founder photo.
-  6. closing `sy-marketing-hero` — "Treasures with a *story.*", lede "New treasures arrive
-     daily, every one at least 20 years old.", action "Shop the catalog" → `/`.
+  5. `sy-feature-band` Our story (`tone="story"`, `stacked`, cream) — heading "sy·ca·pooke"
+     with `sy-quote`: “It’s the made-up word I whispered to my son when he was a baby. When it
+     came time to clear out our family home, I realized every teacup and brooch deserved that
+     same word — and someone who’d see it too.” — Founder, age 70, grandmother of five; and the
+     founder photo.
+  6. `sy-feature-band` closing (`tone="sell"`, `stacked`, terracotta) — h2 "Treasures with a
+     *story.*", lede "New treasures arrive daily, every one at least 20 years old.", inverse
+     action "Shop the catalog" → `/`.
 
   `sellHref = computed(() => auth.member() ? '/sell' : '/join')` (`L2-078`).
 - **Share tags** — crawlers that build link previews do not run scripts, so the meta
@@ -108,7 +113,7 @@ reduced motion, the footer link, the title, the meta description and the link-pr
 | `L2-080` | `L1-020` | Retired (video dialog); never reused |
 | `L2-081` | `L1-020` | Retired (video captions); never reused |
 | `L2-082` | `L1-020` | Retired (video error state); never reused |
-| `L2-083` | `L1-020` | Contrast over gradients, heading order, reduced motion, title, meta description and link-preview tags |
+| `L2-083` | `L1-020` | Flat bands with no decoration, contrast on them, heading order, no decorative motion, title, meta description and link-preview tags |
 
 Related requirements applied without restating them: `L2-061` to `L2-065` (responsive,
 accessible shell), `L2-010` (no role needed), `L2-011` to `L2-013` (the vintage rule the

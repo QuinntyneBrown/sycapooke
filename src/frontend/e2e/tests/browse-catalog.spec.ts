@@ -1,7 +1,7 @@
 // Acceptance Test
 // Traces to: L2-022, L2-059, L2-061
 // Description: Anyone opens / and pages through the newest Active and Reserved listings, 24 at a
-// time, in 2, 3 or 4 columns, opens a category from the top bar, and sees the loading, empty,
+// time, in 1, 2 or 4 columns, opens a category from the top bar, and sees the loading, empty,
 // error and offline states.
 
 import { catalogCard, catalogPage, expect, problem, serveCatalog, test } from '../fixtures';
@@ -74,8 +74,8 @@ test.describe('browse catalog', () => {
   });
 
   for (const { width, columns } of [
-    { width: 375, columns: 2 },
-    { width: 800, columns: 3 },
+    { width: 375, columns: 1 },
+    { width: 800, columns: 2 },
     { width: 1280, columns: 4 },
   ]) {
     test(`the grid has ${columns} columns at ${width}px`, async ({ page }) => {

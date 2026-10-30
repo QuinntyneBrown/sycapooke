@@ -18,7 +18,7 @@ state, listing card with listing grid, load more) and the components search-and-
 added (chip, `sy-sheet` with `SheetService`, the `search` icon) and the components
 manage-notification-preferences added (switch, and `ToastService` behind `sy-toast-region`) and
 the components manage-cookie-consent added (consent banner, the hint of the switch) and the components the
-marketing page added (marketing hero, shapes, feature band, steps, quote) and the
+marketing page added (marketing hero, feature band, steps, quote) and the
 components sign-in-with-google added (provider button with its "or" divider). Feature screens not built yet are inventoried below
 with their states and marked **not yet composed**; each is composed when its journey is
 implemented, and the catalogue grows in the same change.
@@ -400,17 +400,19 @@ real story.") and link-preview tags (`og:title` "Sycapooke · Treasures with a s
 every piece at least 20 years old, and never promises new or reproduction goods
 ([ADR general/0005](adr/general/0005-marketing-wording.md)).
 
-- Library: `sy-marketing-hero` (with `sy-shapes` inside: `full` in the hero, `quiet` in the closing band; hero: eyebrow "Jewelry · Clothing · Housewares · Electronics",
+- Library: `sy-marketing-hero` (on paper, no decoration: eyebrow "Jewelry · Clothing · Housewares · Electronics",
   h1 "A home for the things that *mattered.*", lede "Sycapooke is the marketplace made only for
   vintage — for families downsizing a lifetime of treasures, and the people who’ll love them
-  next.", actions, media slot with the hero photo `/media/sycapooke-hero.jpg`; closing: h2
-  "Treasures with a *story.*", lede "New treasures arrive daily, every one at least 20 years
-  old.", `variant="closing"`), `sy-feature-band` (For shoppers "Every piece is at least 20 years
-  old." with the points Four focused categories, Listed by a real person and Honest condition,
-  and "Browse the catalog"; For sellers "Downsizing? Let your treasures find their next home.",
-  `surface`, with the points Big buttons, clear steps and A real person to call 1-800-555-0123,
-  and "List your first item"; How it works "Three steps. That’s it.", `stacked`; Our story
-  "sy·ca·pooke", `stacked`), `sy-steps` (List it, Sell it, Get paid), `sy-quote` (the founder's
+  next.", actions, media slot with the hero photo `/media/sycapooke-hero.jpg`),
+  `sy-feature-band` (For shoppers "Every piece is at least 20 years old." on paper with the
+  points Four focused categories, Listed by a real person and Honest condition, and "Browse the
+  catalog"; For sellers "Downsizing? Let your treasures find their next home.", `tone="sell"`
+  (terracotta, cream text, inverse buttons), with the points Big buttons, clear steps and A real
+  person to call 1-800-555-0123, and "List your first item"; How it works "Three steps. That’s
+  it.", `stacked`; Our story "sy·ca·pooke", `tone="story"` (cream under a line rule), `stacked`;
+  the closing call to action "Treasures with a *story.*", lede "New treasures arrive daily, every
+  one at least 20 years old.", `tone="sell"`, `stacked`, with the inverse "Shop the catalog"),
+  `sy-steps` (List it, Sell it, Get paid), `sy-quote` (the founder's
   quote “It’s the made-up word I whispered to my son when he was a baby. When it came time to
   clear out our family home, I realized every teacup and brooch deserved that same word — and
   someone who’d see it too.”, attributed "Founder, age 70, grandmother of five", with the founder

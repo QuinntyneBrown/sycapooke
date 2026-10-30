@@ -21,6 +21,7 @@ import {
   CatalogQuery,
   CatalogSort,
   EMPTY_QUERY,
+  MAX_SEARCH_LENGTH,
   SORTS,
   canonicalParams,
   chipsOf,
@@ -110,6 +111,12 @@ export class CatalogPage implements OnInit {
     void this.api.brands().then((result) => {
       if (result.ok) this.brands.set(result.value);
     });
+  }
+
+  /** The hero search: a trimmed keyword of at most 100 characters starts a fresh search (L2-023). */
+  searchFor(event: Event, term: string): void {
+    event.preventDefault();
+    this.show({ ...EMPTY_QUERY, q: term.trim().slice(0, MAX_SEARCH_LENGTH) });
   }
 
   /** Navigates to the catalog with this result set; a category page leaves for / with its category kept. */

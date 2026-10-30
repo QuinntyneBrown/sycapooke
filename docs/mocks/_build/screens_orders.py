@@ -355,7 +355,7 @@ def _():
 @od.state("cancelled", "Cancelled by the seller before shipping: full refund and the seller’s reason.")
 def _():
     body = (alert("info", "Refunded in full", f"{money(94.72)} back to {CARD[0]} ending {CARD[1]}. Allow 5–10 days.") +
-            '<blockquote class="quote"><p>“Found a tear in the lining while packing. Sorry about this.”</p><cite>margarets_china</cite></blockquote>'
+            '<blockquote class="quote quote--sm"><p>“Found a tear in the lining while packing. Sorry about this.”</p><cite>margarets_china</cite></blockquote>'
             f'<div>{btn("Shop similar items", "primary", P("catalog", "category"))}</div>')
     return order_page("SY-48213", head="Cancelled", body=body)
 
@@ -423,7 +423,7 @@ def _():
 
 @sd.state("cancel-requested", "The buyer asked to cancel before shipping: accept or decline.")
 def _():
-    body = ('<blockquote class="quote"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>pia_collects</cite></blockquote>'
+    body = ('<blockquote class="quote quote--sm"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>pia_collects</cite></blockquote>'
             f'<div>{btn("Respond", "primary", D("respond-cancellation"))}</div>{ship_to()}')
     return sale_page("SY-48302", "Buyer asked to cancel", body)
 
@@ -553,7 +553,7 @@ def _():
 # Respond to cancellation request -------------------------------------------
 rc = screen("respond-cancellation", "dialog", "Respond to cancellation", opens_from="sale-detail", reqs=["L2-035"],
             na={"invalid": "Two buttons, no inputs to validate."})
-RC_BODY = '<blockquote class="quote"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>pia_collects</cite></blockquote>'
+RC_BODY = '<blockquote class="quote quote--sm"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>pia_collects</cite></blockquote>'
 RC_DESC = "Accepting refunds $79.48 in full. Declining keeps the order — you still ship by Fri 30 Oct."
 
 

@@ -97,9 +97,9 @@ Per `AGENTS.md`, the application project holds `AppComponent`, the four shell co
   `L2-061` values; the design-system token values shall be corrected to match.
 - **Layout rules** — `.container` gutters per breakpoint from tokens;
   `min-width: 0` on grid children; long words wrap (`overflow-wrap: anywhere`)
-  so no page scrolls horizontally at 320 px. Catalog grid: 2 columns XS/SM,
-  3 MD, 4 LG/XL (`L2-061` AC2), implemented by `sy-listing-grid` in `@sycapooke/components`. The mock `ui.css` shows 3 columns at LG when the
-  filter sidebar is present; the implementation follows `L2-061` with 4.
+  so no page scrolls horizontally at 320 px. Catalog grid: 1 column XS,
+  2 SM/MD, 4 LG/XL (`L2-061` AC2, the landing page's `sm:grid-cols-2 lg:grid-cols-4`),
+  implemented by `sy-listing-grid` in `@sycapooke/components`.
 - **`SheetComponent` and `SheetService`** — built by search-and-filter-catalog
   in `@sycapooke/components` (`src/lib/sheet/`): `SheetService` opens a component whose
   template is a `sy-sheet` through `DialogService` (inert page, Escape closes,

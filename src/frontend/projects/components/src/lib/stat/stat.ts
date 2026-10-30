@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/** One figure with its label, such as "Paid out $33.30"; group several in a `.stats` row (design system: Stat). */
+/**
+ * One figure with its label, such as "$33.30 Paid out": a serif italic value beside a forest
+ * label; group several in a `.stats` stack divided by line rules (design system: Stats row).
+ */
 @Component({
   selector: 'sy-stat',
   templateUrl: './stat.html',

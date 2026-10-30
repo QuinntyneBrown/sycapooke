@@ -10,7 +10,6 @@
   </ng-container>
   <img
     media
-    class="welcome__photo"
     src="/media/sycapooke-hero.jpg"
     width="928"
     height="1152"
@@ -31,38 +30,39 @@
   headingId="sellers-title"
   eyebrow="For sellers"
   heading="Downsizing? Let your treasures find their next home."
-  tone="surface"
+  tone="sell"
   [points]="sellerPoints"
 >
-  <a syButton="primary" [routerLink]="sellHref()" actions>List your first item</a>
+  <a syButton="inverse" [routerLink]="sellHref()" actions>List your first item</a>
 </sy-feature-band>
 
 <sy-feature-band headingId="how-title" eyebrow="How it works" heading="Three steps. That’s it." [stacked]="true">
   <sy-steps [steps]="steps" />
 </sy-feature-band>
 
-<sy-feature-band headingId="story-title" eyebrow="Our story" heading="sy·ca·pooke" [stacked]="true">
-  <div class="welcome__story">
+<sy-feature-band headingId="story-title" eyebrow="Our story" heading="sy·ca·pooke" tone="story" [stacked]="true">
+  <div class="story">
     <sy-quote [text]="founderQuote" cite="Founder, age 70, grandmother of five" />
-    <img
-      class="welcome__photo welcome__founder"
-      src="/media/sycapooke-founder.jpg"
-      width="928"
-      height="1152"
-      loading="lazy"
-      alt="Our founder, smiling in her living room and holding a framed family photograph"
-    />
+    <figure class="story__photo">
+      <img
+        src="/media/sycapooke-founder.jpg"
+        width="928"
+        height="1152"
+        loading="lazy"
+        alt="Our founder, smiling in her living room and holding a framed family photograph"
+      />
+    </figure>
   </div>
 </sy-feature-band>
 
-<sy-marketing-hero
-  variant="closing"
+<sy-feature-band
   headingId="closing-title"
+  heading=""
   lede="New treasures arrive daily, every one at least 20 years old."
+  tone="sell"
+  [stacked]="true"
+  [closing]="true"
 >
   <ng-container title>Treasures with a <em>story.</em></ng-container>
-  <ng-container actions>
-    <a syButton="primary" size="lg" routerLink="/">Shop the catalog</a>
-    <a syButton size="lg" [routerLink]="sellHref()">Start selling</a>
-  </ng-container>
-</sy-marketing-hero>
+  <a syButton="inverse" size="lg" routerLink="/" actions>Shop the catalog</a>
+</sy-feature-band>
