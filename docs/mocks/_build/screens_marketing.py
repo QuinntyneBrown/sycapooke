@@ -1,4 +1,4 @@
-"""Marketing page at /welcome (L1-020, L2-078, L2-079, L2-083).
+"""Marketing page at /welcome and its 29-second pitch video dialog (L1-020, L2-078, L2-079, L2-083, L2-089 to L2-091).
 
 Copy rules (ADR general/0005): headlines of 3 to 6 words, one supporting line, scannable
 points; everything is vintage (at least 20 years old) and the copy never promises anything
@@ -7,12 +7,16 @@ newer. The copy is identical to the app's WelcomePage (src/frontend/projects/mar
 Look (Heirloom, from the landing page): the hero sits on paper beside the hero photo; the
 For sellers band and the closing band are terracotta with cream text and ink buttons; Our
 story is a cream band under a line rule; everything else is paper. No shapes, no gradients.
+The hero photo is the pitch video's poster (ADR platform/0014): one "Play · 0:29" pill opens the
+video dialog; nothing plays before the visitor presses it.
 """
 from mk import *
 
+MEDIA = f"{A}media/"
+
 STATIC_NA = {"loading": "Static content ships with the app; the page calls no Sycapooke API endpoint.",
              "empty": "The page always has content.",
-             "error": "Static content cannot fail to load once the app is served."}
+             "error": "Static content cannot fail to load once the app is served; the video has its own error state."}
 
 SHOPPER_POINTS = [("Four focused categories", "Jewelry, clothing, housewares and electronics. Nothing to filter out."),
                   ("Listed by a real person", "Every piece comes from a family with a story to tell about it."),
@@ -32,9 +36,10 @@ def seller_href(member: bool) -> str:
 
 
 def hero_photo() -> str:
-    """The hero photo slot: /media/sycapooke-hero.jpg in the app, a placeholder illustration here. 4:5, 2rem corners, no frame."""
-    return (f'<figure class="marketing-hero__photo"><img src="{A}hero.svg" alt="A brooch, a teacup and a transistor radio laid out on a linen cloth" '
-            'width="1200" height="1500"></figure>')
+    """The hero photo slot is the video poster: /media/sycapooke-hero.jpg in the app, a placeholder illustration here.
+    4:5, 2rem corners, no frame; one cream pill reading "Play · 0:29" opens the pitch video dialog (L2-089)."""
+    return (f'<button class="video-poster" type="button"><img src="{A}hero.svg" alt="" width="1200" height="1500">'
+            f'<span class="video-poster__play">{ic("play")}Play<span class="video-poster__meta" aria-hidden="true">· 0:29</span></span></button>')
 
 
 def hero(member: bool) -> str:
@@ -91,13 +96,13 @@ def welcome(member: bool) -> Page:
     return Page(main=main, user="member" if member else "guest", main_class="marketing")
 
 
-wl = screen("welcome", "page", "Treasures with a story", route="/welcome", reqs=["L2-078", "L2-079", "L2-083"], na=STATIC_NA)
+wl = screen("welcome", "page", "Treasures with a story", route="/welcome", reqs=["L2-078", "L2-079", "L2-083", "L2-089", "L2-090", "L2-091"], na=STATIC_NA)
 
 
-@wl.state("default", "Signed out: hero on paper with the hero photo, shoppers, the terracotta sellers band, three steps, the cream Our story band and the terracotta closing CTA; Start selling goes to /join.")
+@wl.state("default", "Signed out: hero on paper with the hero photo as the video poster, shoppers, the terracotta sellers band, three steps, the cream Our story band and the terracotta closing CTA; Start selling goes to /join.")
 def _():
     pg = welcome(False)
-    pg.notes = note("Flat bands: paper, terracotta (sellers, closing) and cream (story). Nothing decorative moves. The hero and founder photos are /media/sycapooke-hero.jpg and /media/sycapooke-founder.jpg in the app.",
+    pg.notes = note("Flat bands: paper, terracotta (sellers, closing) and cream (story). Nothing decorative moves. The hero photo is the video poster: its Play pill opens the pitch video dialog and nothing autoplays. The hero and founder photos are /media/sycapooke-hero.jpg and /media/sycapooke-founder.jpg in the app.",
                     "top: 6rem; right: 1rem;")
     return pg
 
@@ -105,3 +110,58 @@ def _():
 @wl.state("signed-in", "Signed in: the same page; Start selling and List your first item go to /sell.")
 def _():
     return welcome(True)
+
+
+# ---------------------------------------------------------------------------
+# Pitch video dialog (L2-089 to L2-091): the 29-second video in an lg dialog with a hidden heading
+# ---------------------------------------------------------------------------
+def player(state: str) -> str:
+    """sy-video-player: ink 16:9 frame with the native video, a state overlay and Play/Pause + Captions pills.
+    The poster is the hero photo (/media/sycapooke-hero.jpg in the app)."""
+    track_default = " default" if state == "captions" else ""
+    video = (f'<video controls playsinline preload="metadata" poster="{A}hero.svg" aria-label="Sycapooke video">'
+             f'<source src="{MEDIA}sycapooke-pitch.mp4" type="video/mp4"><source src="{MEDIA}sycapooke-pitch.webm" type="video/webm">'
+             f'<track kind="captions" src="{MEDIA}sycapooke-pitch.vtt" srclang="en" label="English"{track_default}></video>')
+    overlay = ""
+    if state == "loading":
+        overlay = ('<div class="video-player__state" role="status"><span class="spinner spinner--lg" aria-hidden="true"></span>'
+                   '<p>Loading video…</p></div>')
+    elif state == "error":
+        overlay = (f'<div class="video-player__state" role="alert">{ic("alert", "icon icon--lg")}<strong>The video didn’t load</strong>'
+                   f'<p>Check your connection and try again.</p>{btn("Try again", "primary", icon="refresh")}</div>')
+    playing = state in ("default", "captions")
+    play = btn("Pause", "primary", icon="pause") if playing else btn("Play", "primary", icon="play")
+    cc_on = state == "captions"
+    cc = btn("Captions", "", icon="captions", attrs=f'aria-pressed="{"true" if cc_on else "false"}"')
+    controls = "" if state == "error" else play + cc
+    return (f'<div class="video-player"><div class="video-player__frame">{video}{overlay}</div>'
+            f'<div class="video-player__controls">{controls}</div></div>')
+
+
+pv = screen("pitch-video", "dialog", "Pitch video", opens_from="welcome", reqs=["L2-089", "L2-090", "L2-091"],
+            na={"busy": "Playing a video sends nothing to the Sycapooke API.", "invalid": "Nothing to fill in."})
+
+
+@pv.state("default", "Playing after the visitor pressed Play: no visible heading, native controls plus Pause and Captions; captions off by default.")
+def _():
+    d = Dialog(bg=("welcome", "default"), html=dialog("Sycapooke video", player("default"), size="lg", title_hidden=True))
+    d.notes = note("Opens only from the poster's Play pill and plays with sound because the visitor asked. Space or K pauses; Esc closes, stops the video and returns focus to the poster.",
+                   "top: 1rem; left: 1rem;")
+    return d
+
+
+@pv.state("loading", "The video is buffering: spinner over the poster; Play and Captions stay usable.")
+def _():
+    return Dialog(bg=("welcome", "default"), html=dialog("Sycapooke video", player("loading"), size="lg", title_hidden=True))
+
+
+@pv.state("error", "The video failed to load: plain message and Try again; the page behind still works once closed.")
+def _():
+    return Dialog(bg=("welcome", "default"), html=dialog("Sycapooke video", player("error"), size="lg", title_hidden=True))
+
+
+@pv.state("captions", "Captions on: the English track shows; the Captions button is pressed.")
+def _():
+    d = Dialog(bg=("welcome", "default"), html=dialog("Sycapooke video", player("captions"), size="lg", title_hidden=True))
+    d.notes = note("Captions come from sycapooke-pitch.vtt and stay on for the rest of the visit.", "top: 1rem; left: 1rem;")
+    return d

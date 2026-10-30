@@ -1,6 +1,6 @@
 # ADR-0011: A Marketing Feature Library and a Marketing Shell
 
-**Date:** 2026-10-26 (trimmed 2026-10-30: the pitch video is dropped, [ADR general/0009](../general/0009-cloned-from-tutumuch.md))
+**Date:** 2026-10-26 (trimmed 2026-10-30: the pitch video was dropped by [ADR general/0009](../general/0009-cloned-from-tutumuch.md) and returned the same day by [ADR platform/0014](0014-pitch-video.md))
 **Category:** platform
 **Status:** Accepted
 **Deciders:** Quinntyne Brown (product owner)
@@ -22,9 +22,11 @@ by the static host.
   `sy-steps` and `sy-quote`.
 - Add a `marketing` shell value: routes with `data.shell = 'marketing'` get the same top bar
   and footer but `<main id="main" class="marketing">` without the container.
-- Page images live in `src/frontend/projects/sycapooke/public/media/` (served at `/media/`):
-  the hero photo `sycapooke-hero.jpg`, the founder photo `sycapooke-founder.jpg` and the
-  1200×630 share image `sycapooke-share.jpg`, with their sources and licences in
+- Page media live in `src/frontend/projects/sycapooke/public/media/` (served at `/media/`):
+  the hero photo `sycapooke-hero.jpg` (also the video poster), the founder photo
+  `sycapooke-founder.jpg`, the 1200×630 share image `sycapooke-share.jpg` and the pitch video
+  `sycapooke-pitch.mp4`, `sycapooke-pitch.webm` and `sycapooke-pitch.vtt`
+  ([ADR platform/0014](0014-pitch-video.md)), with their sources and licences in
   `public/media/ATTRIBUTION.md`.
 
 ## Options Considered
@@ -41,10 +43,12 @@ by the static host.
 
 ### Positive
 - The page is lazy-loaded and calls no Sycapooke API endpoint of its own.
-- No video, no dialog, no media build step: three photographs and copy.
+- Three photographs and copy, plus one 29-second video that plays only on request; its build
+  step lives in `docs/mocks/_build/video/`, not in the frontend build (ADR platform/0014).
 
 ### Negative
-- `public/media/` adds committed images; keep them optimised (JPEG, under 300 KB each).
+- `public/media/` adds committed images and the video; keep the images optimised (JPEG, under
+  300 KB each) and the video short (under 30 s, a few MB).
 
 ### Risks
 - Photographs change with the brand. Mitigation: `ATTRIBUTION.md` records source and licence so

@@ -45,7 +45,10 @@ subcategories, one accepted value `Vintage`, every piece at least 20 years old
 **Dropped.** The 30-second pitch video and its dialog, poster, player, captions, media files and
 build script (`L2-080` to `L2-082` retired, never reused); the mascot; and all print collateral
 (`docs/print/` and its ADR, general/0007, deleted). The marketing page gained hero and founder
-photographs and an Our story band with the founder's quote instead.
+photographs and an Our story band with the founder's quote instead. The video returned on
+2026-10-30 as a 29-second film whose poster is the hero photograph, under `L2-089` to `L2-091`
+([ADR platform/0014](../platform/0014-pitch-video.md)); the mascot and print collateral stay
+dropped.
 
 **Deferred.** The advertising placements on the landing page are not a product feature.
 

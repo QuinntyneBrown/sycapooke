@@ -81,7 +81,7 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 | [Earnings](components/earnings.html) | one | unknown, known | sell/filled |
 | [Error summary](components/error-summary.html) | one | shown and focused | sell/invalid, register/invalid |
 | [Fixed size](components/fixed-size.html) | Vintage | absent, shown | sell/filled |
-| [Icon](components/icon.html) | 19 glyphs (search added by search-and-filter-catalog, flag by resolve-order-problems) | static | every page |
+| [Icon](components/icon.html) | 22 glyphs (search added by search-and-filter-catalog, flag by resolve-order-problems; play, pause and captions by the pitch video) | static | every page |
 | [Input group](components/input-group.html) | leading addon | default, invalid | sell price and shipping |
 | [Item row](components/item-row.html) | with or without thumbnail | default, truncated | sell/success |
 | [Empty state](components/empty-state.html) | default, error (compact); dashed line box | static | catalog/empty, catalog/error |
@@ -109,6 +109,8 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 | [Marketing hero](components/marketing-hero.html) | one (on paper, with the photo) | static | welcome |
 | [Feature band](components/feature-band.html) | default (paper), sell (terracotta), story (cream), stacked, closing | static | welcome |
 | [Steps](components/steps.html) | one (ringed numbers) | static | welcome |
+| [Video poster](components/video-poster.html) | one (the hero photo as a “Play · 0:29” button) | default, hover (photo zoom), focus | welcome |
+| [Video player](components/video-player.html) | one (ink 16:9 frame with Play/Pause and Captions pills) | loading, playing, paused, captions on, error | dialogs/pitch-video |
 
 ## Patterns
 
@@ -128,6 +130,10 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 - `assets/logo.svg` / `logo.png` and `logo-dark.svg` / `logo-dark.png` (the tag and wordmark on paper and on ink),
   `app-icon.png` / `app-icon.svg` and `favicon.ico` (the tag alone).
 - `assets/components.css` — component stylesheet extracted from the mocks' `ui.css`.
+
+## The one element not on the landing page
+
+The pitch video (the video poster and video player, with the pitch video dialog) is the only element of the marketing page that the Magic Patterns landing page does not have. It was dropped at the clone (ADR general/0009) and returned on 2026-10-30 by [ADR platform/0014](../adr/platform/0014-pitch-video.md): the hero photograph becomes a named “Play” button with the listing card's cream pill, and the dialog frames the video in ink. Both draw only on existing tokens; no new colour, type, shape or motion was added for them.
 
 ## Drift found in the mocks
 

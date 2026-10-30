@@ -403,7 +403,8 @@ every piece at least 20 years old, and never promises new or reproduction goods
 - Library: `sy-marketing-hero` (on paper, no decoration: eyebrow "Jewelry · Clothing · Housewares · Electronics",
   h1 "A home for the things that *mattered.*", lede "Sycapooke is the marketplace made only for
   vintage — for families downsizing a lifetime of treasures, and the people who’ll love them
-  next.", actions, media slot with the hero photo `/media/sycapooke-hero.jpg`),
+  next.", actions, media slot with `sy-video-poster`: the hero photo `/media/sycapooke-hero.jpg` as one
+  button named "Play" with the "Play · 0:29" pill, opening the Pitch video dialog through `DialogService`),
   `sy-feature-band` (For shoppers "Every piece is at least 20 years old." on paper with the
   points Four focused categories, Listed by a real person and Honest condition, and "Browse the
   catalog"; For sellers "Downsizing? Let your treasures find their next home.", `tone="sell"`
@@ -418,7 +419,8 @@ every piece at least 20 years old, and never promises new or reproduction goods
   someone who’d see it too.”, attributed "Founder, age 70, grandmother of five", with the founder
   photo `/media/sycapooke-founder.jpg`), `syButton` (primary "Shop the catalog" to `/`; "Start
   selling" and "List your first item" to `/join`, or `/sell` for a member)
-- Local: `WelcomePage` (copy, CTA targets from `AuthState.member()`, the two photographs).
+- Local: `WelcomePage` (copy, CTA targets from `AuthState.member()`, the two photographs), `PitchVideoDialog`
+  (see Dialogs).
 
 ### Privacy — `/privacy` (`pages/privacy`: default)
 
@@ -474,6 +476,7 @@ Built by resolve-order-problems in `@sycapooke/orders` (`src/lib/problem-detail/
 | Respond to cancellation (`dialogs/respond-cancellation`: default, busy, failed) | `DialogService` | `sy-dialog` (heading "{buyer} asked to cancel", description "Accepting refunds {total} in full. Declining keeps the order — you still ship by {date}."), `sy-quote` (the buyer's message), `sy-alert` (danger "That didn’t go through" in the top slot), `sy-button` ("Decline"; primary "Accept and refund", focused; the chosen one shows busy and the other is disabled) | `RespondCancellationDialog` in `@sycapooke/orders` |
 | Withdraw listing (`dialogs/withdraw-listing`: default, busy, failed) | `DialogService` | `sy-dialog` (`size="sm"`, icon `trash`, tone danger, title "Withdraw “{title}”?", description "It leaves the shop right away. This can’t be undone."), `sy-alert` (danger "Couldn’t withdraw" / "Your listing is still live." in the top slot after a failure), `sy-button` ("Keep listing", focused, disabled while busy; danger "Withdraw" with busy, "Try again" after a failure) | `WithdrawListingDialog` in `@sycapooke/catalog` (ADR listings/0003); on success the page goes to `/account/listings` |
 | Cookie settings (`dialogs/cookie-settings`: default, analytics-on) | `DialogService` through `CookieSettingsDialogService` | `sy-dialog` (size `sm`, heading "Cookie settings"), `sy-switch` with `hint` "Strictly necessary" ("Sign-in and checkout. Always on.", checked and disabled) and "Analytics" ("Helps us see which pages are slow.", `autofocus`), `sy-button` (Cancel; primary Save) | `CookieSettingsDialog` in `@sycapooke/privacy` |
+| Pitch video (`dialogs/pitch-video`: default, loading, error, captions) | `DialogService` | `sy-dialog` (size `lg`, heading "Sycapooke video" visually hidden), `sy-video-player` (ink 16:9 frame with the native `video`: MP4 then WebM sources at `/media/sycapooke-pitch.*`, English captions track, poster `/media/sycapooke-hero.jpg`; spinner overlay with "Loading video…" while loading; "The video didn’t load" / "Check your connection and try again." with Try again on error; `sy-button` primary Play/Pause and secondary Captions with `aria-pressed`, off by default) | `PitchVideoDialog` in `@sycapooke/marketing`; Escape closes, stops the video and returns focus to the poster |
 | Resolve problem (`dialogs/resolve-problem`: default, invalid, busy) | `DialogService` | `sy-dialog` (heading "Resolve problem {reference}"), `sy-radio-group` (legend "Decision") with `sy-choice` "Refund buyer in full" ("{total} to {buyer} · no payout") and "Release payout to seller" ("Order completes · {seller} is paid"), `sy-form-field` (textarea "Reason", help "Sent to both members.", error "Add a reason. Both members see it."), `sy-alert` (danger after a failure), `sy-button` (Cancel, disabled while busy; primary "Refund buyer" or "Release payout", busy "Refunding" or "Releasing") | `ResolveProblemDialog` in `@sycapooke/orders` |
 
 ## Notifications

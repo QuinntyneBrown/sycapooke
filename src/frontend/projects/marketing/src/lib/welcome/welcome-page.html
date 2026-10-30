@@ -8,13 +8,7 @@
     <a syButton="primary" size="lg" routerLink="/">Shop the catalog</a>
     <a syButton size="lg" [routerLink]="sellHref()">Start selling</a>
   </ng-container>
-  <img
-    media
-    src="/media/sycapooke-hero.jpg"
-    width="928"
-    height="1152"
-    alt="A brass lamp, pearl necklace, tweed jacket, rotary telephone and teacup arranged on an old oak dresser"
-  />
+  <sy-video-poster media poster="/media/sycapooke-hero.jpg" label="Play" duration="0:29" (watch)="openVideo()" />
 </sy-marketing-hero>
 
 <sy-feature-band

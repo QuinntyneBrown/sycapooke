@@ -1,0 +1,43 @@
+<div class="video-player">
+  <div class="video-player__frame">
+    @for (n of [attempt()]; track n) {
+      <video
+        #video
+        controls
+        playsinline
+        preload="metadata"
+        [attr.poster]="poster() || null"
+        [attr.aria-label]="label()"
+        (loadeddata)="ready()"
+        (canplay)="ready()"
+        (play)="playing.set(true)"
+        (pause)="playing.set(false)"
+      >
+        @for (source of sources(); track source.src; let last = $last) {
+          <source [src]="source.src" [type]="source.type" (error)="last && failed()" />
+        }
+        <track kind="captions" [src]="captions()" srclang="en" label="English" />
+      </video>
+    }
+    @if (state() === 'loading') {
+      <div class="video-player__state"><sy-spinner label="Loading video…" /></div>
+    } @else if (state() === 'error') {
+      <div class="video-player__state" role="alert">
+        <sy-icon name="alert" size="lg" />
+        <strong>The video didn’t load</strong>
+        <p>Check your connection and try again.</p>
+        <button syButton="primary" type="button" (click)="retry()"><sy-icon name="refresh" />Try again</button>
+      </div>
+    }
+  </div>
+  <div class="video-player__controls">
+    @if (state() !== 'error') {
+      <button syButton="primary" type="button" (click)="toggle()">
+        <sy-icon [name]="playing() ? 'pause' : 'play'" />{{ playing() ? 'Pause' : 'Play' }}
+      </button>
+      <button syButton type="button" [attr.aria-pressed]="captionsOn()" (click)="toggleCaptions()">
+        <sy-icon name="captions" />Captions
+      </button>
+    }
+  </div>
+</div>

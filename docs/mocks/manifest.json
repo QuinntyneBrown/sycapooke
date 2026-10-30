@@ -333,7 +333,10 @@
       "requirements": [
         "L2-078",
         "L2-079",
-        "L2-083"
+        "L2-083",
+        "L2-089",
+        "L2-090",
+        "L2-091"
       ],
       "states": [
         "default",
@@ -342,7 +345,7 @@
       "not_applicable": {
         "loading": "Static content ships with the app; the page calls no Sycapooke API endpoint.",
         "empty": "The page always has content.",
-        "error": "Static content cannot fail to load once the app is served."
+        "error": "Static content cannot fail to load once the app is served; the video has its own error state."
       }
     },
     {
@@ -838,6 +841,27 @@
       "not_applicable": {
         "busy": "Opening the menu makes no request.",
         "invalid": "The menu has no inputs."
+      }
+    },
+    {
+      "id": "pitch-video",
+      "kind": "dialog",
+      "title": "Pitch video",
+      "opens_from": "welcome",
+      "requirements": [
+        "L2-089",
+        "L2-090",
+        "L2-091"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "error",
+        "captions"
+      ],
+      "not_applicable": {
+        "busy": "Playing a video sends nothing to the Sycapooke API.",
+        "invalid": "Nothing to fill in."
       }
     },
     {

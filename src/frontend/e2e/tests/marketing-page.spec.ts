@@ -1,9 +1,12 @@
 // Acceptance Test
-// Traces to: L2-078, L2-079, L2-080, L2-081, L2-082, L2-083
+// Traces to: L2-078, L2-079, L2-083, L2-089, L2-090, L2-091
 // Description: The public marketing page at /welcome: sections and CTA targets for visitors and
-// members, the footer link, heading order, title, meta description and link-preview tags. The share image comes from the static build.
+// members, the footer link, heading order, title, meta description and link-preview tags, and the
+// pitch video: poster only until pressed, keyboard-operable player with captions off by default,
+// and a plain error with Try again when the video cannot load. The share image comes from the
+// static build.
 
-import { expect, marcus, serveCatalog, signInAs, test } from '../fixtures';
+import { expect, marcus, serveCatalog, servePitchVideo, signInAs, test } from '../fixtures';
 import { ShellPage } from '../pages/shell.page';
 import { WelcomePage } from '../pages/welcome.page';
 
@@ -13,6 +16,7 @@ test.describe('marketing page', () => {
     await welcome.goto();
 
     await expect(welcome.heading).toHaveText('A home for the things that mattered.');
+    await expect(welcome.poster).toBeVisible();
     for (const name of [
       'Every piece is at least 20 years old.',
       'Downsizing? Let your treasures find their next home.',
@@ -88,5 +92,93 @@ test.describe('marketing page', () => {
     const image = await page.request.get('/media/sycapooke-share.jpg');
     expect(image.status()).toBe(200);
     expect(image.headers()['content-type']).toBe('image/jpeg');
+  });
+
+  test.describe('pitch video', () => {
+    test.beforeEach(async ({ page }) => {
+      await servePitchVideo(page);
+    });
+
+    test('only the poster is on the page until it is pressed', async ({ page }) => {
+      const welcome = new WelcomePage(page);
+      await welcome.goto();
+
+      await expect(welcome.poster).toBeVisible();
+      await expect(welcome.poster).toHaveAccessibleName('Play');
+      await expect(welcome.poster.locator('img')).toHaveAttribute('alt', '');
+      await expect(welcome.poster).toContainText('0:29');
+      await expect(page.locator('video')).toHaveCount(0);
+      await expect(welcome.dialog).toHaveCount(0);
+    });
+
+    test('the keyboard opens the dialog, plays and pauses, and Escape returns focus to the poster', async ({
+      page,
+    }) => {
+      const welcome = new WelcomePage(page);
+      await welcome.goto();
+
+      await welcome.poster.focus();
+      await page.keyboard.press('Enter');
+      await expect(welcome.dialog).toBeVisible();
+      await expect(welcome.video).toHaveAttribute('aria-label', 'Sycapooke video');
+      await expect(welcome.playPause).toBeVisible();
+
+      // Autoplay may be blocked; the Play/Pause pill reflects whichever state the video is in.
+      await welcome.playPause.focus();
+      const pausedBefore = await welcome.isPaused();
+      await page.keyboard.press('Enter');
+      await expect.poll(() => welcome.isPaused()).toBe(!pausedBefore);
+      await expect(welcome.playPause).toHaveText(pausedBefore ? 'Pause' : 'Play');
+      await page.keyboard.press('Space');
+      await expect.poll(() => welcome.isPaused()).toBe(pausedBefore);
+      await expect(welcome.playPause).toHaveText(pausedBefore ? 'Play' : 'Pause');
+
+      await page.keyboard.press('Escape');
+      await expect(welcome.dialog).toHaveCount(0);
+      await expect(page.locator('video')).toHaveCount(0);
+      await expect(welcome.poster).toBeFocused();
+    });
+
+    test('captions are off until Captions turns them on, and the dialog is named by a hidden heading', async ({
+      page,
+    }) => {
+      const welcome = new WelcomePage(page);
+      await welcome.goto();
+      await welcome.poster.click();
+
+      await expect(welcome.dialog).toBeVisible();
+      const heading = welcome.dialog.getByRole('heading', { name: 'Sycapooke video' });
+      await expect(heading).toHaveClass(/visually-hidden/);
+      await expect(welcome.captions).toHaveAttribute('aria-pressed', 'false');
+      const trackMode = () => welcome.video.evaluate((video: HTMLVideoElement) => video.textTracks[0]?.mode);
+      await expect.poll(trackMode).toBe('hidden');
+
+      await welcome.captions.click();
+      await expect(welcome.captions).toHaveAttribute('aria-pressed', 'true');
+      await expect.poll(trackMode).toBe('showing');
+
+      await welcome.captions.click();
+      await expect(welcome.captions).toHaveAttribute('aria-pressed', 'false');
+      await expect.poll(trackMode).toBe('hidden');
+    });
+
+    test('when the video cannot load the dialog says so with Try again, and the page still works', async ({ page }) => {
+      await page.route('**/media/sycapooke-pitch.{mp4,webm}', (route) => route.fulfill({ status: 404 }));
+      await serveCatalog(page, 0);
+      const welcome = new WelcomePage(page);
+      await welcome.goto();
+      await welcome.poster.click();
+
+      await expect(welcome.dialog).toBeVisible();
+      await expect(welcome.videoError).toContainText('The video didn’t load');
+      await expect(welcome.videoError).toContainText('Check your connection and try again.');
+      await expect(welcome.videoError.getByRole('button', { name: 'Try again' })).toBeVisible();
+      await expect(welcome.playPause).toHaveCount(0);
+
+      await welcome.dialog.getByRole('button', { name: 'Close' }).click();
+      await expect(welcome.dialog).toHaveCount(0);
+      await welcome.link('Shop the catalog').click();
+      await expect(page).toHaveURL(/\/$/);
+    });
   });
 });

@@ -19,5 +19,5 @@ infrastructure and CI, and each has an estimate in
 | [responsive-accessible-shell](responsive-accessible-shell/README.md) | `L2-061`, `L2-062`, `L2-063`, `L2-064`, `L2-065` |
 | [report-errors-and-observe](report-errors-and-observe/README.md) | `L2-068`, `L2-069`, `L2-070` |
 | [keep-available-and-recoverable](keep-available-and-recoverable/README.md) | `L2-066`, `L2-067` |
-| [marketing-page](marketing-page/README.md) | `L2-078`, `L2-079`, `L2-080`, `L2-081`, `L2-082`, `L2-083` |
+| [marketing-page](marketing-page/README.md) | `L2-078`, `L2-079`, `L2-083`, `L2-089`, `L2-090`, `L2-091` |
 | [deploy-to-production](deploy-to-production/README.md) | `L2-084`, `L2-085`, `L2-086` |

@@ -43,10 +43,11 @@ not re-add references to them in other documents. The decision is recorded in
   endpoint for Core Web Vitals and no frontend performance requirement. Lazy routes
   stay as a workspace convention, not as a measured budget. See
   [ADR-0003](docs/adr/general/0003-no-frontend-performance-testing.md).
-- **Pitch video, mascot, print collateral and advertising placements**: no video dialog,
-  poster or player, no media build script, no mascot, no `docs/print/`, and no sponsored
-  slots in the catalog. See [ADR general/0009](docs/adr/general/0009-cloned-from-tutumuch.md)
-  and [ADR general/0005](docs/adr/general/0005-marketing-wording.md).
+- **Mascot, print collateral and advertising placements**: no mascot, no `docs/print/`, and
+  no sponsored slots in the catalog. See [ADR general/0009](docs/adr/general/0009-cloned-from-tutumuch.md)
+  and [ADR general/0005](docs/adr/general/0005-marketing-wording.md). The pitch video is
+  back in scope ([ADR platform/0014](docs/adr/platform/0014-pitch-video.md), `L2-089` to
+  `L2-091`): the hero photo of `/welcome` is its poster and nothing plays until pressed.
 
 The removed requirement numbers `L2-038`, `L2-039`, `L2-044` to `L2-047`, `L2-055`,
 `L2-057`, `L2-058`, `L2-014` and `L2-080` to `L2-082` are retired; never reuse them.
@@ -86,7 +87,7 @@ sycapooke/
 │   ├── journeys.md              user journeys with effort
 │   ├── deployment.md            production host, deploy workflow, rollback
 │   ├── specs/                   L1.md and L2.md requirements
-│   ├── mocks/                   generated HTML mocks (_build/ holds the Python sources)
+│   ├── mocks/                   generated HTML mocks (_build/ holds the Python sources; _build/video/ builds the pitch video)
 │   ├── design-system/           Heirloom: tokens, foundations, components and patterns extracted from the mocks
 │   ├── detailed-designs/        {subsystem}/{feature}/README.md + diagrams/
 │   ├── estimates/               README.md + one file per subsystem
@@ -112,7 +113,7 @@ sycapooke/
 │           ├── sycapooke/         the application (projectType "application")
 │           │   ├── src/app/     app.config.ts, app.routes.ts, shells only
 │           │   └── public/
-│           │       ├── media/   hero, founder and share images + ATTRIBUTION.md (ADR platform/0011)
+│           │       ├── media/   hero, founder and share images, the pitch video (mp4, webm) and its captions (vtt) + ATTRIBUTION.md (ADR platform/0011, 0014)
 │           │       └── fonts/   Fraunces and Source Sans 3 (woff2) + their SIL OFL licences
 │           ├── api/             library: typed HTTP services, DTOs, auth state, interceptors
 │           ├── components/      library: Heirloom design-system components and styles (tokens.css)
@@ -132,7 +133,7 @@ sycapooke/
 ([ADR platform/0010](docs/adr/platform/0010-sycapooke-cli-for-demo-seeding.md)).
 
 There is no `moderation` library and no `Sycapooke.Moderation` project. There is no
-print-collateral folder and no video under `public/media/`.
+print-collateral folder; the only video under `public/media/` is the pitch video.
 
 ## Frontend workspace layout (MANDATORY)
 

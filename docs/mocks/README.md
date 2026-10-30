@@ -69,7 +69,8 @@ docs/mocks/
   assets/tokens.css    design tokens (Heirloom plus the Sycapooke palette); the only place colours live
   assets/ui.css        component kit in the Heirloom look, including the Sycapooke layer (size tag, listing card, gallery…)
   assets/items/*.svg   product illustrations used as listing photos
-  assets/hero.svg      placeholder for the welcome hero photo (/media/sycapooke-hero.jpg in the app)
+  assets/hero.svg      placeholder for the welcome hero photo, also the video poster (/media/sycapooke-hero.jpg in the app)
+  assets/media/        the pitch video (sycapooke-pitch.mp4, .webm, .vtt) copied from public/media/, built by _build/video/
   assets/founder.svg   placeholder for the founder photo (/media/sycapooke-founder.jpg in the app)
   assets/logo.png      the Sycapooke logo
   _build/mk.py         shell, components and helpers
@@ -121,7 +122,7 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 | Verify email (`verify-email`) | [✅](pages/verify-email/default.html) | [✅](pages/verify-email/loading.html) | ➖ | [✅](pages/verify-email/error.html) |  |  |  |  | [✅](pages/verify-email/expired.html) |  |  |  |  |  |  |  |  |  | [✅](pages/verify-email/used.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-002` |
 | Catalog (`catalog`) | [✅](pages/catalog/default.html) | [✅](pages/catalog/loading.html) | [✅](pages/catalog/empty.html) | [✅](pages/catalog/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/catalog/guest.html) | [✅](pages/catalog/category.html) | [✅](pages/catalog/search.html) | [✅](pages/catalog/filtered.html) | [✅](pages/catalog/no-results.html) | [✅](pages/catalog/offline.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-022`, `L2-023`, `L2-024`, `L2-059`, `L2-061`, `L2-062` |
 | Listing detail (`listing-detail`) | [✅](pages/listing-detail/default.html) | [✅](pages/listing-detail/loading.html) | ➖ | [✅](pages/listing-detail/error.html) |  |  |  |  |  | [✅](pages/listing-detail/own.html) | [✅](pages/listing-detail/unavailable.html) |  |  |  |  |  |  |  |  | [✅](pages/listing-detail/guest.html) |  |  |  |  |  | [✅](pages/listing-detail/new-seller.html) | [✅](pages/listing-detail/reserved.html) | [✅](pages/listing-detail/sold.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-025`, `L2-026`, `L2-028`, `L2-016`, `L2-063`, `L2-065` |
-| Treasures with a story (`welcome`) | [✅](pages/welcome/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/welcome/signed-in.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-078`, `L2-079`, `L2-083` |
+| Treasures with a story (`welcome`) | [✅](pages/welcome/default.html) | ➖ | ➖ | ➖ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/welcome/signed-in.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-078`, `L2-079`, `L2-083`, `L2-089`, `L2-090`, `L2-091` |
 | Checkout (`checkout`) | [✅](pages/checkout/default.html) | [✅](pages/checkout/loading.html) | ➖ | [✅](pages/checkout/error.html) |  | [✅](pages/checkout/invalid.html) | [✅](pages/checkout/submitting.html) |  | [✅](pages/checkout/expired.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/checkout/new-address.html) | [✅](pages/checkout/non-us.html) | [✅](pages/checkout/declined.html) | [✅](pages/checkout/conflict.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-027`, `L2-028`, `L2-029`, `L2-030`, `L2-063`, `L2-065` |
 | Order confirmed (`order-confirmation`) | [✅](pages/order-confirmation/default.html) | [✅](pages/order-confirmation/loading.html) | ➖ | [✅](pages/order-confirmation/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | `L2-030`, `L2-033` |
 | Order (buyer) (`order-detail`) | [✅](pages/order-detail/default.html) | [✅](pages/order-detail/loading.html) | ➖ | [✅](pages/order-detail/error.html) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | [✅](pages/order-detail/paid.html) | [✅](pages/order-detail/cancel-requested.html) | [✅](pages/order-detail/cancel-declined.html) | [✅](pages/order-detail/delivered.html) | [✅](pages/order-detail/completed.html) | [✅](pages/order-detail/cancelled.html) | [✅](pages/order-detail/refunded.html) | [✅](pages/order-detail/problem.html) |  |  |  |  |  |  |  |  |  | `L2-032`, `L2-033`, `L2-034`, `L2-035`, `L2-036` |
@@ -144,24 +145,25 @@ Legend: ✅ mock exists · ➖ not applicable (reason in manifest) · ❌ missin
 
 ### Dialogs
 
-| Screen | default | busy | invalid | failed | blocked | sent | limited | guest | analytics-on | Requirements |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Change password (`change-password`) | [✅](dialogs/change-password/default.html) | [✅](dialogs/change-password/busy.html) | [✅](dialogs/change-password/invalid.html) | [✅](dialogs/change-password/failed.html) |  |  |  |  |  | `L2-009`, `L2-001`, `L2-008` |
-| Close account (`close-account`) | [✅](dialogs/close-account/default.html) | [✅](dialogs/close-account/busy.html) | [✅](dialogs/close-account/invalid.html) |  | [✅](dialogs/close-account/blocked.html) |  |  |  |  | `L2-005` |
-| Sign out everywhere (`sign-out-everywhere`) | [✅](dialogs/sign-out-everywhere/default.html) | [✅](dialogs/sign-out-everywhere/busy.html) | ➖ | [✅](dialogs/sign-out-everywhere/failed.html) |  |  |  |  |  | `L2-008` |
-| Verify email prompt (`verify-email-prompt`) | [✅](dialogs/verify-email-prompt/default.html) | [✅](dialogs/verify-email-prompt/busy.html) | ➖ |  |  | [✅](dialogs/verify-email-prompt/sent.html) | [✅](dialogs/verify-email-prompt/limited.html) |  |  | `L2-002`, `L2-003` |
-| Filters (`filters`) | [✅](dialogs/filters/default.html) | [✅](dialogs/filters/busy.html) | [✅](dialogs/filters/invalid.html) |  |  |  |  |  |  | `L2-024`, `L2-062` |
-| Menu (`nav-menu`) | [✅](dialogs/nav-menu/default.html) | ➖ | ➖ |  |  |  |  | [✅](dialogs/nav-menu/guest.html) |  | `L2-062`, `L2-065` |
-| Add tracking (`add-tracking`) | [✅](dialogs/add-tracking/default.html) | [✅](dialogs/add-tracking/busy.html) | [✅](dialogs/add-tracking/invalid.html) | [✅](dialogs/add-tracking/failed.html) |  |  |  |  |  | `L2-033` |
-| Cancel order (`cancel-order`) | [✅](dialogs/cancel-order/default.html) | [✅](dialogs/cancel-order/busy.html) | [✅](dialogs/cancel-order/invalid.html) | [✅](dialogs/cancel-order/failed.html) |  |  |  |  |  | `L2-035` |
-| Confirm receipt (`confirm-receipt`) | [✅](dialogs/confirm-receipt/default.html) | [✅](dialogs/confirm-receipt/busy.html) | ➖ | [✅](dialogs/confirm-receipt/failed.html) |  |  |  |  |  | `L2-034` |
-| Relist item (`relist`) | [✅](dialogs/relist/default.html) | [✅](dialogs/relist/busy.html) | ➖ |  |  |  |  |  |  | `L2-035` |
-| Report a problem (`report-problem`) | [✅](dialogs/report-problem/default.html) | [✅](dialogs/report-problem/busy.html) | [✅](dialogs/report-problem/invalid.html) | [✅](dialogs/report-problem/failed.html) |  |  |  |  |  | `L2-036` |
-| Ask to cancel (`request-cancellation`) | [✅](dialogs/request-cancellation/default.html) | [✅](dialogs/request-cancellation/busy.html) | ➖ | [✅](dialogs/request-cancellation/failed.html) |  |  |  |  |  | `L2-035` |
-| Respond to cancellation (`respond-cancellation`) | [✅](dialogs/respond-cancellation/default.html) | [✅](dialogs/respond-cancellation/busy.html) | ➖ | [✅](dialogs/respond-cancellation/failed.html) |  |  |  |  |  | `L2-035` |
-| Withdraw listing (`withdraw-listing`) | [✅](dialogs/withdraw-listing/default.html) | [✅](dialogs/withdraw-listing/busy.html) | ➖ | [✅](dialogs/withdraw-listing/failed.html) |  |  |  |  |  | `L2-020` |
-| Cookie settings (`cookie-settings`) | [✅](dialogs/cookie-settings/default.html) | ➖ | ➖ |  |  |  |  |  | [✅](dialogs/cookie-settings/analytics-on.html) | `L2-056` |
-| Resolve problem (`resolve-problem`) | [✅](dialogs/resolve-problem/default.html) | [✅](dialogs/resolve-problem/busy.html) | [✅](dialogs/resolve-problem/invalid.html) |  |  |  |  |  |  | `L2-036` |
+| Screen | default | busy | invalid | failed | blocked | sent | limited | guest | loading | error | captions | analytics-on | Requirements |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Change password (`change-password`) | [✅](dialogs/change-password/default.html) | [✅](dialogs/change-password/busy.html) | [✅](dialogs/change-password/invalid.html) | [✅](dialogs/change-password/failed.html) |  |  |  |  |  |  |  |  | `L2-009`, `L2-001`, `L2-008` |
+| Close account (`close-account`) | [✅](dialogs/close-account/default.html) | [✅](dialogs/close-account/busy.html) | [✅](dialogs/close-account/invalid.html) |  | [✅](dialogs/close-account/blocked.html) |  |  |  |  |  |  |  | `L2-005` |
+| Sign out everywhere (`sign-out-everywhere`) | [✅](dialogs/sign-out-everywhere/default.html) | [✅](dialogs/sign-out-everywhere/busy.html) | ➖ | [✅](dialogs/sign-out-everywhere/failed.html) |  |  |  |  |  |  |  |  | `L2-008` |
+| Verify email prompt (`verify-email-prompt`) | [✅](dialogs/verify-email-prompt/default.html) | [✅](dialogs/verify-email-prompt/busy.html) | ➖ |  |  | [✅](dialogs/verify-email-prompt/sent.html) | [✅](dialogs/verify-email-prompt/limited.html) |  |  |  |  |  | `L2-002`, `L2-003` |
+| Filters (`filters`) | [✅](dialogs/filters/default.html) | [✅](dialogs/filters/busy.html) | [✅](dialogs/filters/invalid.html) |  |  |  |  |  |  |  |  |  | `L2-024`, `L2-062` |
+| Menu (`nav-menu`) | [✅](dialogs/nav-menu/default.html) | ➖ | ➖ |  |  |  |  | [✅](dialogs/nav-menu/guest.html) |  |  |  |  | `L2-062`, `L2-065` |
+| Pitch video (`pitch-video`) | [✅](dialogs/pitch-video/default.html) | ➖ | ➖ |  |  |  |  |  | [✅](dialogs/pitch-video/loading.html) | [✅](dialogs/pitch-video/error.html) | [✅](dialogs/pitch-video/captions.html) |  | `L2-089`, `L2-090`, `L2-091` |
+| Add tracking (`add-tracking`) | [✅](dialogs/add-tracking/default.html) | [✅](dialogs/add-tracking/busy.html) | [✅](dialogs/add-tracking/invalid.html) | [✅](dialogs/add-tracking/failed.html) |  |  |  |  |  |  |  |  | `L2-033` |
+| Cancel order (`cancel-order`) | [✅](dialogs/cancel-order/default.html) | [✅](dialogs/cancel-order/busy.html) | [✅](dialogs/cancel-order/invalid.html) | [✅](dialogs/cancel-order/failed.html) |  |  |  |  |  |  |  |  | `L2-035` |
+| Confirm receipt (`confirm-receipt`) | [✅](dialogs/confirm-receipt/default.html) | [✅](dialogs/confirm-receipt/busy.html) | ➖ | [✅](dialogs/confirm-receipt/failed.html) |  |  |  |  |  |  |  |  | `L2-034` |
+| Relist item (`relist`) | [✅](dialogs/relist/default.html) | [✅](dialogs/relist/busy.html) | ➖ |  |  |  |  |  |  |  |  |  | `L2-035` |
+| Report a problem (`report-problem`) | [✅](dialogs/report-problem/default.html) | [✅](dialogs/report-problem/busy.html) | [✅](dialogs/report-problem/invalid.html) | [✅](dialogs/report-problem/failed.html) |  |  |  |  |  |  |  |  | `L2-036` |
+| Ask to cancel (`request-cancellation`) | [✅](dialogs/request-cancellation/default.html) | [✅](dialogs/request-cancellation/busy.html) | ➖ | [✅](dialogs/request-cancellation/failed.html) |  |  |  |  |  |  |  |  | `L2-035` |
+| Respond to cancellation (`respond-cancellation`) | [✅](dialogs/respond-cancellation/default.html) | [✅](dialogs/respond-cancellation/busy.html) | ➖ | [✅](dialogs/respond-cancellation/failed.html) |  |  |  |  |  |  |  |  | `L2-035` |
+| Withdraw listing (`withdraw-listing`) | [✅](dialogs/withdraw-listing/default.html) | [✅](dialogs/withdraw-listing/busy.html) | ➖ | [✅](dialogs/withdraw-listing/failed.html) |  |  |  |  |  |  |  |  | `L2-020` |
+| Cookie settings (`cookie-settings`) | [✅](dialogs/cookie-settings/default.html) | ➖ | ➖ |  |  |  |  |  |  |  |  | [✅](dialogs/cookie-settings/analytics-on.html) | `L2-056` |
+| Resolve problem (`resolve-problem`) | [✅](dialogs/resolve-problem/default.html) | [✅](dialogs/resolve-problem/busy.html) | [✅](dialogs/resolve-problem/invalid.html) |  |  |  |  |  |  |  |  |  | `L2-036` |
 
 ### Notifications
 

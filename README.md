@@ -62,7 +62,7 @@ The look is the **Heirloom** design system, extracted from the Sycapooke landing
 | Privacy       | Partial   | Cookie consent; account closure and erasure are planned                                                                                                              |
 | Reviews       | Available | Public seller profile; ratings show "No reviews yet"                                                                                                                 |
 | Notifications | Available | Transactional email through an outbox, email preferences and one-click unsubscribe                                                                                   |
-| Marketing     | Available | Public page at `/welcome` ("Treasures with a story") for shoppers and sellers, with the founder's story and link-preview tags; linked as "About Sycapooke" in the footer |
+| Marketing     | Available | Public page at `/welcome` ("Treasures with a story") for shoppers and sellers, with the founder's story, a 29-second pitch video behind the hero photo (plays only on request) and link-preview tags; linked as "About Sycapooke" in the footer |
 
 Overall progress and effort are tracked in [docs/estimates](docs/estimates/README.md). Moderation, writing reviews and personal data export are deferred by [ADR-0001](docs/adr/general/0001-defer-moderation-reviews-and-data-export.md).
 
@@ -241,7 +241,7 @@ sycapooke/
 │   ├── backend/             .NET solution: Api, Application, Domain, Infrastructure, Worker, Migrator, Cli
 │   └── frontend/            Angular workspace
 │       ├── e2e/             Playwright tests and fixtures
-│       └── projects/        sycapooke app (public/media/ photos, public/fonts/ Fraunces and Source Sans 3);
+│       └── projects/        sycapooke app (public/media/ photos and the pitch video, public/fonts/ Fraunces and Source Sans 3);
 │                            api, components, accounts, catalog, listings, orders, reviews,
 │                            marketing and privacy libraries
 └── tests/                   xUnit test project per backend project
@@ -279,8 +279,11 @@ See [SUPPORT.md](SUPPORT.md) for how to file issues and get help. For anything a
 ## License
 
 Sycapooke is licensed under the [MIT License](LICENSE). The demo photos in
-`src/backend/Sycapooke.Cli/SeedPhotos/` and the page images in
+`src/backend/Sycapooke.Cli/SeedPhotos/` and the page images and pitch video in
 `src/frontend/projects/sycapooke/public/media/` are not: they keep their own licences, with authors
 and sources in [SeedPhotos/ATTRIBUTION.md](src/backend/Sycapooke.Cli/SeedPhotos/ATTRIBUTION.md) and
-[media/ATTRIBUTION.md](src/frontend/projects/sycapooke/public/media/ATTRIBUTION.md). The Fraunces and
+[media/ATTRIBUTION.md](src/frontend/projects/sycapooke/public/media/ATTRIBUTION.md). The video's
+narration is synthesised with Kokoro-82M (`onnx-community/Kokoro-82M-v1.0-ONNX`, voice `af_heart`,
+Apache-2.0) and its music is "Warm Nostalgic Sentimental Music" by andriig on Pixabay (Pixabay
+Content Licence); `docs/mocks/_build/video/` holds the build. The Fraunces and
 Source Sans 3 fonts in `public/fonts/` are under the SIL Open Font License.

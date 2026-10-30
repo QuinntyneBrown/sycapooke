@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { Page, Route, test as base, expect } from '@playwright/test';
 
 /** The signed-in member as GET /api/auth/me returns it. */
@@ -210,6 +213,25 @@ export const test = base.extend<{ consent: ConsentFixture; unfixturedApiCalls: s
 });
 
 export { expect };
+
+const MEDIA_DIR = join(__dirname, '..', 'dist', 'sycapooke', 'browser', 'media');
+const PITCH_MEDIA = [
+  ['sycapooke-pitch.mp4', 'pitch-test.mp4', 'video/mp4'],
+  ['sycapooke-pitch.webm', 'pitch-test.webm', 'video/webm'],
+  ['sycapooke-pitch.vtt', 'pitch-test.vtt', 'text/vtt'],
+] as const;
+
+/**
+ * Serves the pitch video (L2-089): the built files when the build has them, else the two-second
+ * test assets under e2e/assets so the player behaves the same before the media build runs.
+ */
+export async function servePitchVideo(page: Page): Promise<void> {
+  for (const [name, asset, contentType] of PITCH_MEDIA) {
+    if (existsSync(join(MEDIA_DIR, name))) continue;
+    const body = readFileSync(join(__dirname, 'assets', asset));
+    await page.route(`**/media/${name}`, (route) => route.fulfill({ contentType, body }));
+  }
+}
 
 /** One catalog card as GET /api/catalog/listings returns it; n picks the reference and title. */
 /** The catalog cards cycle through the categories: [category, subcategory, title]. */

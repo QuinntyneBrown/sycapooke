@@ -97,7 +97,10 @@
                 }
               ],
               "outputHashing": "all",
-              "index": { "input": "projects/sycapooke/src/index.marketing.html", "output": "index.html" },
+              "index": {
+                "input": "projects/sycapooke/src/index.marketing.html",
+                "output": "index.html"
+              },
               "fileReplacements": [
                 {
                   "replace": "projects/sycapooke/src/app/app.routes.ts",
@@ -116,6 +119,9 @@
             },
             "development": {
               "buildTarget": "sycapooke:build:development"
+            },
+            "marketing": {
+              "buildTarget": "sycapooke:build:marketing"
             }
           },
           "defaultConfiguration": "development",

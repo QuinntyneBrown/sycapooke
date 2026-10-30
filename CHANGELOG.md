@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-10-30
+
+### Added
+
+- The pitch video is back: a 29-second film (MP4 H.264/AAC with a WebM VP9/Opus fallback and English WebVTT captions at `/media/sycapooke-pitch.*`) whose poster is the hero photograph of `/welcome`. One "Play · 0:29" pill opens the Pitch video dialog (`sy-dialog`, heading "Sycapooke video" hidden) with `sy-video-player`: native controls, Play/Pause, Captions off by default, a loading spinner and a "The video didn’t load" state with Try again; nothing plays or sounds before the visitor presses Play (`L2-089` to `L2-091`, [ADR platform/0014](docs/adr/platform/0014-pitch-video.md)).
+- `sy-video-poster` and `sy-video-player` in the Heirloom design system and `@sycapooke/components`; the `pitch-video` dialog mocks (default, loading, error, captions).
+- `docs/mocks/_build/video/build_video.py` builds the video from Playwright-rendered slides with Kokoro-82M narration (voice `af_heart`) and a ducked Pixabay track, credited in `public/media/ATTRIBUTION.md`.
+
+### Changed
+
+- The hero photograph of `/welcome` is the video poster: a named "Play" button with a decorative image (`L2-083`, `L2-078`).
+- `AGENTS.md` keeps the mascot, print collateral and advertising placements out of scope; the video no longer is.
+
 ## [0.1.0] — 2026-10-30
 
 ### Added
