@@ -83,3 +83,7 @@ public sealed record ProblemDetailView(
     string BuyerDisplayName,
     string SellerDisplayName,
     ProblemOrderView Order);
+
+public sealed record SupportRequestView(string Reference, string Kind, string Label, string Total, string Customer, DateTime At, string Status, string Link);
+
+public sealed record SupportQueueView(IReadOnlyList<SupportRequestView> Items, int OpenCount);

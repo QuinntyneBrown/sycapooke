@@ -231,6 +231,27 @@ public sealed class ResolveOrderProblemsTests : IDisposable
     }
 
     [Fact]
+    public async Task The_support_queue_lists_open_and_resolved_problems_for_the_founder_only()
+    {
+        var (orderId, founder) = await DeliveredOrderAsync();
+        var reported = await ReportAsync(orderId);
+
+        var open = (await founder.GetFromJsonAsync<SupportQueueView>("/api/shop/support"))!;
+        using var asBuyer = await _buyer.GetAsync("/api/shop/support");
+
+        var row = Assert.Single(open.Items);
+        Assert.Equal(1, open.OpenCount);
+        Assert.Equal(("Problem", "Open", $"/shop/problems/{reported.Reference}"), (row.Kind, row.Status, row.Link));
+        Assert.Equal("marcus_12", row.Customer);
+        Assert.Equal(HttpStatusCode.Forbidden, asBuyer.StatusCode);
+
+        (await founder.ResolveProblemAsync(reported.Reference, "RefundBuyer", "Refunded.")).EnsureSuccessStatusCode();
+        var resolved = (await founder.GetFromJsonAsync<SupportQueueView>("/api/shop/support"))!;
+        Assert.Equal(0, resolved.OpenCount);
+        Assert.Equal("Refunded", Assert.Single(resolved.Items).Status);
+    }
+
+    [Fact]
     public async Task A_full_refund_makes_the_order_refunded_refunds_the_buyer_()
     {
         var (orderId, seller) = await DeliveredOrderAsync();

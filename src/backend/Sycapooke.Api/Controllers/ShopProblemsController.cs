@@ -15,6 +15,10 @@ namespace Sycapooke.Api.Controllers;
 [Authorize(Policy = Policies.CanSell)]
 public sealed class ShopProblemsController(ISender sender) : ControllerBase
 {
+    [HttpGet("api/shop/support")]
+    public async Task<IActionResult> Queue(CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new GetSupportQueueQuery(), cancellationToken));
+
     [HttpGet("api/shop/problems/{reference}")]
     public async Task<IActionResult> Get(string reference, CancellationToken cancellationToken)
     {
