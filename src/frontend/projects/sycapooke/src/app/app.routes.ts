@@ -8,4 +8,5 @@ export const routes: Routes = [
   { path: 'members', loadChildren: () => import('@sycapooke/reviews').then((m) => m.routes) },
   { path: 'privacy', loadChildren: () => import('@sycapooke/privacy').then((m) => m.routes) },
   { path: '', loadChildren: () => import('@sycapooke/accounts').then((m) => m.routes) },
+  { path: '**', loadChildren: () => import('@sycapooke/accounts').then((m) => m.notFoundRoutes) },
 ];

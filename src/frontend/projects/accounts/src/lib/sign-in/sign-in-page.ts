@@ -38,6 +38,8 @@ export class SignInPage implements OnInit {
   readonly returnUrl = input<string>('');
   /** The Google callback's verdict, bound from the query string: cancelled, existing or failed. */
   readonly google = input<string>('');
+  /** `1` when the session ended after 14 days away: the page says welcome back (mocks pages/session-expired). */
+  readonly expired = input<string>('');
   /** The reference the callback sent with a failure. */
   readonly ref = input<string>('');
   /** Buy now on a listing sends a visitor here with the listing as returnUrl (L2-026). */
@@ -45,7 +47,9 @@ export class SignInPage implements OnInit {
 
   readonly form = inject(NonNullableFormBuilder).group({ email: '', password: '' });
   readonly busy = signal(false);
-  readonly failure = signal<{ kind: 'incorrect' } | { kind: 'error'; ref: string } | null>(null);
+  /** The welcome-back screen gives way to the form once the member chooses Sign in. */
+  readonly dismissedExpired = signal(false);
+  readonly failure = signal<{ kind: 'incorrect' } | { kind: 'locked' } | { kind: 'error'; ref: string } | null>(null);
   /** True once Sycapooke API said a Google client is configured; the button renders only then. */
   readonly googleOffered = signal(false);
   readonly leavingForGoogle = signal(false);
@@ -79,7 +83,9 @@ export class SignInPage implements OnInit {
     this.failure.set(
       result.problem.status === 401
         ? { kind: 'incorrect' }
-        : { kind: 'error', ref: shortRef(result.problem.correlationId) },
+        : result.problem.code === 'SIGN_IN_LOCKED'
+          ? { kind: 'locked' }
+          : { kind: 'error', ref: shortRef(result.problem.correlationId) },
     );
   }
 

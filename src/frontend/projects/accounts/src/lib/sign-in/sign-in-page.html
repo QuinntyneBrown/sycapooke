@@ -1,78 +1,95 @@
-@if (toBuy()) {
+@if (expired() === '1' && !dismissedExpired()) {
   <div>
-    <h1>Sign in to buy</h1>
-    <p class="text-muted sign-in__lead">You’ll go straight back to the item.</p>
-  </div>
-} @else {
-  <div><h1>Sign in</h1></div>
-}
-@switch (googleResult()) {
-  @case ('cancelled') {
-    <sy-alert tone="info" heading="Google sign-in was cancelled" live="polite"
-      >Nothing was changed. Try again, or sign in with your email and password.</sy-alert
-    >
-  }
-  @case ('existing') {
-    <sy-alert tone="warning" heading="An account with this email already exists" icon="lock"
-      >Sign in with your password and verify your email first. After that, Google will sign you in to the same
-      account.</sy-alert
-    >
-  }
-  @case ('failed') {
-    <sy-alert tone="danger" heading="Couldn’t sign in with Google"
-      >Try again in a moment, or sign in with your email and password.
-      <span class="ref">{{ googleRef() }}</span></sy-alert
-    >
-  }
-}
-@if (failure(); as failure) {
-  @if (failure.kind === 'incorrect') {
-    <sy-alert tone="danger" heading="Email or password is incorrect">Check both and try again.</sy-alert>
-  } @else {
-    <sy-alert tone="danger" heading="Something went wrong"
-      >Try again in a moment. <span class="ref">{{ failure.ref }}</span></sy-alert
-    >
-  }
-}
-@if (googleOffered()) {
-  <div class="stack">
-    <sy-provider-button
-      provider="google"
-      [href]="googleStartUrl()"
-      [busy]="leavingForGoogle()"
-      (pressed)="leavingForGoogle.set(true)"
-      >Continue with Google</sy-provider-button
-    >
-    <sy-or-divider />
-  </div>
-}
-<form class="stack stack--lg" novalidate [formGroup]="form" (ngSubmit)="submit()">
-  <sy-form-field fieldId="email" label="Email">
-    <input
-      class="input"
-      id="email"
-      type="email"
-      autocomplete="email"
-      formControlName="email"
-      [readonly]="busy() || leavingForGoogle()"
-    />
-  </sy-form-field>
-  <div class="stack stack--sm">
-    <sy-form-field fieldId="password" label="Password">
-      <input
-        class="input"
-        id="password"
-        type="password"
-        autocomplete="current-password"
-        formControlName="password"
-        [readonly]="busy() || leavingForGoogle()"
-      />
-    </sy-form-field>
+    <h1>Welcome back</h1>
+    <p class="text-muted sign-in__lead">For your security, sign in again after 14 days away.</p>
   </div>
   <div class="stack">
-    <button syButton="primary" size="lg" [block]="true" type="submit" [busy]="busy()" [disabled]="leavingForGoogle()">
+    <button syButton="primary" size="lg" [block]="true" type="button" (click)="dismissedExpired.set(true)">
       Sign in
     </button>
   </div>
-</form>
-<p class="text-sm text-muted">New to Sycapooke? <a routerLink="/join">Join</a></p>
+} @else {
+  @if (toBuy()) {
+    <div>
+      <h1>Sign in to buy</h1>
+      <p class="text-muted sign-in__lead">You’ll go straight back to the item.</p>
+    </div>
+  } @else {
+    <div><h1>Sign in</h1></div>
+  }
+  @switch (googleResult()) {
+    @case ('cancelled') {
+      <sy-alert tone="info" heading="Google sign-in was cancelled" live="polite"
+        >Nothing was changed. Try again, or sign in with your email and password.</sy-alert
+      >
+    }
+    @case ('existing') {
+      <sy-alert tone="warning" heading="An account with this email already exists" icon="lock"
+        >Sign in with your password and verify your email first. After that, Google will sign you in to the same
+        account.</sy-alert
+      >
+    }
+    @case ('failed') {
+      <sy-alert tone="danger" heading="Couldn’t sign in with Google"
+        >Try again in a moment, or sign in with your email and password.
+        <span class="ref">{{ googleRef() }}</span></sy-alert
+      >
+    }
+  }
+  @if (failure(); as failure) {
+    @if (failure.kind === 'incorrect') {
+      <sy-alert tone="danger" heading="Email or password is incorrect">Check both and try again.</sy-alert>
+    } @else if (failure.kind === 'locked') {
+      <sy-alert tone="warning" heading="Too many attempts" icon="clock"
+        >Try again in 15 minutes. We’ve emailed you about this.</sy-alert
+      >
+    } @else {
+      <sy-alert tone="danger" heading="Something went wrong"
+        >Try again in a moment. <span class="ref">{{ failure.ref }}</span></sy-alert
+      >
+    }
+  }
+  @if (googleOffered()) {
+    <div class="stack">
+      <sy-provider-button
+        provider="google"
+        [href]="googleStartUrl()"
+        [busy]="leavingForGoogle()"
+        (pressed)="leavingForGoogle.set(true)"
+        >Continue with Google</sy-provider-button
+      >
+      <sy-or-divider />
+    </div>
+  }
+  <form class="stack stack--lg" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    <sy-form-field fieldId="email" label="Email">
+      <input
+        class="input"
+        id="email"
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        [readonly]="busy() || leavingForGoogle()"
+      />
+    </sy-form-field>
+    <div class="stack stack--sm">
+      <sy-form-field fieldId="password" label="Password">
+        <input
+          class="input"
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          formControlName="password"
+          [readonly]="busy() || leavingForGoogle()"
+        />
+      </sy-form-field>
+      <a class="text-sm sign-in__forgot" routerLink="/forgot-password">Forgot password?</a>
+    </div>
+    <div class="stack">
+      <button syButton="primary" size="lg" [block]="true" type="submit" [busy]="busy()" [disabled]="leavingForGoogle()">
+        Sign in
+      </button>
+    </div>
+  </form>
+  <p class="text-sm text-muted">New to Sycapooke? <a routerLink="/join">Join</a></p>
+}

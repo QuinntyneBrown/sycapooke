@@ -1,1 +1,1 @@
-export { routes } from './lib/accounts.routes';
+export { notFoundRoutes, routes } from './lib/accounts.routes';

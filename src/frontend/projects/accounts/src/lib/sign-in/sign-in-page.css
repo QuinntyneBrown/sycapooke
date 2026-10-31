@@ -4,3 +4,6 @@
 .sign-in__lead {
   margin-top: var(--space-2);
 }
+.sign-in__forgot {
+  align-self: flex-start;
+}
