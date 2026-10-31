@@ -1,3 +1,6 @@
 using Sycapooke.Migrator;
 
-return MigratorApp.Run(Console.Out, Environment.GetEnvironmentVariable(MigratorApp.ConnectionStringVariable));
+var connectionString = Environment.GetEnvironmentVariable(MigratorApp.ConnectionStringVariable);
+return args.Contains(MigratorApp.ProvisionFounderFlag)
+    ? MigratorApp.RunProvisionFounder(Console.Out, connectionString, Environment.GetEnvironmentVariable(MigratorApp.FounderVariable))
+    : MigratorApp.Run(Console.Out, connectionString);

@@ -15,6 +15,8 @@ public static class DependencyInjection
         services.AddSingleton<Notifications.UnsubscribeTokens>();
         services.AddScoped<Listings.ListingPhotoAttacher>();
         services.AddScoped<Orders.OrderCancellation>();
+        services.AddScoped<Shop.IFounderAccess, Shop.FounderAccess>();
+        services.AddScoped<Shop.FounderProvisioner>();
         return services;
     }
 }

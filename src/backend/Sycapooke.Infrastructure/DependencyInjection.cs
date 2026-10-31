@@ -5,6 +5,7 @@ using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Catalog;
 using Sycapooke.Application.Listings;
 using Sycapooke.Application.Notifications;
+using Sycapooke.Application.Shop;
 using Sycapooke.Infrastructure.Accounts;
 using Sycapooke.Infrastructure.Carriers;
 using Sycapooke.Infrastructure.Email;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddSingleton<IBreachedPasswords, BundledBreachedPasswords>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddScoped<ISellerPayoutAccountReader, PayoutAccountReader>();
+        services.AddSingleton(ShopConfiguration.Read(configuration));
         services.Configure<AppOptions>(configuration.GetSection("App"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<SellingOptions>(configuration.GetSection("Selling"));
@@ -41,5 +43,22 @@ public static class DependencyInjection
         services.AddSingleton<ICarrierTracking, UnconfiguredCarrierTracking>();
         services.AddSingleton<IPayoutProvider, UnconfiguredPayoutProvider>();
         return services;
+    }
+}
+
+/// <summary>Reads <c>Shop:FounderMemberId</c>. A value that is set but not a single GUID stops startup; an unset value grants no access (ADR platform/0018).</summary>
+internal static class ShopConfiguration
+{
+    public static ShopOptions Read(IConfiguration configuration)
+    {
+        var raw = configuration[$"{ShopOptions.Section}:{nameof(ShopOptions.FounderMemberId)}"];
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return new ShopOptions();
+        }
+
+        return Guid.TryParse(raw, out var id) && id != Guid.Empty
+            ? new ShopOptions { FounderMemberId = id }
+            : throw new InvalidOperationException("Shop:FounderMemberId must be one member ID (a GUID), not a list or another value");
     }
 }

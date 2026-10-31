@@ -5,6 +5,7 @@ using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Notifications;
 using Sycapooke.Domain.Orders;
 using Sycapooke.Domain.Payouts;
+using Sycapooke.Domain.Shop;
 
 namespace Sycapooke.Infrastructure.Persistence;
 
@@ -46,6 +47,8 @@ public sealed class SycapookeDbContext(DbContextOptions<SycapookeDbContext> opti
     public DbSet<OrderProblem> OrderProblems => Set<OrderProblem>();
 
     public DbSet<NotificationPreferences> NotificationPreferences => Set<NotificationPreferences>();
+
+    public DbSet<ShopIdentity> ShopIdentities => Set<ShopIdentity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SycapookeDbContext).Assembly);

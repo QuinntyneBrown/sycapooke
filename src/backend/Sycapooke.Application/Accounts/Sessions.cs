@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Common;
+using Sycapooke.Application.Shop;
 using Sycapooke.Domain.Members;
 
 namespace Sycapooke.Application.Accounts;
@@ -117,11 +118,11 @@ public sealed class SignOutCommandHandler(ISycapookeDbContext db, TimeProvider c
 }
 
 /// <summary>The signed-in member as the app shell needs it.</summary>
-public sealed record CurrentMemberDto(string DisplayName, string Email, bool EmailVerified);
+public sealed record CurrentMemberDto(string DisplayName, string Email, bool EmailVerified, bool IsFounder = false);
 
 public sealed record GetCurrentMemberQuery(Guid MemberId) : IRequest<Result<CurrentMemberDto>>;
 
-public sealed class GetCurrentMemberQueryHandler(ISycapookeDbContext db) : IRequestHandler<GetCurrentMemberQuery, Result<CurrentMemberDto>>
+public sealed class GetCurrentMemberQueryHandler(ISycapookeDbContext db, IFounderAccess founder) : IRequestHandler<GetCurrentMemberQuery, Result<CurrentMemberDto>>
 {
     public async Task<Result<CurrentMemberDto>> Handle(GetCurrentMemberQuery query, CancellationToken cancellationToken)
     {
@@ -129,6 +130,8 @@ public sealed class GetCurrentMemberQueryHandler(ISycapookeDbContext db) : IRequ
             .Where(m => m.Id == query.MemberId)
             .Select(m => new CurrentMemberDto(m.DisplayName, m.Email, m.EmailVerifiedAt != null))
             .SingleOrDefaultAsync(cancellationToken);
-        return member is null ? new Error(401, "SESSION_EXPIRED", "Sign in again") : member;
+        return member is null
+            ? new Error(401, "SESSION_EXPIRED", "Sign in again")
+            : member with { IsFounder = await founder.IsFounderAsync(query.MemberId, cancellationToken) };
     }
 }

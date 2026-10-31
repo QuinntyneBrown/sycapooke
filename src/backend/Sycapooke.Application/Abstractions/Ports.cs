@@ -6,6 +6,7 @@ using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Notifications;
 using Sycapooke.Domain.Orders;
 using Sycapooke.Domain.Payouts;
+using Sycapooke.Domain.Shop;
 
 namespace Sycapooke.Application.Abstractions;
 
@@ -47,6 +48,8 @@ public interface ISycapookeDbContext
     DbSet<OrderProblem> OrderProblems { get; }
 
     DbSet<NotificationPreferences> NotificationPreferences { get; }
+
+    DbSet<ShopIdentity> ShopIdentities { get; }
 
     /// <summary>Transactions, for the steps of checkout that must commit together.</summary>
     DatabaseFacade Database { get; }

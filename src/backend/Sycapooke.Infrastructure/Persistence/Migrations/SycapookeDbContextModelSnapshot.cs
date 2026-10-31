@@ -1117,6 +1117,26 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                     b.ToTable("SellerPayoutAccounts", (string)null);
                 });
 
+            modelBuilder.Entity("Sycapooke.Domain.Shop.ShopIdentity", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("FounderMemberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FounderMemberId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ShopIdentity_FounderMemberId");
+
+                    b.ToTable("ShopIdentity", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ShopIdentity_Singleton", "[Id] = 1");
+                        });
+                });
+
             modelBuilder.Entity("Sycapooke.Domain.Listings.Listing", b =>
                 {
                     b.HasOne("Sycapooke.Domain.Members.Member", null)
@@ -1509,6 +1529,15 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                     b.HasOne("Sycapooke.Domain.Members.Member", null)
                         .WithMany()
                         .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sycapooke.Domain.Shop.ShopIdentity", b =>
+                {
+                    b.HasOne("Sycapooke.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("FounderMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

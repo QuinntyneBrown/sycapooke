@@ -11,6 +11,8 @@ using Microsoft.Extensions.Time.Testing;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Notifications;
 using Sycapooke.Application.Orders;
+using Sycapooke.Application.Shop;
+using Sycapooke.Domain.Shop;
 using Sycapooke.Infrastructure.Persistence;
 
 namespace Sycapooke.Api.Tests.Support;
@@ -53,6 +55,9 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
 
     public FakeGoogleIdentityProvider Google { get; } = new();
 
+    /// <summary>The shop configuration the host reads; a test changes it as a restart with new settings would.</summary>
+    public ShopOptions Shop { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -87,6 +92,8 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IPayoutProvider>();
             services.AddSingleton<IPayoutProvider>(PayoutProvider);
             services.AddSingleton<INotificationHandler<OrderCompleted>>(Completed);
+            services.RemoveAll<ShopOptions>();
+            services.AddSingleton(Shop);
             services.RemoveAll<IGoogleIdentityProvider>();
             services.AddSingleton<IGoogleIdentityProvider>(Google);
         });
@@ -116,6 +123,26 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<ISender>().Send(new DispatchEmailsCommand());
         return Email.Sent.Skip(before).ToList();
+    }
+
+    /// <summary>The ID of the registered member with this email.</summary>
+    public Guid MemberId(string email)
+    {
+        EnsureDatabase();
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SycapookeDbContext>();
+        return db.Members.AsNoTracking().Single(m => m.NormalizedEmail == email.ToUpperInvariant()).Id;
+    }
+
+    /// <summary>Configures and stores the founder binding, as the operator's provisioning step does.</summary>
+    public void BindFounder(Guid memberId)
+    {
+        Shop.FounderMemberId = memberId;
+        InDatabase(db =>
+        {
+            db.ShopIdentities.Add(ShopIdentity.Bind(memberId));
+            db.SaveChanges();
+        });
     }
 
     public void InDatabase(Action<SycapookeDbContext> action)
