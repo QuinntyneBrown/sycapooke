@@ -19,6 +19,8 @@ public interface ISycapookeDbContext
 
     DbSet<Session> Sessions { get; }
 
+    DbSet<PasswordResetToken> PasswordResetTokens { get; }
+
     DbSet<ExternalLogin> ExternalLogins { get; }
 
     DbSet<PendingExternalJoin> PendingExternalJoins { get; }

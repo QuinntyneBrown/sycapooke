@@ -344,6 +344,41 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                     b.ToTable("Members", (string)null);
                 });
 
+            modelBuilder.Entity("Sycapooke.Domain.Members.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PasswordResetTokens_TokenHash");
+
+                    b.HasIndex("MemberId", "CreatedAt")
+                        .HasDatabaseName("IX_PasswordResetTokens_MemberId_CreatedAt");
+
+                    b.ToTable("PasswordResetTokens", (string)null);
+                });
+
             modelBuilder.Entity("Sycapooke.Domain.Members.PendingExternalJoin", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1215,6 +1250,15 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Sycapooke.Domain.Members.ExternalLogin", b =>
+                {
+                    b.HasOne("Sycapooke.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sycapooke.Domain.Members.PasswordResetToken", b =>
                 {
                     b.HasOne("Sycapooke.Domain.Members.Member", null)
                         .WithMany()

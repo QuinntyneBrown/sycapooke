@@ -25,6 +25,15 @@ public sealed class SeedListingsTests(SeededDemo demo) : IClassFixture<SeededDem
     }
 
     [Fact]
+    public void The_founder_owns_every_listing()
+    {
+        var (listings, founderId) = demo.Harness.InDatabase(db =>
+            (db.Listings.ToList(), db.Members.Single(m => m.Email == DemoCatalogue.Founder.Email).Id));
+
+        Assert.All(listings, l => Assert.Equal(founderId, l.SellerId));
+    }
+
+    [Fact]
     public void Every_listing_uses_photos_from_its_own_categorys_folder()
     {
         Assert.All(DemoCatalogue.Listings, l => Assert.All(l.Photos, p => Assert.StartsWith($"{l.Category}/", p)));
@@ -90,12 +99,12 @@ public sealed class SeedListingsTests(SeededDemo demo) : IClassFixture<SeededDem
     }
 
     [Fact]
-    public void Each_member_publishes_at_most_one_listing_a_day_over_the_past_thirty_days()
+    public void The_founder_publishes_at_most_one_listing_a_day_in_the_past()
     {
         var listings = demo.Harness.InDatabase(db => db.Listings.ToList());
         var now = DateTime.UtcNow;
 
-        Assert.All(listings, l => Assert.InRange(l.PublishedAt!.Value, now.AddDays(-31), now));
+        Assert.All(listings, l => Assert.InRange(l.PublishedAt!.Value, now.AddDays(-50), now));
         Assert.All(listings.GroupBy(l => (l.SellerId, l.PublishedAt!.Value.Date)), g => Assert.Single(g));
     }
 

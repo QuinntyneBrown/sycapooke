@@ -18,6 +18,8 @@ public sealed class SycapookeDbContext(DbContextOptions<SycapookeDbContext> opti
 
     public DbSet<Session> Sessions => Set<Session>();
 
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
 
     public DbSet<PendingExternalJoin> PendingExternalJoins => Set<PendingExternalJoin>();

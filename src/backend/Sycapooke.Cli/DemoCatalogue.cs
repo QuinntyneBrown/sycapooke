@@ -20,8 +20,8 @@ public sealed record DemoListing(
     IReadOnlyList<string> Photos);
 
 /// <summary>
-/// The fixed demo set (seed-demo-data design): 8 members and 48 listings, 12 in each of the
-/// 4 categories. Every piece is at least 20 years old and says so in its description. Brands
+/// The fixed demo set (seed-demo-data design): the founder, 8 private customers and the founder's
+/// 48 listings, 12 in each of the 4 categories. Every piece is at least 20 years old and says so in its description. Brands
 /// come from Selling:SuggestedBrands; photos are the committed images in SeedPhotos/, two per
 /// category, shared by that category's listings. A small demo, not a load or scale fixture
 /// (ADR general/0002).
@@ -31,7 +31,11 @@ public static class DemoCatalogue
     /// <summary>The shared demo password, documented in the CLI README. For local use only.</summary>
     public const string Password = "Sycapooke-demo-only-2026";
 
-    public static readonly IReadOnlyList<DemoMember> Members =
+    /// <summary>The shop's founder and only seller. Her name and story are placeholders until she approves the real ones.</summary>
+    public static readonly DemoMember Founder = new("MissIda", "ida@demo.sycapooke.test");
+
+    /// <summary>The private customers: they shop and manage their own account, nothing else.</summary>
+    public static readonly IReadOnlyList<DemoMember> Customers =
     [
         new("BroochBetty", "betty@demo.sycapooke.test"),
         new("TeacupLorraine", "lorraine@demo.sycapooke.test"),
@@ -42,6 +46,9 @@ public static class DemoCatalogue
         new("GlazeCarol", "carol@demo.sycapooke.test"),
         new("FilmFrank", "frank@demo.sycapooke.test"),
     ];
+
+    /// <summary>Every demo account, the founder first.</summary>
+    public static readonly IReadOnlyList<DemoMember> Members = [Founder, .. Customers];
 
     private const string Brooch = "Jewelry/gold-filigree-brooch.jpg";
     private const string Pearls = "Jewelry/triple-strand-pearls.jpg";
@@ -144,7 +151,4 @@ public static class DemoCatalogue
 
     private static List<DemoListing> Interleave(params List<DemoListing>[] categories) =>
         Enumerable.Range(0, categories[0].Count).SelectMany(i => categories.Select(c => c[i])).ToList();
-
-    /// <summary>The member who sells listing <paramref name="index"/>: sellers take turns.</summary>
-    public static DemoMember SellerOf(int index) => Members[index % Members.Count];
 }

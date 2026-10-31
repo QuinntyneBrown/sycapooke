@@ -53,6 +53,27 @@ public sealed class AuthController(ISender sender, SessionCookies cookies, IGoog
         return await Me(result.Value!.MemberId, cancellationToken);
     }
 
+    /// <summary>Always answers 202, whether or not the address is registered (L2-009).</summary>
+    [HttpPost("password-reset")]
+    public async Task<IActionResult> RequestPasswordReset(PasswordResetRequest request, CancellationToken cancellationToken)
+    {
+        await sender.Send(new RequestPasswordResetCommand(request.Email), cancellationToken);
+        return Accepted();
+    }
+
+    [HttpPost("password-reset/confirm")]
+    public async Task<IActionResult> ConfirmPasswordReset(PasswordResetConfirmRequest request, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new ResetPasswordCommand(request.Token, request.Password), cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return this.ToProblem(result.Error!);
+        }
+
+        SessionCookies.Clear(Response);
+        return NoContent();
+    }
+
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
@@ -100,6 +121,10 @@ public sealed record RegisterRequest(string? DisplayName, string? Email, string?
 public sealed record VerifyEmailRequest(string? Token);
 
 public sealed record VerificationEmailRequest(string? Email);
+
+public sealed record PasswordResetRequest(string? Email);
+
+public sealed record PasswordResetConfirmRequest(string? Token, string? Password);
 
 public sealed record SignInRequest(string? Email, string? Password);
 

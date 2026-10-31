@@ -11,7 +11,7 @@ tool, and CI never runs it against a database
 | Command | What it does |
 |---------|--------------|
 | `reset [--force]` | Drops the database, applies every EF Core migration (the same code as `Sycapooke.Migrator`) and empties the photo store. |
-| `seed [--reset] [--force]` | Loads 8 demo members and 48 Active listings, 12 in each of Jewelry, Clothing, Housewares and Electronics, every one at least 20 years old, each with 1 to 2 photos from its category's folder. `--reset` runs `reset` first. |
+| `seed [--reset] [--force]` | Loads the demo founder, 8 private customers and the founder's 48 Active listings, 12 in each of Jewelry, Clothing, Housewares and Electronics, every one at least 20 years old, each with 1 to 2 photos from its category's folder. `--reset` runs `reset` first. |
 | `help` | Prints usage. |
 
 `reset` (and `seed --reset`) only runs when `DOTNET_ENVIRONMENT` is `Development`, unless
@@ -60,21 +60,26 @@ built DLL with the x64 host, `& "C:\Program Files\dotnet\x64\dotnet.exe" Sycapoo
 
 ## Demo accounts
 
-Every demo member uses the password **`Sycapooke-demo-only-2026`**. It is for local use only:
+Every demo account uses the password **`Sycapooke-demo-only-2026`**. It is for local use only:
 never seed a shared or production database.
 
-| Display name | Email |
-|--------------|-------|
-| BroochBetty | `betty@demo.sycapooke.test` |
-| TeacupLorraine | `lorraine@demo.sycapooke.test` |
-| RadioWalter | `walter@demo.sycapooke.test` |
-| OvercoatDennis | `dennis@demo.sycapooke.test` |
-| PearlEvelyn | `evelyn@demo.sycapooke.test` |
-| ShirtwaistJoan | `joan@demo.sycapooke.test` |
-| GlazeCarol | `carol@demo.sycapooke.test` |
-| FilmFrank | `frank@demo.sycapooke.test` |
+| Role | Display name | Email |
+|------|--------------|-------|
+| Founder | MissIda | `ida@demo.sycapooke.test` |
+| Customer | BroochBetty | `betty@demo.sycapooke.test` |
+| Customer | TeacupLorraine | `lorraine@demo.sycapooke.test` |
+| Customer | RadioWalter | `walter@demo.sycapooke.test` |
+| Customer | OvercoatDennis | `dennis@demo.sycapooke.test` |
+| Customer | PearlEvelyn | `evelyn@demo.sycapooke.test` |
+| Customer | ShirtwaistJoan | `joan@demo.sycapooke.test` |
+| Customer | GlazeCarol | `carol@demo.sycapooke.test` |
+| Customer | FilmFrank | `frank@demo.sycapooke.test` |
 
-Seller ratings show "No reviews yet": no orders, reviews, reports or data exports are seeded.
+The founder alone has shop management; seed binds her through the same provisioning step a trusted
+operator runs (`Sycapooke.Migrator --provision-founder`) and prints her member ID. Set
+`Shop__FounderMemberId` to that ID for the local API; without it nobody has founder access. She
+publishes all 48 listings, one a day, so the daily publish limit stays in force. The founder summary
+shows "No reviews yet": no orders, reviews, reports or data exports are seeded.
 
 ## Photos
 

@@ -121,6 +121,12 @@ public sealed class Member
         NormalizedDisplayName = Normalize(displayName);
     }
 
+    /// <summary>Replaces the password hash; the caller has proved the right to and validated the new password.</summary>
+    public void ChangePassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
+
     public void GrantAdministrator()
     {
         IsAdministrator = true;

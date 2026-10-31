@@ -154,11 +154,15 @@ public sealed class SignOutEverywhereCommandHandler(ISycapookeDbContext db, Time
 /// <summary>Revokes all of a member's sessions; shared by sign-out-everywhere and password reset.</summary>
 public static class SessionRevoker
 {
-    public static async Task RevokeAllAsync(ISycapookeDbContext db, Guid memberId, DateTime now, CancellationToken cancellationToken)
+    /// <summary>Marks every live session revoked; with <paramref name="save"/> false the caller saves it with its own change.</summary>
+    public static async Task RevokeAllAsync(ISycapookeDbContext db, Guid memberId, DateTime now, CancellationToken cancellationToken, bool save = true)
     {
         var sessions = await db.Sessions.Where(s => s.MemberId == memberId && s.RevokedAt == null).ToListAsync(cancellationToken);
         sessions.ForEach(s => s.Revoke(now));
-        await db.SaveChangesAsync(cancellationToken);
+        if (save)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
     }
 }
 

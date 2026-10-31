@@ -36,18 +36,7 @@ public sealed partial class RegisterMemberCommandHandler(
             errors["email"] = new("EMAIL_TAKEN", "An account with this email already exists");
         }
 
-        if (password.Length < 12)
-        {
-            errors["password"] = new("PASSWORD_TOO_SHORT", "Password must be at least 12 characters");
-        }
-        else if (password.Length > 128)
-        {
-            errors["password"] = new("PASSWORD_TOO_LONG", "Password must be 128 characters or fewer");
-        }
-        else if (breached.Contains(password))
-        {
-            errors["password"] = new("PASSWORD_BREACHED", "This password has appeared in a data breach. Choose another.");
-        }
+        PasswordRules.Validate(breached, password, "password", errors);
 
         MemberRegistrationRules.ValidateConsent(command.AgeConfirmed, command.TermsAccepted, errors);
 

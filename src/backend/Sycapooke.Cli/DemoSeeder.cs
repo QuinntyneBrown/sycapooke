@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Sycapooke.Application.Accounts;
 using Sycapooke.Application.Common;
 using Sycapooke.Application.Listings;
+using Sycapooke.Application.Shop;
 using Sycapooke.Domain.Listings;
 using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Notifications;
@@ -19,11 +20,11 @@ namespace Sycapooke.Cli;
 /// </summary>
 public sealed class DemoSeeder(ISender sender, SycapookeDbContext db, SeedClock clock, IConfiguration configuration)
 {
-    /// <summary>The demo members register this long before the seed, before their first listing.</summary>
-    public static readonly TimeSpan MembersJoinedBefore = TimeSpan.FromDays(31);
+    /// <summary>The demo accounts register this long before the seed, before the first listing.</summary>
+    public static readonly TimeSpan MembersJoinedBefore = TimeSpan.FromDays(49);
 
-    /// <summary>The listings are published over this many days before the seed, oldest first.</summary>
-    public static readonly TimeSpan ListingsSpread = TimeSpan.FromDays(30);
+    /// <summary>The founder's listings are published over this many days before the seed, oldest first: one a day.</summary>
+    public static readonly TimeSpan ListingsSpread = TimeSpan.FromDays(48);
 
     private const string SuppressionReason = "Demo member verified by Sycapooke.Cli";
 
@@ -36,7 +37,7 @@ public sealed class DemoSeeder(ISender sender, SycapookeDbContext db, SeedClock 
 
     public async Task SeedAsync(TextWriter output, CancellationToken cancellationToken)
     {
-        var marker = Member.Normalize(DemoCatalogue.Members[0].Email);
+        var marker = Member.Normalize(DemoCatalogue.Founder.Email);
         if (await db.Members.AnyAsync(m => m.NormalizedEmail == marker, cancellationToken))
         {
             output.WriteLine("Demo data already exists. Run seed --reset for a fresh demo.");
@@ -44,22 +45,30 @@ public sealed class DemoSeeder(ISender sender, SycapookeDbContext db, SeedClock 
         }
 
         var start = clock.GetUtcNow();
+        var memberIds = new Dictionary<DemoMember, Guid>();
         try
         {
             clock.Set(start - MembersJoinedBefore);
-            var memberIds = new Dictionary<DemoMember, Guid>();
             foreach (var member in DemoCatalogue.Members)
             {
                 memberIds[member] = await AddMemberAsync(member, cancellationToken);
             }
 
-            // Spread the publishes so no seller publishes twice on one day: the daily limit
+            // The trusted operator step of L2-003: bind the one founder before she publishes anything.
+            var founderId = memberIds[DemoCatalogue.Founder];
+            var outcome = await new FounderProvisioner(db).ProvisionAsync(founderId, cancellationToken);
+            if (outcome is not (ProvisionOutcome.Bound or ProvisionOutcome.AlreadyBound))
+            {
+                throw new InvalidOperationException($"Binding the demo founder: {outcome}");
+            }
+
+            // Spread the publishes so the founder publishes once a day: the daily limit
             // (Selling:PublishesPerDay, L2-051) stays in force and never blocks the seed.
             var spacing = ListingsSpread / DemoCatalogue.Listings.Count;
             for (var i = 0; i < DemoCatalogue.Listings.Count; i++)
             {
                 clock.Set(start - ListingsSpread + (spacing * i));
-                await AddListingAsync(memberIds[DemoCatalogue.SellerOf(i)], DemoCatalogue.Listings[i], cancellationToken);
+                await AddListingAsync(founderId, DemoCatalogue.Listings[i], cancellationToken);
             }
         }
         finally
@@ -68,6 +77,7 @@ public sealed class DemoSeeder(ISender sender, SycapookeDbContext db, SeedClock 
         }
 
         output.WriteLine($"Seeded {DemoCatalogue.Members.Count} members and {DemoCatalogue.Listings.Count} listings.");
+        output.WriteLine($"Founder: {DemoCatalogue.Founder.Email}. For the local API set Shop__FounderMemberId to {memberIds[DemoCatalogue.Founder]}.");
     }
 
     /// <summary>Registers the member, verifies them with the link from their queued email, then suppresses that email.</summary>

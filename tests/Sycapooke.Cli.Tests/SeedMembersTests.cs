@@ -43,6 +43,24 @@ public sealed class SeedMembersTests(SeededDemo demo) : IClassFixture<SeededDemo
     }
 
     [Fact]
+    public void Exactly_one_founder_is_bound_and_customers_are_not()
+    {
+        var (identities, founder) = demo.Harness.InDatabase(db =>
+            (db.ShopIdentities.ToList(), db.Members.Single(m => m.Email == DemoCatalogue.Founder.Email)));
+
+        var binding = Assert.Single(identities);
+        Assert.Equal(founder.Id, binding.FounderMemberId);
+        Assert.Equal(DemoCatalogue.Customers.Count + 1, DemoCatalogue.Members.Count);
+        Assert.Equal(DemoCatalogue.Founder, DemoCatalogue.Members[0]);
+    }
+
+    [Fact]
+    public void The_cli_output_names_the_founder_setting_for_the_local_api()
+    {
+        Assert.Contains("Shop__FounderMemberId", demo.Run.Output);
+    }
+
+    [Fact]
     public void No_demo_member_has_a_pending_email_and_the_verification_emails_are_suppressed()
     {
         var messages = demo.Harness.InDatabase(db => db.OutboxMessages.ToList());
