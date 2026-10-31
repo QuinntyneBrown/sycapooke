@@ -125,15 +125,3 @@ const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' 
 export function formatUsd(amount: number): string {
   return usd.format(amount);
 }
-
-/**
- * Estimated earnings, (price + shipping) × (1 − fee / 100) rounded half up to the cent, or null
- * while the price is empty or invalid (L2-031). Display only; seller-payouts computes the fee.
- */
-export function estimateEarnings(price: string, shipping: string, feePercent: number): string | null {
-  if (!inRange(price, 1, 5000)) return null;
-  const ship = shipping.trim() ? (inRange(shipping, 0, 100) ? parseMoney(shipping)! : null) : 0;
-  if (ship === null) return null;
-  const cents = Math.round((parseMoney(price)! + ship) * (100 - feePercent));
-  return formatUsd(cents / 100);
-}

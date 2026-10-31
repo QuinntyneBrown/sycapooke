@@ -20,6 +20,7 @@ const CUSTOMER_TABS: readonly SubnavItem[] = [
 
 /** The founder's shop-management tabs; each joins when its page is built. */
 const FOUNDER_TABS: readonly SubnavItem[] = [
+  { label: 'Shop', path: '/shop' },
   { label: 'Inventory', path: '/account/listings' },
   { label: 'Emails', path: '/account/emails' },
   { label: 'Settings', path: '/account/settings' },

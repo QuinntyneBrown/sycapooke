@@ -39,9 +39,6 @@
     @if (published(); as item) {
       <sy-center-state icon="check" heading="It’s live">
         <div class="panel sell__panel"><sy-item-row [title]="item.title" [meta]="item.meta" /></div>
-        @if (item.payoutOnboardingRequired) {
-          <p class="text-muted"><a routerLink="/account/payouts">Set up payouts</a> so you’re paid when it sells.</p>
-        }
         <a actions syButton="primary" [routerLink]="['/items', item.reference]">View listing</a>
         <a actions syButton routerLink="/sell" (click)="reset()">Sell another</a>
       </sy-center-state>

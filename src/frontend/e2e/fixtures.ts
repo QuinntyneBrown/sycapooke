@@ -19,6 +19,10 @@ export const marcus: MemberFixture = {
 
 export const unverifiedMarcus: MemberFixture = { ...marcus, emailVerified: false };
 
+/** Marcus in the founder's seat, for specs of founder-only pages written before the fixtures split. */
+export const founderMarcus: MemberFixture = { ...marcus, isFounder: true };
+export const unverifiedFounderMarcus: MemberFixture = { ...unverifiedMarcus, isFounder: true };
+
 /** The shop's founder: the only member who sees "Sell an item" in the top bar. */
 export const ida: MemberFixture = {
   displayName: 'miss_ida',
@@ -64,7 +68,6 @@ export const categories = [
 
 /** GET /api/selling/options. */
 export const sellingOptions = {
-  feePercent: 10,
   conditions: ['New with tags', 'New without tags', 'Used - Excellent', 'Used - Good', 'Used - Fair'],
   suggestedBrands: ['Trifari', 'Pendleton', 'Pyrex'],
   maxPhotos: 8,

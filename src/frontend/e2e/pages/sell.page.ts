@@ -21,7 +21,6 @@ export class SellPage {
   readonly description: Locator;
   readonly price: Locator;
   readonly shipping: Locator;
-  readonly earnings: Locator;
   readonly saveDraft: Locator;
   readonly publish: Locator;
   readonly errorSummary: Locator;
@@ -45,7 +44,6 @@ export class SellPage {
     this.description = page.getByLabel('Description');
     this.price = page.locator('#price');
     this.shipping = page.getByLabel('Shipping');
-    this.earnings = page.locator('.earnings');
     this.saveDraft = page.getByRole('button', { name: 'Save draft' });
     this.publish = page.getByRole('button', { name: 'Publish' });
     this.errorSummary = page.getByRole('alert').filter({ hasText: 'Fix these to continue' });

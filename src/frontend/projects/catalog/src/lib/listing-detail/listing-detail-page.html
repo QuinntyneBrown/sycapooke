@@ -118,7 +118,7 @@
               <time [attr.datetime]="listing.publishedAt">{{ listed() }}</time>
             </dd>
           </dl>
-          <sy-seller-summary [seller]="listing.seller" />
+          <sy-founder-summary [founder]="listing.seller" />
         </div>
       </div>
       @if (similarCards().length > 0) {

@@ -14,9 +14,8 @@ export interface Category {
   sizeLabel: string;
 }
 
-/** GET /api/selling/options: the platform fee shown before publishing (L2-031) and form choices. */
+/** GET /api/selling/options: the form choices. */
 export interface SellingOptions {
-  feePercent: number;
   conditions: string[];
   suggestedBrands: string[];
   maxPhotos: number;

@@ -77,7 +77,6 @@ export interface MyListings {
 export interface PublishResult {
   reference: string;
   status: string;
-  payoutOnboardingRequired: boolean;
 }
 
 /** Typed client for the seller's listings (create-listing). */

@@ -76,7 +76,7 @@ public page. The founder's public details are edited on Edit story.
 
 ### Shop — `/shop` (`pages/shop`: default, loading, empty, error)
 
-Founder overview (new, not yet built). App shell with the founder sub-navigation (Shop tab). Only
+Founder overview, built as `@sycapooke/listings` `ShopPage` (`src/lib/shop/`) behind `founderGuard`; so far it shows the Active listings figure and the Inventory row, and Sales, Support and Story join with their pages. App shell with the founder sub-navigation (Shop tab). Only
 the verified founder reaches it; anyone else gets the Forbidden page (state `management`).
 
 - Library: `sy-stat` (Active listings, To ship by {date}, Open problem; each inside a linked

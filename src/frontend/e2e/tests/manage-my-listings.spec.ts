@@ -7,7 +7,7 @@
 
 import { Page } from '@playwright/test';
 
-import { expect, marcus, myListingRow, myListings, problem, signInAs, test } from '../fixtures';
+import { expect, founderMarcus, myListingRow, myListings, problem, signInAs, test } from '../fixtures';
 import { MyListingsPage } from '../pages/my-listings.page';
 
 const all = myListings(
@@ -68,7 +68,7 @@ async function serve(page: Page): Promise<string[]> {
 test.describe('manage my listings', () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-10-26T18:00:00Z'));
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await page.route('**/photos/**', (route) => route.fulfill({ contentType: 'image/png', body: Buffer.alloc(0) }));
   });
 

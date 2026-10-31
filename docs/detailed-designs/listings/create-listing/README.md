@@ -28,7 +28,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and covered: drafts, publishing and the sell form are founder-only (`FounderInventoryTests`, `PublishListingTests`, `ListingDraftTests`, `sell.spec.ts`, `manage-founder-access.spec.ts`); the fee preview, earnings panel and payout prompt are removed. Remaining: visual comparison with the mocks at 320px.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

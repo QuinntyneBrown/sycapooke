@@ -24,7 +24,6 @@ interface Published {
   reference: string;
   title: string;
   meta: string;
-  payoutOnboardingRequired: boolean;
 }
 
 /**
@@ -136,7 +135,6 @@ export class SellPage implements OnInit {
       reference: saved.reference,
       title: saved.title ?? '',
       meta: [saved.brand, size, saved.price === null ? null : formatUsd(saved.price)].filter(Boolean).join(' · '),
-      payoutOnboardingRequired: result.value.payoutOnboardingRequired,
     });
     this.view.set('success');
   }

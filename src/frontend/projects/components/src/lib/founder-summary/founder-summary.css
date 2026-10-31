@@ -1,0 +1,7 @@
+:host {
+  display: block;
+}
+.founder__body {
+  flex: 1;
+  gap: var(--space-1);
+}

@@ -1,0 +1,46 @@
+<div class="page-header">
+  <div>
+    <h1>Shop</h1>
+    <p class="subtitle">{{ auth.member()?.displayName }}’s collection</p>
+  </div>
+  @if (view() !== 'empty') {
+    <a syButton="primary" routerLink="/sell"><sy-icon name="plus" />Sell an item</a>
+  }
+</div>
+@switch (view()) {
+  @case ('loading') {
+    <div class="grid grid--auto" aria-busy="true" aria-label="Loading" style="--layout-gutter: var(--space-4)">
+      @for (panel of [1, 2, 3]; track panel) {
+        <div class="panel"><span class="skeleton skeleton--text"></span></div>
+      }
+    </div>
+  }
+  @case ('error') {
+    <sy-empty-state icon="refresh" heading="Couldn’t load the shop" tone="error">
+      Something went wrong on our side. <span class="ref">{{ errorRef() }}</span>
+      <button actions syButton="primary" type="button" (click)="load()"><sy-icon name="refresh" />Try again</button>
+    </sy-empty-state>
+  }
+  @case ('empty') {
+    <sy-empty-state icon="tag" heading="Nothing for sale yet">
+      Add your first treasure and it appears in the shop.
+      <a actions syButton="primary" routerLink="/sell"><sy-icon name="plus" />Sell an item</a>
+    </sy-empty-state>
+  }
+  @default {
+    <div class="grid grid--auto" style="--layout-gutter: var(--space-4)">
+      <a class="panel" routerLink="/account/listings" style="text-decoration: none; color: inherit">
+        <sy-stat label="Active listings" [value]="active().toString()" />
+      </a>
+    </div>
+    <ul class="settings-list" style="margin-top: var(--space-8)">
+      <li>
+        <div class="settings-list__body">
+          <span class="settings-list__title">Inventory</span>
+          <span class="settings-list__meta">Drafts, active, reserved and sold pieces</span>
+        </div>
+        <a syButton routerLink="/account/listings">Open inventory</a>
+      </li>
+    </ul>
+  }
+}

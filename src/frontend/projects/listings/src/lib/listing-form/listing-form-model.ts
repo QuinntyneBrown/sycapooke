@@ -12,7 +12,6 @@ import {
   MAX_PHOTO_BYTES,
   SERVER_FIELDS,
   checkListing,
-  estimateEarnings,
   formatFileSize,
   toDetails,
 } from './listing-rules';
@@ -63,9 +62,6 @@ export class ListingFormModel {
   readonly isUsedFair = computed(() => this.value().condition === 'Used - Fair');
   readonly titleCount = computed(() => `${this.value().title.length} / 80`);
   readonly descriptionCount = computed(() => `${this.value().description.length.toLocaleString('en-US')} / 2,000`);
-  readonly earnings = computed(() =>
-    estimateEarnings(this.value().price, this.value().shipping, this.options()?.feePercent ?? 0),
-  );
   readonly summary = computed<SummaryError[]>(() =>
     FIELD_IDS.filter((id) => this.errors()[id]).map((id) => ({ fieldId: id, message: this.errors()[id]! })),
   );

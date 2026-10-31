@@ -34,7 +34,9 @@ test.describe('view listing detail', () => {
       'href',
       '/members/heirloom_hazel',
     );
-    await expect(detail.seller).toContainText('New seller');
+    await expect(detail.seller).toContainText('Founder of Sycapooke · 0 completed sales');
+    await expect(detail.seller).toContainText('No reviews yet');
+    await expect(detail.seller.getByRole('link', { name: 'Read her story and see her collection' })).toBeVisible();
     await expect(detail.buyBar).toContainText('$94.00');
     await expect(detail.buyNow).toHaveAttribute('href', '/checkout/L-10001');
     expect(unfixturedApiCalls).toEqual([]);

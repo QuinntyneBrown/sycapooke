@@ -108,7 +108,7 @@ No change. The handlers query `ISycapookeDbContext`; there is no full-text index
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and covered: filters and search run over the founder's inventory only (`SearchAndFilterCatalogTests`, `search-and-filter-catalog.spec.ts`). Remaining: visual comparison with the mocks.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

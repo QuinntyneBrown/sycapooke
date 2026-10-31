@@ -13,6 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Account pages: `/account`, `/account/profile`, `/account/settings` with Change password and Sign out everywhere dialogs, `/forgot-password`, `/reset-password`, the welcome-back screen at `/sign-in?expired=1`, the locked sign-in state, `/403` and the not-found page; `signedInGuard` and `founderGuard`; the `sy-subnav` component.
 - The demo seeder creates one founder who owns every demo listing, plus customers, and binds the founder.
 
+- Founder-only inventory: drafts, publishing, photo uploads, edits, withdrawals and inventory require founder access (403 `FOUNDER_REQUIRED` otherwise); the catalog, counts, brands and listing detail show only the founder's listings; `/shop`, `/sell` and inventory routes are guarded.
+- `sy-founder-summary` replaces the seller summary on the listing detail page.
+
+### Removed
+
+- The fee preview and `sy-earnings` from the sell form, `feePercent` from the selling options, and the payout prompt from publishing.
+
 ### Added (earlier)
 
 - `https://www.sycapooke.com/` and `https://sycapooke.com/` serve the marketing application at their root: Namecheap points the apex at the VM's static IP and `www` at the apex, the `sycapooke-marketing` image also serves its build with base href `/` on port 8080, and `deploy/edge/Caddyfile` sends both hosts there; `https://app.sycapooke.com/` serves the full application, and the marketing build's links open it there ([ADR platform/0017](docs/adr/platform/0017-sycapooke-com-shows-the-marketing-site.md)).

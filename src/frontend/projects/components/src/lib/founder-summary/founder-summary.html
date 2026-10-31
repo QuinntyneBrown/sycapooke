@@ -1,0 +1,12 @@
+<div class="seller">
+  <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+  <div class="stack stack--sm founder__body">
+    <a class="seller__name" [routerLink]="['/members', founder().displayName]">{{ founder().displayName }}</a>
+    <span class="seller__meta"
+      >Founder of Sycapooke · {{ founder().completedSalesCount | number }} completed
+      {{ founder().completedSalesCount === 1 ? 'sale' : 'sales' }}</span
+    >
+    <span class="rating text-muted">No reviews yet</span>
+    <a class="text-sm" [routerLink]="['/members', founder().displayName]">Read her story and see her collection</a>
+  </div>
+</div>

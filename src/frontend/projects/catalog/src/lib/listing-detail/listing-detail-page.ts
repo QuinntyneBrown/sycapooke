@@ -10,7 +10,7 @@ import {
   GalleryComponent,
   IconComponent,
   ListingGridComponent,
-  SellerSummaryComponent,
+  FounderSummaryComponent,
   SizeTagComponent,
 } from '@sycapooke/components';
 
@@ -52,7 +52,7 @@ export function listedAgo(iso: string, now = Date.now()): string {
     GalleryComponent,
     IconComponent,
     ListingGridComponent,
-    SellerSummaryComponent,
+    FounderSummaryComponent,
     SizeTagComponent,
   ],
   providers: [ListingDetailStore],

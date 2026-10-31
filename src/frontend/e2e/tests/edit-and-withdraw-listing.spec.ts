@@ -10,8 +10,8 @@ import { Page, Route } from '@playwright/test';
 
 import {
   expect,
+  founderMarcus,
   listingDetail,
-  marcus,
   myListing,
   photo,
   problem,
@@ -75,7 +75,7 @@ async function recordPuts(
 
 test.describe('edit listing', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await serveCatalogue(page);
     await page.route('**/photos/**', (route) => route.fulfill({ contentType: 'image/png', body: Buffer.alloc(0) }));
   });
@@ -207,7 +207,7 @@ test.describe('edit listing', () => {
 
 test.describe('withdraw listing', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await serveListing(page, listingDetail({ viewer: { relation: 'Seller' } }));
   });
 
@@ -279,7 +279,7 @@ test.describe('withdraw listing', () => {
 
 test.describe('relist: edit first', () => {
   test('Edit first in the Relist dialog opens the edit page', async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await serveCatalogue(page);
     await page.route('**/photos/**', (route) => route.fulfill({ contentType: 'image/png', body: Buffer.alloc(0) }));
     await page.route('**/api/sales/o-1', (route) =>

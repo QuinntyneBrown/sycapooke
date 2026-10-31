@@ -7,14 +7,14 @@
 import { Request } from '@playwright/test';
 import {
   expect,
-  marcus,
+  founderMarcus,
   myListing,
   problem,
   serveCatalogue,
   servePhotoUploads,
   signInAs,
   test,
-  unverifiedMarcus,
+  unverifiedFounderMarcus,
 } from '../fixtures';
 import { SellPage } from '../pages/sell.page';
 
@@ -29,7 +29,7 @@ test.describe('sell an item', () => {
 
   test.describe('as a verified member', () => {
     test.beforeEach(async ({ page }) => {
-      await signInAs(page, marcus);
+      await signInAs(page, founderMarcus);
       await serveCatalogue(page);
       await servePhotoUploads(page);
     });
@@ -64,19 +64,6 @@ test.describe('sell an item', () => {
         'Clocks',
         'Typewriters and office',
       ]);
-    });
-
-    test('estimated earnings after the fee follow the price', async ({ page }) => {
-      const sell = new SellPage(page);
-      await sell.goto();
-
-      await expect(sell.earnings).toContainText('You earn after the 10% fee');
-      await expect(sell.earnings.locator('strong')).toHaveText('—');
-      await sell.price.fill('60.00');
-      await sell.shipping.fill('8.00');
-      await expect(sell.earnings.locator('strong')).toHaveText('$61.20');
-      await sell.price.fill('0.99');
-      await expect(sell.earnings.locator('strong')).toHaveText('—');
     });
 
     test('Used - Fair asks for the flaws', async ({ page }) => {
@@ -161,7 +148,7 @@ test.describe('sell an item', () => {
       expect(unfixturedApiCalls).toEqual([]);
     });
 
-    test('a complete listing is published without a size and prompts for payouts', async ({ page }) => {
+    test('a complete listing is published without a size', async ({ page }) => {
       let created: Record<string, unknown> | null = null;
       let published = false;
       await page.route('**/api/listings', async (route) => {
@@ -170,7 +157,7 @@ test.describe('sell an item', () => {
       });
       await page.route('**/api/listings/L-10001/publish', async (route) => {
         published = true;
-        await route.fulfill({ json: { reference: 'L-10001', status: 'Active', payoutOnboardingRequired: true } });
+        await route.fulfill({ json: { reference: 'L-10001', status: 'Active' } });
       });
       const sell = new SellPage(page);
       await sell.goto();
@@ -181,7 +168,7 @@ test.describe('sell an item', () => {
       await expect(sell.heading).toHaveText('It’s live');
       await expect(page.getByText('Gold filigree brooch with garnets')).toBeVisible();
       await expect(page.getByText('Trifari · Vintage · $60.00')).toBeVisible();
-      await expect(page.getByRole('link', { name: 'Set up payouts' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Set up payouts' })).toHaveCount(0);
       await expect(page.getByRole('link', { name: 'View listing' })).toHaveAttribute('href', '/items/L-10001');
       expect(created).toEqual({
         category: 'Jewelry',
@@ -208,7 +195,7 @@ test.describe('sell an item', () => {
         route.fulfill({ status: 201, json: myListing(route.request().postDataJSON()) }),
       );
       await page.route('**/api/listings/L-10001/publish', (route) =>
-        route.fulfill({ json: { reference: 'L-10001', status: 'Active', payoutOnboardingRequired: false } }),
+        route.fulfill({ json: { reference: 'L-10001', status: 'Active' } }),
       );
       const sell = new SellPage(page);
       await sell.goto();
@@ -288,7 +275,7 @@ test.describe('sell an item', () => {
   });
 
   test('when categories fail to load the form shows a reference and can retry', async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     let attempts = 0;
     await page.route('**/api/categories', (route) => {
       attempts += 1;
@@ -307,7 +294,7 @@ test.describe('sell an item', () => {
 
   test.describe('as an unverified member', () => {
     test.beforeEach(async ({ page }) => {
-      await signInAs(page, unverifiedMarcus);
+      await signInAs(page, unverifiedFounderMarcus);
     });
 
     test('selling waits for email verification and the link can be resent', async ({ page }) => {

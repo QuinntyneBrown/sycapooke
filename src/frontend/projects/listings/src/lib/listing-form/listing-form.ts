@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { ControlContainer, ReactiveFormsModule } from '@angular/forms';
 import {
-  EarningsComponent,
   FixedSizeComponent,
   FormFieldComponent,
   InputGroupComponent,
@@ -19,7 +18,6 @@ import { ListingFormModel } from './listing-form-model';
   selector: 'sy-listing-form',
   imports: [
     ReactiveFormsModule,
-    EarningsComponent,
     FixedSizeComponent,
     FormFieldComponent,
     InputGroupComponent,

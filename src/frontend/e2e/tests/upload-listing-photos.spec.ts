@@ -7,8 +7,8 @@
 import { Page, Request } from '@playwright/test';
 import {
   expect,
+  founderMarcus,
   imageFile,
-  marcus,
   myListing,
   photo,
   problem,
@@ -23,7 +23,7 @@ test.describe('upload listing photos', () => {
   let uploaded: string[];
 
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await serveCatalogue(page);
     uploaded = await servePhotoUploads(page);
   });
