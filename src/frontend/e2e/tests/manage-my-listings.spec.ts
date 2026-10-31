@@ -104,7 +104,7 @@ test.describe('manage my listings', () => {
     await listings.goto();
 
     await expect(listings.row('Untitled draft').getByRole('link')).toHaveAttribute('href', '/sell/L-10029');
-    await expect(listings.row('Camel wool overcoat').getByRole('link')).toHaveAttribute('href', '/sales/o-9');
+    await expect(listings.row('Camel wool overcoat').getByRole('link')).toHaveAttribute('href', '/shop/sales/o-9');
     await expect(listings.row('Walnut transistor radio, working').getByRole('link')).toHaveAttribute(
       'href',
       '/items/L-10021',

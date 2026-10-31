@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-/** The member's "Purchases" at /account/purchases or "Sales" at /account/sales (mocks pages/purchases, pages/sales). */
+/** The member's "Purchases" at /account/purchases or "Sales" at /shop/sales (mocks pages/purchases, pages/sales). */
 export class OrderHistoryPage {
   readonly heading: Locator;
   readonly subtitle: Locator;
@@ -23,7 +23,7 @@ export class OrderHistoryPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/account/${this.list}`);
+    await this.page.goto(this.list === 'sales' ? '/shop/sales' : '/account/purchases');
   }
 
   row(title: string): Locator {

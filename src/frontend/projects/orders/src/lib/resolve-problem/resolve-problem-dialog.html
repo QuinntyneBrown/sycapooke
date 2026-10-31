@@ -9,11 +9,11 @@
         name="outcome"
         id="outcome-refund"
         data-autofocus
-        [checked]="outcome() === 'FullRefund'"
+        [checked]="outcome() === 'RefundBuyer'"
         [disabled]="state() === 'busy'"
-        (change)="outcome.set('FullRefund')"
+        (change)="outcome.set('RefundBuyer')"
       /><span class="choice__text"
-        >Refund buyer in full<small>{{ total }} to {{ data.detail.buyerDisplayName }} · no payout</small></span
+        >Refund in full<small>{{ total }} back to {{ data.detail.buyerDisplayName }}</small></span
       ></sy-choice
     >
     <sy-choice inputId="outcome-release">
@@ -21,15 +21,21 @@
         type="radio"
         name="outcome"
         id="outcome-release"
-        [checked]="outcome() === 'ReleaseToSeller'"
+        [checked]="outcome() === 'CloseWithoutRefund'"
         [disabled]="state() === 'busy'"
-        (change)="outcome.set('ReleaseToSeller')"
+        (change)="outcome.set('CloseWithoutRefund')"
       /><span class="choice__text"
-        >Release payout to seller<small>Order completes · {{ data.detail.sellerDisplayName }} is paid</small></span
+        >Close without refund (order completes)<small>No refund; the order becomes Completed</small></span
       ></sy-choice
     >
   </sy-radio-group>
-  <sy-form-field #rf fieldId="resolve-reason" label="Reason" help="Sent to both members." [error]="reasonError()">
+  <sy-form-field
+    #rf
+    fieldId="resolve-reason"
+    label="Your explanation"
+    help="Shown to the customer."
+    [error]="reasonError()"
+  >
     <textarea
       class="textarea"
       id="resolve-reason"

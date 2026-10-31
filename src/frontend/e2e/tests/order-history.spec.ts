@@ -7,7 +7,7 @@
 
 import { Page } from '@playwright/test';
 
-import { expect, marcus, orderList, orderRow, problem, sale, signInAs, test } from '../fixtures';
+import { expect, founderMarcus, orderList, orderRow, problem, sale, signInAs, test } from '../fixtures';
 import { OrderHistoryPage } from '../pages/order-history.page';
 import { SaleDetailPage } from '../pages/sale-detail.page';
 
@@ -65,7 +65,7 @@ async function serve(page: Page, list: 'purchases' | 'sales', body: Record<strin
 
 test.describe('order history', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await page.route('**/photos/**', (route) => route.fulfill({ contentType: 'image/png', body: Buffer.alloc(0) }));
   });
 
@@ -98,7 +98,7 @@ test.describe('order history', () => {
     await expect(history.rows.nth(0)).toContainText('$48.15');
     await expect(history.rows.nth(0)).toContainText('Paid');
     await expect(history.rows.nth(1)).toContainText('to parlor_pat · Fri 2 Oct');
-    await expect(history.row('Fire-King mixing bowls').getByRole('link')).toHaveAttribute('href', '/sales/o-0');
+    await expect(history.row('Fire-King mixing bowls').getByRole('link')).toHaveAttribute('href', '/shop/sales/o-0');
     expect(unfixturedApiCalls).toEqual([]);
   });
 

@@ -164,16 +164,12 @@ export function problem(
 }
 
 /**
- * Answers GET /api/auth/me and POST /api/auth/refresh with this member, and GET /api/payouts with
- * a summary that shows no payout banner (a test that needs one routes it again).
+ * Answers GET /api/auth/me and POST /api/auth/refresh with this member.
  */
 export async function signInAs(page: Page, member: MemberFixture): Promise<void> {
   const answer = (route: Route) => route.fulfill({ json: member });
   await page.route('**/api/auth/me', answer);
   await page.route('**/api/auth/refresh', answer);
-  await page.route('**/api/payouts', (route) =>
-    route.fulfill({ json: payoutSummary({ history: [], pending: '0.00' }) }),
-  );
 }
 
 /**
@@ -549,7 +545,6 @@ export function sale(fields: Record<string, unknown> = {}): Record<string, unkno
     },
     timeline: timeline(),
     tracking: null,
-    payout: null,
     cancellation: null,
     cancellationRequest: null,
     canRelist: false,
@@ -579,7 +574,7 @@ export function buyerOrder(fields: Record<string, unknown> = {}): Record<string,
   };
 }
 
-/** A buyer's open problem as the order, sale and admin endpoints return it (mocks order-detail/problem). */
+/** A buyer's open problem as the order, sale and shop endpoints return it (mocks order-detail/problem). */
 export function orderProblem(fields: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     reference: 'P-1001',
@@ -598,7 +593,7 @@ export function orderProblem(fields: Record<string, unknown> = {}): Record<strin
   };
 }
 
-/** GET /api/admin/problems/P-1001: the problem on the Delivered order SY-48140 (mocks pages/problem-detail). */
+/** GET /api/shop/problems/P-1001: the problem on the Delivered order SY-48140 (mocks pages/problem-detail). */
 export function problemDetail(fields: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     problem: orderProblem({
@@ -618,7 +613,6 @@ export function problemDetail(fields: Record<string, unknown> = {}): Record<stri
       deliveredAt: '2026-10-24T15:00:00Z',
       item: { ...(sale()['item'] as object), title: 'Fair Isle cardigan', brand: 'Pendleton' },
     },
-    payout: 'Held',
     ...fields,
   };
 }
@@ -626,46 +620,6 @@ export function problemDetail(fields: Record<string, unknown> = {}): Record<stri
 /** The buyer's request to cancel as the API returns it, Pending unless <status> says otherwise. */
 export function cancellationRequest(status = 'Pending'): Record<string, unknown> {
   return { message: 'Ordered the wrong colour, sorry. Can we cancel?', status, requestedAt: '2026-10-24T18:00:00Z' };
-}
-
-/** One row of the payouts history: the camel overcoat sold as SY-48302, held until the order completes. */
-export function payoutRow(fields: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
-    orderId: 'o-1',
-    orderReference: 'SY-48302',
-    item: (sale()['item'] as object) ?? {},
-    amount: '40.50',
-    fee: '4.50',
-    status: 'Held',
-    holdReason: 'OrderNotCompleted',
-    paidAt: null,
-    ...fields,
-  };
-}
-
-/** The mixing bowls sold as SY-47511 and paid out on Mon 5 Oct (mocks pages/payouts/default). */
-export const paidPayoutRow = payoutRow({
-  orderId: 'o-2',
-  orderReference: 'SY-47511',
-  item: { ...(sale()['item'] as object), title: 'Fire-King mixing bowls', brand: 'Fire-King' },
-  amount: '33.30',
-  fee: '3.70',
-  status: 'Paid',
-  holdReason: null,
-  paidAt: '2026-10-05T16:00:00Z',
-});
-
-/** GET /api/payouts for an onboarded seller with one held and one paid payout (mocks pages/payouts/default). */
-export function payoutSummary(fields: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
-    paidOut: '33.30',
-    pending: '40.50',
-    onboarding: 'Complete',
-    bankDisplay: 'Chase •••• 6021',
-    banner: null,
-    history: [payoutRow(), paidPayoutRow],
-    ...fields,
-  };
 }
 
 /** One row of GET /api/purchases or /api/sales: the camel overcoat paid on Sat 24 Oct, from or to parlor_pat. */

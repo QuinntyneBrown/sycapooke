@@ -39,6 +39,9 @@
             }
           }
           <sy-thread [entries]="thread()" />
+          @if (detail.problem.status === 'Open' && !detail.problem.sellerResponse) {
+            <a syButton [routerLink]="['/shop/sales', detail.order.id]">Reply on the sale</a>
+          }
         </div>
         <aside class="panel panel--sunken stack" aria-label="Order">
           <span class="eyebrow">Order {{ detail.order.reference }}</span>

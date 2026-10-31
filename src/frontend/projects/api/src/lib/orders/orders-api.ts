@@ -4,7 +4,6 @@ import { Injectable, inject } from '@angular/core';
 import { API_BASE_URL } from '../api-base-url';
 import { ApiResult, toResult } from '../api-result';
 import { CheckoutItem, Purchase, ShippingAddress } from './checkout-api';
-import { SalePayout } from './payouts-api';
 import type { OrderProblem } from './problems-api';
 
 export type OrderStatus = 'Paid' | 'Shipped' | 'Delivered' | 'Completed' | 'Cancelled' | 'Refunded';
@@ -64,7 +63,8 @@ export interface Sale {
   shipTo: ShippingAddress | null;
   timeline: OrderTimelineStep[];
   tracking: Tracking | null;
-  payout: SalePayout | null;
+  /** Where the refund is: null without one, otherwise Pending or Issued. */
+  refund?: 'Pending' | 'Issued' | null;
   cancellation: Cancellation | null;
   cancellationRequest: CancellationRequest | null;
   canRelist: boolean;

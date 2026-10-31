@@ -68,9 +68,9 @@ export class WelcomePage {
     { title: 'A real person to call', text: 'If you get stuck, call 1-800-555-0123.' },
   ];
   readonly steps: Step[] = [
-    { title: 'List it', text: 'Add photos, a price and the condition.' },
-    { title: 'Sell it', text: 'A buyer pays. You ship within 5 business days.' },
-    { title: 'Get paid', text: 'The order completes and your payout is on its way.' },
+    { title: 'Find a treasure', text: 'Browse jewelry, clothing, housewares and electronics.' },
+    { title: 'Pay securely', text: 'Check out with a card; the piece is yours once you pay.' },
+    { title: 'Receive its story', text: 'It arrives packed with care, with a note about where it came from.' },
   ];
   openVideo(): void {
     this.dialogs.open(PitchVideoDialog);

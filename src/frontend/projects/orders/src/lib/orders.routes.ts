@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
+import { founderGuard } from '@sycapooke/api';
 
-/** Lazy routes of the orders feature area, mounted at /: checkout, the order confirmation, purchases and sales, the buyer's order, the seller's sale, payouts and the administrator's problem page (admin shell). */
+/** Lazy routes of the orders feature area, mounted at /: checkout, the order confirmation, purchases and sales, the buyer's order, the founder's sales, support queue and problem page. */
 export const routes: Routes = [
   {
     path: 'checkout/:reference',
@@ -18,7 +19,8 @@ export const routes: Routes = [
     title: 'Order · Sycapooke',
   },
   {
-    path: 'sales/:id',
+    path: 'shop/sales/:id',
+    canActivate: [founderGuard],
     loadComponent: () => import('./sale-detail/sale-detail-page').then((m) => m.SaleDetailPage),
     title: 'Sale · Sycapooke',
   },
@@ -29,20 +31,24 @@ export const routes: Routes = [
     data: { list: 'purchases', area: 'account' },
   },
   {
-    path: 'account/sales',
+    path: 'shop/sales',
+    canActivate: [founderGuard],
     loadComponent: () => import('./order-history/order-history-page').then((m) => m.OrderHistoryPage),
     title: 'Sales · Sycapooke',
-    data: { list: 'sales' },
+    data: { list: 'sales', area: 'account' },
   },
   {
-    path: 'account/payouts',
-    loadComponent: () => import('./payouts/payouts-page').then((m) => m.PayoutsPage),
-    title: 'Payouts · Sycapooke',
+    path: 'shop/support',
+    canActivate: [founderGuard],
+    loadComponent: () => import('./support/support-page').then((m) => m.SupportPage),
+    title: 'Support · Sycapooke',
+    data: { area: 'account' },
   },
   {
-    path: 'admin/problems/:reference',
+    path: 'shop/problems/:reference',
+    canActivate: [founderGuard],
     loadComponent: () => import('./problem-detail/problem-detail-page').then((m) => m.ProblemDetailPage),
-    title: 'Order problem · Sycapooke admin',
-    data: { shell: 'admin' },
+    title: 'Order problem · Sycapooke',
+    data: { area: 'account' },
   },
 ];

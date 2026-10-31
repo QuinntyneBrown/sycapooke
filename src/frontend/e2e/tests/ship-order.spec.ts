@@ -8,7 +8,18 @@
 
 import { Route } from '@playwright/test';
 
-import { buyerOrder, expect, marcus, problem, sale, signInAs, test, timeline, uspsTracking } from '../fixtures';
+import {
+  buyerOrder,
+  expect,
+  founderMarcus,
+  marcus,
+  problem,
+  sale,
+  signInAs,
+  test,
+  timeline,
+  uspsTracking,
+} from '../fixtures';
 import { OrderDetailPage } from '../pages/order-detail.page';
 import { SaleDetailPage } from '../pages/sale-detail.page';
 
@@ -21,7 +32,7 @@ async function serveSale(page: import('@playwright/test').Page, body = sale()): 
 
 test.describe('ship order: seller', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
   });
 
   test('the seller sees a paid sale with the ship-by date and where to ship it', async ({
@@ -205,7 +216,7 @@ test.describe('ship order: seller', () => {
     await expect(salePage.centerState).toContainText('Ref 5c1d-0e7a');
     await expect(salePage.centerState.getByRole('link', { name: 'Back to sales' })).toHaveAttribute(
       'href',
-      '/account/sales',
+      '/shop/sales',
     );
     await salePage.centerState.getByRole('button', { name: 'Try again' }).click();
     await expect(salePage.heading).toHaveText('You made a sale');

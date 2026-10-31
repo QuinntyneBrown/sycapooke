@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { AdminProblemsApi, ProblemDetail, ProblemOutcome } from '@sycapooke/api';
+import { ShopProblemsApi, ProblemDetail, ProblemOutcome } from '@sycapooke/api';
 import {
   AlertComponent,
   ButtonDirective,
@@ -19,9 +19,9 @@ export interface ResolveProblemData {
 }
 
 /**
- * "Resolve problem {reference}" (L2-036, mocks dialogs/resolve-problem): refund the buyer in full
- * or release the payout to the seller, with a reason both members see. No reason shows "Add a
- * reason. Both members see it." without calling the API. Closes with the resolved problem.
+ * "Resolve problem {reference}" (L2-036, mocks dialogs/resolve-problem): refund the customer in full
+ * or close without a refund, with an explanation the customer sees. No explanation shows "Add an
+ * explanation. The customer sees it." without calling the API. Closes with the resolved problem.
  */
 @Component({
   selector: 'sy-resolve-problem-dialog',
@@ -31,25 +31,25 @@ export interface ResolveProblemData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResolveProblemDialog {
-  private readonly api = inject(AdminProblemsApi);
+  private readonly api = inject(ShopProblemsApi);
   readonly ref = inject<DialogRef<ProblemDetail>>(DialogRef);
   readonly data = inject<ResolveProblemData>(DIALOG_DATA);
 
-  readonly outcome = signal<ProblemOutcome>('FullRefund');
+  readonly outcome = signal<ProblemOutcome>('RefundBuyer');
   readonly reason = signal('');
   readonly state = signal<'default' | 'busy' | 'failed'>('default');
   readonly reasonError = signal<string | null>(null);
   readonly failure = signal('Nothing changed. Check your connection and try again.');
 
   readonly total = formatMoney(this.data.detail.order.total);
-  readonly action = computed(() => (this.outcome() === 'FullRefund' ? 'Refund buyer' : 'Release payout'));
-  readonly busyLabel = computed(() => (this.outcome() === 'FullRefund' ? 'Refunding' : 'Releasing'));
+  readonly action = computed(() => 'Send decision');
+  readonly busyLabel = computed(() => (this.outcome() === 'RefundBuyer' ? 'Refunding' : 'Closing'));
 
   async submit(): Promise<void> {
     if (this.state() === 'busy') return;
     const reason = this.reason().trim();
     if (!reason) {
-      this.reasonError.set('Add a reason. Both members see it.');
+      this.reasonError.set('Add an explanation. The customer sees it.');
       return;
     }
     this.reasonError.set(null);

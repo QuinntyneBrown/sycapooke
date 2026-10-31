@@ -121,9 +121,9 @@ public sealed class CancelOrderTests : IDisposable
         using var buyerResponds = await _buyer.RespondToCancellationAsync(orderId, "Accept");
         using var visitorCancels = await _anonymous.CancelOrderAsync(orderId, "ItemDamaged");
 
-        Assert.Equal(HttpStatusCode.NotFound, buyerCancels.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, buyerCancels.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, sellerAsks.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, buyerResponds.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, buyerResponds.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, visitorCancels.StatusCode);
         _factory.InDatabase(db => Assert.Equal(OrderStatus.Paid, db.Orders.Single().Status));
     }
@@ -182,7 +182,7 @@ public sealed class CancelOrderTests : IDisposable
         Assert.Equal(SellerEmail, email.To);
         Assert.Equal("The buyer asked to cancel order SY-10001", email.Subject);
         Assert.Contains("Ordered the wrong colour, sorry.", email.Body);
-        Assert.Contains($"https://sycapooke.test/sales/{orderId}", email.Body);
+        Assert.Contains($"https://sycapooke.test/shop/sales/{orderId}", email.Body);
         _factory.InDatabase(db => Assert.Contains(db.OutboxMessages, m => m.NotificationType == NotificationType.CancellationRequested));
     }
 

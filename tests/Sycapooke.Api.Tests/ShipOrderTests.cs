@@ -131,8 +131,8 @@ public sealed class ShipOrderTests : IDisposable
         using var buyerShip = await _buyer.AddTrackingAsync(orderId);
         using var visitorShip = await _anonymous.AddTrackingAsync(orderId);
 
-        Assert.Equal(HttpStatusCode.NotFound, buyerView.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, buyerShip.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, buyerView.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, buyerShip.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, visitorShip.StatusCode);
     }
 

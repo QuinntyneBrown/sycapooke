@@ -1,0 +1,81 @@
+<div class="page-header">
+  <div class="stack stack--sm">
+    <h1>Support</h1>
+    @if (view() === 'loaded') {
+      <p class="subtitle">{{ subtitle() }}</p>
+    }
+  </div>
+</div>
+@switch (view()) {
+  @case ('loading') {
+    <ul class="order-list" role="list" aria-busy="true" aria-label="Loading support requests">
+      @for (row of [1, 2, 3, 4]; track row) {
+        <li>
+          <div class="item-row support__skeleton-row">
+            <span class="skeleton skeleton--rect thumb support__skeleton-thumb"></span>
+            <div class="item-row__body">
+              <span class="skeleton skeleton--text support__skeleton-title"></span>
+              <span class="skeleton skeleton--text support__skeleton-meta"></span>
+            </div>
+            <span class="skeleton skeleton--text support__skeleton-price"></span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+  @case ('error') {
+    <sy-empty-state icon="refresh" heading="Couldn’t load support requests" tone="error">
+      <span class="ref">{{ errorRef() }}</span>
+      <button actions syButton="primary" type="button" (click)="retry()"><sy-icon name="refresh" />Try again</button>
+    </sy-empty-state>
+  }
+  @default {
+    @if (queue()?.items?.length === 0) {
+      <sy-empty-state icon="check-circle" heading="No requests">
+        When a customer reports a problem or asks to cancel, it shows up here.
+      </sy-empty-state>
+    } @else {
+      <div class="cluster" role="group" aria-label="Filter support requests">
+        <button
+          [syButton]="filter() === 'all' ? 'primary' : ''"
+          size="sm"
+          type="button"
+          [attr.aria-current]="filter() === 'all' ? 'true' : null"
+          (click)="filter.set('all')"
+        >
+          All
+        </button>
+        <button
+          [syButton]="filter() === 'open' ? 'primary' : ''"
+          size="sm"
+          type="button"
+          [attr.aria-current]="filter() === 'open' ? 'true' : null"
+          (click)="filter.set('open')"
+        >
+          Open
+        </button>
+      </div>
+      <ul class="order-list" role="list">
+        @for (row of rows(); track row.reference) {
+          <li>
+            <a [routerLink]="row.link">
+              <sy-item-row [title]="row.item.title" [meta]="meta(row)">
+                <div thumb class="thumb">
+                  <div class="photo photo--6">
+                    @if (row.item.photo; as photo) {
+                      <img [src]="photo.src" alt="" width="160" height="160" />
+                    }
+                  </div>
+                </div>
+              </sy-item-row>
+              <span class="order-list__end">
+                <span class="price">{{ money(row.total) }}</span>
+                <sy-status [tone]="tone(row.status)">{{ row.status }}</sy-status>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+}

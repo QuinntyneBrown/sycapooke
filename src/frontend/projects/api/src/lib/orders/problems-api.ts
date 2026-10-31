@@ -16,9 +16,9 @@ export const PROBLEM_REASONS: readonly { value: ProblemReason; label: string }[]
   { value: 'Counterfeit', label: 'Counterfeit' },
 ];
 
-export type ProblemOutcome = 'FullRefund' | 'ReleaseToSeller';
+export type ProblemOutcome = 'RefundBuyer' | 'CloseWithoutRefund';
 
-/** One private evidence photo; the URL is served by Sycapooke API to the order's members and administrators. */
+/** One private evidence photo; the URL is served by Sycapooke API to the founder and the customer. */
 export interface ProblemPhoto {
   id: string;
   url: string;
@@ -40,7 +40,7 @@ export interface OrderProblem {
   resolvedAt: string | null;
 }
 
-/** The administrator's problem page: claim, both members, the order's facts and the payout status. */
+/** The founder's problem page: the claim, both parties, and the order's facts. */
 export interface ProblemDetail {
   problem: OrderProblem;
   buyerDisplayName: string;
@@ -53,8 +53,6 @@ export interface ProblemDetail {
     deliveredAt: string | null;
     item: CheckoutItem;
   };
-  /** Held, Releasable, Sent, Paid, Failed, Cancelled or None. */
-  payout: string;
 }
 
 /** Typed client for the members' side of an order problem (resolve-order-problems). */
@@ -86,23 +84,46 @@ export class ProblemsApi {
   }
 }
 
-/** Typed client for the administrator's side (L2-036); 403 ADMINISTRATOR_REQUIRED without the role. */
+/** One request in the founder's support queue: a customer's problem or a cancellation request. */
+export interface SupportRequest {
+  reference: string;
+  kind: 'Problem' | 'CancellationRequest';
+  label: string;
+  item: CheckoutItem;
+  total: string;
+  customer: string;
+  at: string;
+  status: 'Open' | 'Refunded' | 'Closed';
+  /** The page that handles it, for example /shop/problems/P-1001. */
+  link: string;
+}
+
+export interface SupportQueue {
+  items: SupportRequest[];
+  openCount: number;
+}
+
+/** Typed client for the founder's side (L2-036); 403 FOUNDER_REQUIRED for anyone else. */
 @Injectable({ providedIn: 'root' })
-export class AdminProblemsApi {
+export class ShopProblemsApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
+  support(): Promise<ApiResult<SupportQueue>> {
+    return toResult(this.http.get<SupportQueue>(`${this.baseUrl}/shop/support`));
+  }
+
   getProblem(reference: string): Promise<ApiResult<ProblemDetail>> {
-    return toResult(this.http.get<ProblemDetail>(`${this.baseUrl}/admin/problems/${reference}`));
+    return toResult(this.http.get<ProblemDetail>(`${this.baseUrl}/shop/problems/${reference}`));
   }
 
   /**
-   * Refund in full or release to the seller, with a reason both members see. 422
-   * PROBLEM_RESOLUTION_INVALID; 409 PROBLEM_ALREADY_RESOLVED or ORDER_INVALID_TRANSITION.
+   * Refund the customer in full or close the problem without a refund, with a reason the customer sees.
+   * 422 PROBLEM_RESOLUTION_INVALID; 409 PROBLEM_ALREADY_RESOLVED or ORDER_INVALID_TRANSITION.
    */
   resolve(reference: string, outcome: ProblemOutcome, reason: string): Promise<ApiResult<ProblemDetail>> {
     return toResult(
-      this.http.post<ProblemDetail>(`${this.baseUrl}/admin/problems/${reference}/resolution`, { outcome, reason }),
+      this.http.post<ProblemDetail>(`${this.baseUrl}/shop/problems/${reference}/resolution`, { outcome, reason }),
     );
   }
 }

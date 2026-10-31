@@ -4,11 +4,10 @@ import { ActivatedRouteSnapshot, NavigationEnd, ResolveEnd, Router, RouterOutlet
 import { filter, map } from 'rxjs';
 import { AuthState } from '@sycapooke/api';
 import { FooterComponent, LogoComponent, SubnavComponent, SubnavItem, TopBarComponent } from '@sycapooke/components';
-import { PayoutBannerComponent } from '@sycapooke/orders';
 import { CookieSettingsDialogService } from '@sycapooke/privacy';
 
-/** Shell named by the deepest route's data.shell: 'app' (default), 'auth' or 'admin'. */
-type Shell = 'app' | 'auth' | 'admin' | 'marketing';
+/** Shell named by the deepest route's data.shell: 'app' (default), 'auth' or 'marketing'. */
+type Shell = 'app' | 'auth' | 'marketing';
 
 /** The customer's account tabs (mocks pages/account). */
 const CUSTOMER_TABS: readonly SubnavItem[] = [
@@ -22,6 +21,8 @@ const CUSTOMER_TABS: readonly SubnavItem[] = [
 const FOUNDER_TABS: readonly SubnavItem[] = [
   { label: 'Shop', path: '/shop' },
   { label: 'Inventory', path: '/account/listings' },
+  { label: 'Sales', path: '/shop/sales' },
+  { label: 'Support', path: '/shop/support' },
   { label: 'Emails', path: '/account/emails' },
   { label: 'Settings', path: '/account/settings' },
 ];
@@ -37,18 +38,17 @@ function shellOf(route: ActivatedRouteSnapshot): Shell {
   let deepest = route;
   while (deepest.firstChild) deepest = deepest.firstChild;
   const shell = deepest.data['shell'];
-  return shell === 'auth' || shell === 'admin' || shell === 'marketing' ? shell : 'app';
+  return shell === 'auth' || shell === 'marketing' ? shell : 'app';
 }
 
 /**
- * App shell: the payout banner, top bar with the member from AuthState, main#main with the router
+ * App shell: the top bar with the member from AuthState, main#main with the router
  * outlet and the footer, whose "Cookie settings" opens the dialog; a top-bar search navigates to the catalog. Routes with data.shell 'auth' render in the auth shell: large logo above a centred card.
- * Routes with data.shell 'admin' render in the admin shell: the admin top bar and no footer.
  * Routes with data.shell 'marketing' get the app shell with a full-width main.marketing (ADR platform/0011).
  */
 @Component({
   selector: 'sy-app-shell',
-  imports: [RouterOutlet, TopBarComponent, FooterComponent, LogoComponent, PayoutBannerComponent, SubnavComponent],
+  imports: [RouterOutlet, TopBarComponent, FooterComponent, LogoComponent, SubnavComponent],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -176,7 +176,7 @@ test.describe('edit listing', () => {
 
     await expect(edit.heading).toHaveText('This item has sold');
     await expect(edit.centerState).toContainText('Sold listings can’t be edited.');
-    await expect(page.getByRole('link', { name: 'Your sales' })).toHaveAttribute('href', '/account/sales');
+    await expect(page.getByRole('link', { name: 'Your sales' })).toHaveAttribute('href', '/shop/sales');
   });
 
   test('a withdrawn listing says it is gone for good', async ({ page }) => {

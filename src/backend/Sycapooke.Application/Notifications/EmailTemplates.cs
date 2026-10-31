@@ -52,7 +52,7 @@ public static class EmailTemplates
                 $"Open this link to verify your email and start buying and selling:\n{m.Link}\n\nThe link works for 24 hours."),
             SaleMadeEmail m => (
                 "You made a sale",
-                $"{m.ItemTitle} sold for {Money(m.Total)} (order {m.OrderReference}).\n\nShip it by {Day(m.ShipBy)} and add the tracking number:\n{root}/sales/{m.OrderId}"),
+                $"{m.ItemTitle} sold for {Money(m.Total)} (order {m.OrderReference}).\n\nShip it by {Day(m.ShipBy)} and add the tracking number:\n{root}/shop/sales/{m.OrderId}"),
             OrderShippedEmail m => (
                 $"Your order {m.OrderReference} has shipped",
                 $"{m.ItemTitle} is on its way with {m.Carrier}, tracking number {m.TrackingNumber}.\nTrack it: {m.TrackingUrl}\n\nSee your order:\n{root}/orders/{m.OrderId}"),
@@ -61,10 +61,10 @@ public static class EmailTemplates
                 $"{m.ItemTitle} was delivered. Confirm you received it, or report a problem within 3 days:\n{root}/orders/{m.OrderId}"),
             ShipByReminderEmail m => (
                 $"Ship order {m.OrderReference} by {Day(m.ShipBy)}",
-                $"{m.ItemTitle} has not shipped yet. Add the tracking number by {Day(m.ShipBy)}, or the order is cancelled and the buyer refunded:\n{root}/sales/{m.OrderId}"),
+                $"{m.ItemTitle} has not shipped yet. Add the tracking number by {Day(m.ShipBy)}, or the order is cancelled and the buyer refunded:\n{root}/shop/sales/{m.OrderId}"),
             OrderCancelledEmail { ToSeller: true } m => (
                 $"Order {m.OrderReference} was cancelled",
-                $"Order {m.OrderReference} for {m.ItemTitle} was cancelled because it was not shipped in time. The buyer gets a full refund.\n{root}/sales/{m.OrderId}"),
+                $"Order {m.OrderReference} for {m.ItemTitle} was cancelled because it was not shipped in time. The buyer gets a full refund.\n{root}/shop/sales/{m.OrderId}"),
             OrderCancelledEmail { Reason: { } reason } m => (
                 $"Your order {m.OrderReference} was cancelled",
                 $"The seller cancelled {m.ItemTitle}. Reason: {reason}.{(m.Note is null ? string.Empty : $"\nTheir note: “{m.Note}”")}\nYou get a full refund.\n{root}/orders/{m.OrderId}"),
@@ -76,7 +76,7 @@ public static class EmailTemplates
                 $"We refunded {Money(m.Amount)} to {Card(m.CardBrand, m.CardLast4)}. It can take 5 to 10 business days to show.\n{root}/orders/{m.OrderId}"),
             CancellationRequestedEmail m => (
                 $"The buyer asked to cancel order {m.OrderReference}",
-                $"The buyer of {m.ItemTitle} asked you to cancel order {m.OrderReference}.{(m.Message is null ? string.Empty : $"\n“{m.Message}”")}\n\nAccept to refund them in full, or decline and ship it:\n{root}/sales/{m.OrderId}"),
+                $"The buyer of {m.ItemTitle} asked you to cancel order {m.OrderReference}.{(m.Message is null ? string.Empty : $"\n“{m.Message}”")}\n\nAccept to refund them in full, or decline and ship it:\n{root}/shop/sales/{m.OrderId}"),
             ProblemReportedEmail m => (
                 $"Problem {m.ProblemReference} reported on order {m.OrderReference}",
                 $"The buyer of {m.ItemTitle} reported a problem: {m.Reason}.\n“{m.Description}”\n\nReview it and decide:\n{root}/shop/problems/{m.ProblemReference}"),

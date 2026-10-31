@@ -6,7 +6,15 @@
 
 import { expect, ida, marcus, signInAs, test } from '../fixtures';
 
-const founderPaths = ['/shop', '/sell', '/account/listings', '/items/L-10001/edit'];
+const founderPaths = [
+  '/shop',
+  '/sell',
+  '/account/listings',
+  '/items/L-10001/edit',
+  '/shop/sales',
+  '/shop/support',
+  '/shop/problems/P-1001',
+];
 
 const emptyCounts = { all: 0, draft: 0, active: 0, reserved: 0, sold: 0, removed: 0 };
 

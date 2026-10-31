@@ -49,7 +49,7 @@ public sealed partial class EmailNotificationTests : IDisposable
         Assert.Equal(Seller, email.To);
         Assert.Equal("You made a sale", email.Subject);
         Assert.Contains("SY-10001", email.Body);
-        Assert.Contains($"https://sycapooke.test/sales/{orderId}", email.Body);
+        Assert.Contains($"https://sycapooke.test/shop/sales/{orderId}", email.Body);
         AssertNoSecrets(email);
         _factory.InDatabase(db => Assert.All(db.OutboxMessages, m => Assert.Equal(OutboxMessageStatus.Sent, m.Status)));
     }
@@ -89,7 +89,7 @@ public sealed partial class EmailNotificationTests : IDisposable
         var cancelled = sent.Where(e => e.Subject.Contains("cancelled", StringComparison.Ordinal)).ToList();
         Assert.Equal([Seller, Buyer], cancelled.Select(e => e.To).Order());
         Assert.Contains(cancelled, e => e.To == Buyer && e.Body.Contains($"https://sycapooke.test/orders/{orderId}"));
-        Assert.Contains(cancelled, e => e.To == Seller && e.Body.Contains($"https://sycapooke.test/sales/{orderId}"));
+        Assert.Contains(cancelled, e => e.To == Seller && e.Body.Contains($"https://sycapooke.test/shop/sales/{orderId}"));
         var refunded = Assert.Single(sent, e => e.Subject.Contains("refund", StringComparison.Ordinal));
         Assert.Equal(Buyer, refunded.To);
         Assert.Contains("$102.34", refunded.Body);
@@ -113,7 +113,7 @@ public sealed partial class EmailNotificationTests : IDisposable
         var reminder = Assert.Single(sent);
         Assert.Equal(Seller, reminder.To);
         Assert.Contains("Ship", reminder.Subject);
-        Assert.Contains($"https://sycapooke.test/sales/{orderId}", reminder.Body);
+        Assert.Contains($"https://sycapooke.test/shop/sales/{orderId}", reminder.Body);
     }
 
     [Fact]

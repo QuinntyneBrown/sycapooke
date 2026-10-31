@@ -13,7 +13,7 @@ import { formatMoney } from '../money';
 import { OrderHistoryList, orderMeta, orderSubtitle, statusTone } from './order-history-text';
 
 /**
- * The member's "Purchases" at /account/purchases and "Sales" at /account/sales (mocks
+ * The member's "Purchases" at /account/purchases and "Sales" at /shop/sales (mocks
  * pages/purchases, pages/sales, L2-037): their orders newest first, each linking to the buyer's
  * order or the seller's sale. The route's `list` data picks the list.
  */
@@ -33,7 +33,7 @@ export class OrderHistoryPage {
   readonly errorRef = signal('');
 
   readonly heading = this.list === 'purchases' ? 'Purchases' : 'Sales';
-  readonly detailPath = this.list === 'purchases' ? '/orders' : '/sales';
+  readonly detailPath = this.list === 'purchases' ? '/orders' : '/shop/sales';
   readonly subtitle = computed(() => {
     const orders = this.orders();
     return orders && orders.items.length > 0 ? orderSubtitle(this.list, orders.counts) : '';

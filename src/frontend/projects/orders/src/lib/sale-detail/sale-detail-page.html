@@ -19,14 +19,14 @@
       <p class="text-muted">Something went wrong on our side. Try again in a moment.</p>
       <span class="ref">{{ errorRef() }}</span>
       <button actions syButton="primary" type="button" (click)="retry()"><sy-icon name="refresh" />Try again</button>
-      <a actions syButton routerLink="/account/sales">Back to sales</a>
+      <a actions syButton routerLink="/shop/sales">Back to sales</a>
     </sy-center-state>
   }
   @default {
     @if (sale(); as sale) {
       <nav aria-label="Breadcrumb" class="order__crumbs">
         <ol class="breadcrumb">
-          <li><a routerLink="/account/sales">Sales</a></li>
+          <li><a routerLink="/shop/sales">Sales</a></li>
           <li aria-current="page">{{ sale.reference }}</li>
         </ol>
       </nav>
@@ -45,7 +45,7 @@
             }
           } @else if (problemOpen() && sale.problem; as problem) {
             <sy-alert tone="warning" icon="flag" [heading]="'Problem reported · ' + problem.reasonLabel"
-              >Your payout is on hold while our team reviews this.</sy-alert
+              >Completion is paused until you resolve it.</sy-alert
             >
             <sy-thread [entries]="thread()" />
             @if (!problem.sellerResponse) {
@@ -95,26 +95,6 @@
               @if (sale.tracking; as tracking) {
                 <sy-tracking-link [carrier]="tracking.carrier" [number]="tracking.number" [url]="tracking.url" />
               }
-            }
-            @if (sale.status === 'Completed' && sale.payout; as payout) {
-              <div class="panel panel--sunken stack">
-                <h2 class="panel__title">Payout</h2>
-                <dl class="totals">
-                  <div>
-                    <dt>Item and shipping</dt>
-                    <dd>{{ money(payout.gross) }}</dd>
-                  </div>
-                  <div>
-                    <dt>Sycapooke fee ({{ payout.feePercent }}%)</dt>
-                    <dd>−{{ money(payout.fee) }}</dd>
-                  </div>
-                  <div class="totals__total">
-                    <dt>Your payout</dt>
-                    <dd>{{ money(payout.net) }}</dd>
-                  </div>
-                </dl>
-                <p class="text-caption">{{ payoutNote() }}</p>
-              </div>
             }
             <div class="stack stack--sm">
               <h2 class="panel__title">Ship to</h2>

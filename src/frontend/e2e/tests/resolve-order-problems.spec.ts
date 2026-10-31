@@ -3,9 +3,9 @@
 // Description: The buyer of a Delivered order reports "Wrong size" with a description and a photo
 // in the Report a problem dialog within the 3-day window; missing answers are shown without a call
 // and a failure keeps everything. The order page then shows the open problem with the thread, and
-// after a refund decision "Refunded in full". The seller sees the problem with the payout on hold
-// and replies once. An administrator opens the problem in the admin shell and refunds the buyer or
-// releases the payout with a reason; a missing reason is refused.
+// after a refund decision "Refunded in full". The founder sees the problem with completion paused
+// and replies once. She opens the problem in the app shell and refunds the customer or closes it
+// without a refund with an explanation; a missing explanation is refused.
 
 import { Page, Route } from '@playwright/test';
 
@@ -13,6 +13,7 @@ import {
   buyerOrder,
   expect,
   imageFile,
+  founderMarcus,
   marcus,
   orderProblem,
   problem,
@@ -86,7 +87,7 @@ test.describe('resolve order problems: buyer', () => {
     await section.reportProblem.click();
 
     await expect(dialog.root).toContainText(
-      'Open until Tue 27 Oct. We hold the seller’s payout while our team looks into it.',
+      'Open until Tue 27 Oct. The founder will reply, and the order won’t complete while she looks into it.',
     );
     await expect(dialog.reasons).toHaveCount(4);
     await dialog.send.click();
@@ -107,7 +108,7 @@ test.describe('resolve order problems: buyer', () => {
     expect(body).toContain('filename="label.jpg"');
     await expect(order.heading).toHaveText('We’re on it');
     await expect(section.alert).toContainText('Problem open · Wrong size');
-    await expect(section.alert).toContainText('We’re holding the seller’s payout until our team decides.');
+    await expect(section.alert).toContainText('Completion is paused while');
     await expect(section.entries.first()).toContainText('You · Sat 24 Oct');
     await expect(section.entries.first().locator('img')).toHaveCount(1);
     await expect(order.confirmReceipt).toHaveCount(0);
@@ -155,7 +156,7 @@ test.describe('resolve order problems: buyer', () => {
           status: 'Refunded',
           problem: orderProblem({
             status: 'Resolved',
-            outcome: 'FullRefund',
+            outcome: 'RefundBuyer',
             resolutionReason: 'Wrong size sent.',
             resolvedAt: '2026-10-24T20:00:00Z',
           }),
@@ -168,20 +169,20 @@ test.describe('resolve order problems: buyer', () => {
     await expect(order.heading).toHaveText('Refunded');
     await expect(order.alert).toContainText('Refunded in full');
     await expect(order.alert).toContainText(
-      'Our team reviewed the problem. $102.34 is on its way back to Visa ending 4242.',
+      'The shop reviewed the problem. $102.34 is on its way back to Visa ending 4242.',
     );
-    await expect(page.locator('main')).toContainText('Resolved Sat 24 Oct by Sycapooke support.');
+    await expect(page.locator('main')).toContainText('Resolved Sat 24 Oct by heirloom_hazel.');
     await expect(page.getByRole('link', { name: 'Back to purchases' })).toBeVisible();
   });
 });
 
 test.describe('resolve order problems: seller', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await servePhotos(page);
   });
 
-  test('the seller sees the problem with the payout on hold and replies once', async ({ page, unfixturedApiCalls }) => {
+  test('the founder sees the problem with completion paused and replies once', async ({ page, unfixturedApiCalls }) => {
     const open = sale({
       status: 'Delivered',
       timeline: timeline('2026-10-20T15:00:00Z', '2026-10-24T15:00:00Z'),
@@ -207,7 +208,7 @@ test.describe('resolve order problems: seller', () => {
 
     await expect(salePage.heading).toHaveText('Problem reported');
     await expect(section.alert).toContainText('Problem reported · Wrong size');
-    await expect(section.alert).toContainText('Your payout is on hold while our team reviews this.');
+    await expect(section.alert).toContainText('Completion is paused until you resolve it.');
     await expect(section.entries).toHaveCount(1);
     await expect(section.entries.first()).toContainText('parlor_pat · Sat 24 Oct');
     await expect(page.locator('main')).toContainText('Visible to the buyer and to Sycapooke.');
@@ -226,16 +227,16 @@ test.describe('resolve order problems: seller', () => {
   });
 });
 
-test.describe('resolve order problems: administrator', () => {
+test.describe('resolve order problems: founder', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, { ...marcus, displayName: 'ana_ruiz' });
+    await signInAs(page, { ...founderMarcus, displayName: 'ida_campbell' });
     await servePhotos(page);
   });
 
-  test('an administrator refunds the buyer in full with a reason', async ({ page, unfixturedApiCalls }) => {
+  test('the founder refunds the customer in full with an explanation', async ({ page, unfixturedApiCalls }) => {
     const sent: unknown[] = [];
-    await page.route('**/api/admin/problems/P-1001', (route) => route.fulfill({ json: problemDetail() }));
-    await page.route('**/api/admin/problems/P-1001/resolution', (route) => {
+    await page.route('**/api/shop/problems/P-1001', (route) => route.fulfill({ json: problemDetail() }));
+    await page.route('**/api/shop/problems/P-1001/resolution', (route) => {
       sent.push(route.request().postDataJSON());
       const detail = problemDetail();
       return route.fulfill({
@@ -244,57 +245,52 @@ test.describe('resolve order problems: administrator', () => {
           problem: {
             ...(detail['problem'] as object),
             status: 'Resolved',
-            outcome: 'FullRefund',
+            outcome: 'RefundBuyer',
             resolvedAt: '2026-10-26T15:05:00Z',
             resolutionReason: 'Hole not disclosed.',
           },
           order: { ...(detail['order'] as object), status: 'Refunded' },
-          payout: 'Cancelled',
         },
       });
     });
     const admin = new ProblemDetailPage(page);
     await admin.goto();
 
-    await expect(admin.topBar).toContainText('Admin');
-    await expect(admin.footer).toHaveCount(0);
     await expect(admin.heading).toHaveText('Not as described');
     await expect(admin.subtitle).toHaveText('Order problem P-1001 · opened Sat 24 Oct');
-    await expect(admin.thread.first()).toContainText('marcus_12 · buyer · Sat 24 Oct');
-    await expect(admin.thread.nth(1)).toContainText('vintage_lou · seller · Sun 25 Oct');
+    await expect(admin.thread.first()).toContainText('marcus_12 · customer · Sat 24 Oct');
+    await expect(admin.thread.nth(1)).toContainText('vintage_lou · you · Sun 25 Oct');
     await expect(admin.photos).toHaveCount(1);
     await expect(admin.panel).toContainText('Order SY-48140');
     await expect(admin.facts).toContainText('Delivered');
     await expect(admin.facts).toContainText('$59.88');
-    await expect(admin.facts).toContainText('Held');
 
     await admin.resolve.click();
     await expect(admin.dialog).toContainText('Resolve problem P-1001');
-    await expect(admin.dialog).toContainText('$59.88 to marcus_12 · no payout');
-    await expect(admin.dialog).toContainText('Order completes · vintage_lou is paid');
+    await expect(admin.dialog).toContainText('$59.88 back to marcus_12');
+    await expect(admin.dialog).toContainText('No refund; the order becomes Completed');
     await expect(admin.refund).toBeChecked();
     await admin.confirm.click();
-    await expect(admin.reasonError).toHaveText('Add a reason. Both members see it.');
+    await expect(admin.reasonError).toHaveText('Add an explanation. The customer sees it.');
     expect(sent).toEqual([]);
     await admin.reason.fill('Hole not disclosed.');
-    await expect(admin.confirm).toHaveText('Refund buyer');
+    await expect(admin.confirm).toHaveText('Send decision');
     await admin.confirm.click();
 
     await expect(admin.dialog).toBeHidden();
-    expect(sent).toEqual([{ outcome: 'FullRefund', reason: 'Hole not disclosed.' }]);
+    expect(sent).toEqual([{ outcome: 'RefundBuyer', reason: 'Hole not disclosed.' }]);
     await expect(admin.alert).toContainText('Refunded in full');
-    await expect(admin.alert).toContainText('$59.88 back to the buyer. No payout.');
+    await expect(admin.alert).toContainText('$59.88 refunded to marcus_12, who has your explanation.');
     await expect(admin.facts).toContainText('Refunded');
-    await expect(admin.facts).toContainText('Not paid');
     await expect(admin.resolve).toHaveCount(0);
     expect(unfixturedApiCalls).toEqual([]);
   });
 
-  test('releasing the payout sends ReleaseToSeller and a busy confirm', async ({ page }) => {
+  test('closing without a refund sends CloseWithoutRefund and a busy confirm', async ({ page }) => {
     const sent: unknown[] = [];
-    await page.route('**/api/admin/problems/P-1001', (route) => route.fulfill({ json: problemDetail() }));
-    const release = await holdThenFail(page, '**/api/admin/problems/P-1001/resolution');
-    await page.route('**/api/admin/problems/P-1001/resolution', async (route) => {
+    await page.route('**/api/shop/problems/P-1001', (route) => route.fulfill({ json: problemDetail() }));
+    const release = await holdThenFail(page, '**/api/shop/problems/P-1001/resolution');
+    await page.route('**/api/shop/problems/P-1001/resolution', async (route) => {
       sent.push(route.request().postDataJSON());
       await route.fallback();
     });
@@ -304,19 +300,19 @@ test.describe('resolve order problems: administrator', () => {
 
     await admin.release.check();
     await admin.reason.fill('Photos show the right size.');
-    await expect(admin.confirm).toHaveText('Release payout');
+    await expect(admin.confirm).toHaveText('Send decision');
     await admin.confirm.click();
 
     await expect(admin.confirm).toHaveAttribute('aria-busy', 'true');
     await expect(admin.cancel).toBeDisabled();
     release();
     await expect(admin.dialog.getByRole('alert')).toContainText('That didn’t go through');
-    expect(sent).toEqual([{ outcome: 'ReleaseToSeller', reason: 'Photos show the right size.' }]);
+    expect(sent).toEqual([{ outcome: 'CloseWithoutRefund', reason: 'Photos show the right size.' }]);
   });
 
-  test('a member without the role sees the load error', async ({ page }) => {
-    await page.route('**/api/admin/problems/P-1001', (route) =>
-      route.fulfill(problem(403, 'ADMINISTRATOR_REQUIRED', 'Only Sycapooke administrators can do that')),
+  test('a customer sees the load error', async ({ page }) => {
+    await page.route('**/api/shop/problems/P-1001', (route) =>
+      route.fulfill(problem(403, 'FOUNDER_REQUIRED', 'Only the shop’s founder can do that')),
     );
     const admin = new ProblemDetailPage(page);
     await admin.goto();

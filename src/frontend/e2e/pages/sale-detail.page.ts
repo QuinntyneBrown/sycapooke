@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-/** The seller's sale page at /sales/{id} and its Add tracking dialog (mocks pages/sale-detail, dialogs/add-tracking). */
+/** The seller's sale page at /shop/sales/{id} and its Add tracking dialog (mocks pages/sale-detail, dialogs/add-tracking). */
 export class SaleDetailPage {
   readonly heading: Locator;
   readonly eyebrow: Locator;
@@ -54,6 +54,6 @@ export class SaleDetailPage {
   }
 
   async goto(id = 'o-1'): Promise<void> {
-    await this.page.goto(`/sales/${id}`);
+    await this.page.goto(`/shop/sales/${id}`);
   }
 }

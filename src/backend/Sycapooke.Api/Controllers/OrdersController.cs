@@ -22,10 +22,12 @@ public sealed class OrdersController(ISender sender) : ControllerBase
     public async Task<IActionResult> Purchases(CancellationToken cancellationToken) =>
         Ok(await sender.Send(new ListOrdersQuery(User.MemberId(), OrderRole.Buyer), cancellationToken));
 
+    [Authorize(Policy = Policies.CanSell)]
     [HttpGet("api/sales")]
     public async Task<IActionResult> Sales(CancellationToken cancellationToken) =>
         Ok(await sender.Send(new ListOrdersQuery(User.MemberId(), OrderRole.Seller), cancellationToken));
 
+    [Authorize(Policy = Policies.CanSell)]
     [HttpGet("api/sales/{id:guid}")]
     public async Task<IActionResult> Sale(Guid id, CancellationToken cancellationToken)
     {
@@ -33,6 +35,7 @@ public sealed class OrdersController(ISender sender) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error!);
     }
 
+    [Authorize(Policy = Policies.CanSell)]
     [HttpPost("api/orders/{id:guid}/shipment")]
     public async Task<IActionResult> AddTracking(Guid id, AddTrackingRequest request, CancellationToken cancellationToken)
     {
@@ -47,6 +50,7 @@ public sealed class OrdersController(ISender sender) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error!);
     }
 
+    [Authorize(Policy = Policies.CanSell)]
     [HttpPost("api/orders/{id:guid}/cancellation")]
     public async Task<IActionResult> Cancel(Guid id, CancelOrderRequest request, CancellationToken cancellationToken)
     {
@@ -61,6 +65,7 @@ public sealed class OrdersController(ISender sender) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error!);
     }
 
+    [Authorize(Policy = Policies.CanSell)]
     [HttpPost("api/orders/{id:guid}/cancellation-request/response")]
     public async Task<IActionResult> RespondToCancellation(Guid id, CancellationResponseRequest request, CancellationToken cancellationToken)
     {

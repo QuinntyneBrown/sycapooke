@@ -51,7 +51,7 @@ export class ProblemSection {
   }
 }
 
-/** The administrator's problem page at /admin/problems/{reference} and its Resolve dialog (mocks pages/problem-detail, dialogs/resolve-problem). */
+/** The founder's problem page at /shop/problems/{reference} and its Resolve dialog (mocks pages/problem-detail, dialogs/resolve-problem). */
 export class ProblemDetailPage {
   readonly topBar: Locator;
   readonly heading: Locator;
@@ -88,15 +88,15 @@ export class ProblemDetailPage {
     this.loading = main.locator('[aria-busy="true"]');
     this.error = main.locator('.empty');
     this.dialog = page.getByRole('dialog', { name: /Resolve problem/ });
-    this.refund = this.dialog.getByRole('radio', { name: /Refund buyer in full/ });
-    this.release = this.dialog.getByRole('radio', { name: /Release payout to seller/ });
-    this.reason = this.dialog.getByLabel('Reason');
+    this.refund = this.dialog.getByRole('radio', { name: /Refund in full/ });
+    this.release = this.dialog.getByRole('radio', { name: /Close without refund/ });
+    this.reason = this.dialog.getByLabel('Your explanation');
     this.reasonError = this.dialog.locator('.field__error');
     this.confirm = this.dialog.locator('.dialog__footer .btn--primary');
     this.cancel = this.dialog.getByRole('button', { name: 'Cancel' });
   }
 
   async goto(reference = 'P-1001'): Promise<void> {
-    await this.page.goto(`/admin/problems/${reference}`);
+    await this.page.goto(`/shop/problems/${reference}`);
   }
 }

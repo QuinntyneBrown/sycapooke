@@ -393,7 +393,7 @@ Founder only; App shell, Sales tab. The same `OrderHistoryPage` with route data 
 
 ### Support queue — `/shop/support` (`pages/support`: default, filtered, loading, empty, error)
 
-Founder only (new, not yet built); App shell, Support tab. Customer problems and cancellation
+Founder only; App shell, Support tab (built in orders: `support/`). Customer problems and cancellation
 requests, newest first; the founder handles them herself (no separate administrator).
 
 - Library: `sy-item-row` ("{reference} · {kind} · {customer} · {when}" with the item thumbnail,

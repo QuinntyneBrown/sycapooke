@@ -24,19 +24,19 @@ public sealed class OrderHistoryTests : IDisposable
     public async Task Purchases_are_listed_newest_first_with_item_seller_total_status_and_date()
     {
         await _buyer.SignInVerifiedMemberAsync(_factory);
-        var (first, _) = await _factory.SeedPaidOrderAsync(_buyer, 30001);
+        var (first, seller1) = await _factory.SeedPaidOrderAsync(_buyer, 30001);
         _factory.Clock.Advance(TimeSpan.FromMinutes(1));
-        var (second, seller2) = await _factory.SeedPaidOrderAsync(_buyer, 30002);
+        var (second, _) = await _factory.SeedPaidOrderAsync(_buyer, 30002);
         _factory.Clock.Advance(TimeSpan.FromMinutes(1));
         var (third, _) = await _factory.SeedPaidOrderAsync(_buyer, 30003);
-        (await seller2.AddTrackingAsync(second)).EnsureSuccessStatusCode();
+        (await seller1.AddTrackingAsync(first)).EnsureSuccessStatusCode();
 
         var list = await _buyer.GetFromJsonAsync<OrderListView>("/api/purchases");
 
         Assert.Equal([third, second, first], list!.Items.Select(i => i.Id));
-        var shipped = list.Items[1];
+        var shipped = list.Items[2];
         Assert.Equal("Shipped", shipped.Status);
-        Assert.Equal("kicks_30002", shipped.OtherParty);
+        Assert.Equal("kicks_30001", shipped.OtherParty);
         Assert.Equal("Floral shirtwaist day dress", shipped.Item.Title);
         Assert.Equal("102.34", shipped.Total);
         Assert.StartsWith("SY-", shipped.Reference);
@@ -50,7 +50,7 @@ public sealed class OrderHistoryTests : IDisposable
         var (orderId, seller) = await _factory.SeedPaidOrderAsync(_buyer);
 
         var sales = await seller.GetFromJsonAsync<OrderListView>("/api/sales");
-        var buyerSales = await _buyer.GetFromJsonAsync<OrderListView>("/api/sales");
+        using var buyerSales = await _buyer.GetAsync("/api/sales");
         var sellerPurchases = await seller.GetFromJsonAsync<OrderListView>("/api/purchases");
 
         var row = Assert.Single(sales!.Items);
@@ -59,7 +59,7 @@ public sealed class OrderHistoryTests : IDisposable
         Assert.Equal(await BuyerNameAsync(), row.OtherParty);
         Assert.NotNull(row.ShipBy);
         Assert.Equal(1, sales.Counts.ToShip);
-        Assert.Empty(buyerSales!.Items);
+        Assert.Equal(HttpStatusCode.Forbidden, buyerSales.StatusCode);
         Assert.Empty(sellerPurchases!.Items);
     }
 

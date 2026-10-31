@@ -66,7 +66,7 @@ export function rowLink(row: MyListingRow): string[] {
     return ['/sell', row.reference];
   }
   if (row.status === 'Sold' && row.saleOrderId) {
-    return ['/sales', row.saleOrderId];
+    return ['/shop/sales', row.saleOrderId];
   }
   return ['/items', row.reference];
 }

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { AdminProblemsApi, ProblemDetail, shortRef } from '@sycapooke/api';
+import { RouterLink } from '@angular/router';
+import { ProblemDetail, ShopProblemsApi, shortRef } from '@sycapooke/api';
 import {
   AlertComponent,
   ButtonDirective,
@@ -27,10 +28,10 @@ const STATUS_TONES: Record<string, StatusTone> = {
 };
 
 /**
- * An administrator's problem page at /admin/problems/{reference} in the admin shell (L2-036, mocks
- * pages/problem-detail): the reason, the buyer's claim with photos and the seller's reply, and a
- * side panel with the order's facts, the payout and "Resolve". A resolved problem shows the
- * decision instead. Members without the Administrator role get the load error (the API answers 403).
+ * The founder's problem page at /shop/problems/{reference} in the app shell (L2-036, mocks
+ * pages/problem-detail): the reason, the customer's claim with photos and her reply, and a side
+ * panel with the order's facts and "Resolve". A resolved problem shows the decision instead.
+ * Anyone else gets the load error (the API answers 403).
  */
 @Component({
   selector: 'sy-problem-detail-page',
@@ -41,6 +42,7 @@ const STATUS_TONES: Record<string, StatusTone> = {
     FactsComponent,
     IconComponent,
     ItemRowComponent,
+    RouterLink,
     ThreadComponent,
   ],
   templateUrl: './problem-detail-page.html',
@@ -48,7 +50,7 @@ const STATUS_TONES: Record<string, StatusTone> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProblemDetailPage {
-  private readonly api = inject(AdminProblemsApi);
+  private readonly api = inject(ShopProblemsApi);
   private readonly dialogs = inject(DialogService);
 
   /** The problem reference, from the route parameter. */
@@ -61,7 +63,7 @@ export class ProblemDetailPage {
   readonly thread = computed<ThreadEntry[]>(() => {
     const detail = this.detail();
     return detail
-      ? problemThread(detail.problem, `${detail.buyerDisplayName} · buyer`, `${detail.sellerDisplayName} · seller`)
+      ? problemThread(detail.problem, `${detail.buyerDisplayName} · customer`, `${detail.sellerDisplayName} · you`)
       : [];
   });
   readonly facts = computed<Fact[]>(() => {
@@ -71,7 +73,6 @@ export class ProblemDetailPage {
       { label: 'Status', value: order.status, status: STATUS_TONES[order.status] ?? 'info' },
       { label: 'Total', value: formatMoney(order.total), numeric: true },
       { label: 'Delivered', value: order.deliveredAt ? formatDay(order.deliveredAt) : 'Not yet' },
-      { label: 'Payout', value: payoutLabel(this.detail()!.payout) },
     ];
   });
   /** The decision of a resolved problem (mocks problem-detail/resolved). */
@@ -80,9 +81,12 @@ export class ProblemDetailPage {
     const problem = detail?.problem;
     if (!detail || problem?.status !== 'Resolved') return null;
     const when = problem.resolvedAt ? ` ${formatDay(problem.resolvedAt)}.` : '';
-    return problem.outcome === 'FullRefund'
-      ? { heading: 'Refunded in full', text: `${formatMoney(detail.order.total)} back to the buyer. No payout.${when}` }
-      : { heading: 'Released to the seller', text: `Order completed. ${detail.sellerDisplayName} is paid.${when}` };
+    return problem.outcome === 'RefundBuyer'
+      ? {
+          heading: 'Refunded in full',
+          text: `${formatMoney(detail.order.total)} refunded to ${detail.buyerDisplayName}, who has your explanation.${when}`,
+        }
+      : { heading: 'Closed without a refund', text: `The order is completed.${when}` };
   });
   readonly opened = computed(() => {
     const at = this.detail()?.problem.openedAt;
@@ -121,11 +125,4 @@ export class ProblemDetailPage {
     this.detail.set(result.value);
     this.view.set('loaded');
   }
-}
-
-/** "Held" while the problem is open, "Not paid" after a refund, "Released" or "Paid" after release. */
-function payoutLabel(status: string): string {
-  if (status === 'Held' || status === 'Paid') return status;
-  if (status === 'Cancelled' || status === 'None') return 'Not paid';
-  return 'Released';
 }

@@ -16,14 +16,14 @@ public sealed class EmailTemplateTests
     public static TheoryData<NotificationType, object, string> Emails => new()
     {
         { NotificationType.EmailVerification, new EmailVerificationEmail("https://sycapooke.test/verify?token=abc"), "https://sycapooke.test/verify?token=abc" },
-        { NotificationType.SaleMade, new SaleMadeEmail(OrderId, "SY-10001", "Jordan 1 Retro", 102.34m, new DateTime(2026, 11, 2)), $"https://sycapooke.test/sales/{OrderId}" },
+        { NotificationType.SaleMade, new SaleMadeEmail(OrderId, "SY-10001", "Jordan 1 Retro", 102.34m, new DateTime(2026, 11, 2)), $"https://sycapooke.test/shop/sales/{OrderId}" },
         { NotificationType.OrderShipped, new OrderShippedEmail(OrderId, "SY-10001", "Jordan 1 Retro", "USPS", "9400111899223456120477", "https://tools.usps.com/x"), $"https://sycapooke.test/orders/{OrderId}" },
         { NotificationType.OrderDelivered, new OrderDeliveredEmail(OrderId, "SY-10001", "Jordan 1 Retro"), $"https://sycapooke.test/orders/{OrderId}" },
-        { NotificationType.ShipByReminder, new ShipByReminderEmail(OrderId, "SY-10001", "Jordan 1 Retro", new DateTime(2026, 11, 2)), $"https://sycapooke.test/sales/{OrderId}" },
+        { NotificationType.ShipByReminder, new ShipByReminderEmail(OrderId, "SY-10001", "Jordan 1 Retro", new DateTime(2026, 11, 2)), $"https://sycapooke.test/shop/sales/{OrderId}" },
         { NotificationType.OrderCancelled, new OrderCancelledEmail(OrderId, "SY-10001", "Jordan 1 Retro", ToSeller: false), $"https://sycapooke.test/orders/{OrderId}" },
-        { NotificationType.OrderCancelled, new OrderCancelledEmail(OrderId, "SY-10001", "Jordan 1 Retro", ToSeller: true), $"https://sycapooke.test/sales/{OrderId}" },
+        { NotificationType.OrderCancelled, new OrderCancelledEmail(OrderId, "SY-10001", "Jordan 1 Retro", ToSeller: true), $"https://sycapooke.test/shop/sales/{OrderId}" },
         { NotificationType.OrderCancelled, new OrderCancelledEmail(OrderId, "SY-10001", "Jordan 1 Retro", ToSeller: false, "Item damaged", "Sorry"), $"https://sycapooke.test/orders/{OrderId}" },
-        { NotificationType.CancellationRequested, new CancellationRequestedEmail(OrderId, "SY-10001", "Jordan 1 Retro", "Wrong colour"), $"https://sycapooke.test/sales/{OrderId}" },
+        { NotificationType.CancellationRequested, new CancellationRequestedEmail(OrderId, "SY-10001", "Jordan 1 Retro", "Wrong colour"), $"https://sycapooke.test/shop/sales/{OrderId}" },
         { NotificationType.AccountLocked, new AccountLockedEmail(new DateTime(2026, 10, 31, 16, 45, 0)), "https://sycapooke.test/forgot-password" },
         { NotificationType.PasswordReset, new PasswordResetEmail("https://sycapooke.test/reset-password?token=abc"), "https://sycapooke.test/reset-password?token=abc" },
         { NotificationType.PasswordChanged, new PasswordChangedEmail(), "https://sycapooke.test/forgot-password" },

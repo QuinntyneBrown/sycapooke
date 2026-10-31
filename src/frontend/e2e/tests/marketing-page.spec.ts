@@ -26,7 +26,11 @@ test.describe('marketing page', () => {
     ]) {
       await expect(welcome.main.getByRole('heading', { level: 2, name })).toBeVisible();
     }
-    await expect(welcome.main.getByRole('heading', { level: 3 })).toHaveText(['List it', 'Sell it', 'Get paid']);
+    await expect(welcome.main.getByRole('heading', { level: 3 })).toHaveText([
+      'Find a treasure',
+      'Pay securely',
+      'Receive its story',
+    ]);
     await expect(welcome.main).not.toContainText(/\bgirls?\b|\bkids?\b/i);
     const sell = welcome.sellLinks();
     await expect(sell).not.toHaveCount(0);

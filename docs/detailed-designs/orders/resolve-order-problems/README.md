@@ -32,7 +32,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+The founder model is implemented and tested: `ShopProblemsController` (`GET /api/shop/support`, `GET /api/shop/problems/{reference}`, `POST .../resolution` with `RefundBuyer` or `CloseWithoutRefund`), the refund retry (`RetryPendingRefundsCommand`, `RefundRetryJob`) and the `refund` projection are covered by `ResolveOrderProblemsTests`; the support queue, problem page and Resolve dialog by `support-queue.spec.ts` and `resolve-order-problems.spec.ts`. Not yet built: the founder's reply form on the problem page (she replies from the sale page).
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

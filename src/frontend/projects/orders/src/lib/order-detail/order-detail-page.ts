@@ -77,7 +77,7 @@ export class OrderDetailPage {
   readonly problemOpen = computed(() => this.order()?.problem?.status === 'Open');
   /** Refunded because Sycapooke decided the problem for the buyer (mocks order-detail/refunded). */
   readonly refundedOnProblem = computed(
-    () => this.order()?.status === 'Refunded' && this.order()?.problem?.outcome === 'FullRefund',
+    () => this.order()?.status === 'Refunded' && this.order()?.problem?.outcome === 'RefundBuyer',
   );
   readonly heading = computed(() => (this.problemOpen() ? 'We’re on it' : HEADINGS[this.order()?.status ?? 'Paid']));
   readonly canConfirm = computed(
@@ -108,7 +108,7 @@ export class OrderDetailPage {
     const order = this.order();
     if (!order) return '';
     const card = order.cardBrand && order.cardLast4 ? `${order.cardBrand} ending ${order.cardLast4}` : 'your card';
-    return `Our team reviewed the problem. ${formatMoney(order.total)} is on its way back to ${card}.`;
+    return `The shop reviewed the problem. ${formatMoney(order.total)} is on its way back to ${card}.`;
   });
   readonly summaryItem = computed<OrderSummaryItem | null>(() => {
     const item = this.order()?.item;

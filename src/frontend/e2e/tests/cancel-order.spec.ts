@@ -13,6 +13,7 @@ import {
   buyerOrder,
   cancellationRequest,
   expect,
+  founderMarcus,
   marcus,
   problem,
   sale,
@@ -56,7 +57,7 @@ async function holdThenFail(page: Page, url: string): Promise<() => void> {
 
 test.describe('cancel order: seller', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAs(page, marcus);
+    await signInAs(page, founderMarcus);
     await page.route('**/photos/**', (route) => route.fulfill({ contentType: 'image/png', body: Buffer.alloc(0) }));
   });
 

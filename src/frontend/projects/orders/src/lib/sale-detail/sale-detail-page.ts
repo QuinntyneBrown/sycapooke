@@ -38,11 +38,10 @@ const HEADINGS: Record<string, string> = {
 };
 
 /**
- * The seller's sale at /sales/{id} (mocks pages/sale-detail, L2-033): the ship-by date and the
+ * The founder's sale at /shop/sales/{id} (mocks pages/sale-detail, L2-033): the ship-by date and the
  * buyer's address while Paid, with Add tracking and Cancel order; the buyer's request to cancel
- * with Respond; the timeline and tracking link once shipped; the payout after the Sycapooke fee once
- * Completed (L2-031); Relist item once Cancelled (L2-035); and the buyer's open problem with the
- * payout on hold and one reply (L2-036).
+ * with Respond; the timeline and tracking link once shipped; Relist item once Cancelled (L2-035); and
+ * the customer's open problem with completion paused and one reply (L2-036).
  */
 @Component({
   selector: 'sy-sale-detail-page',
@@ -109,18 +108,6 @@ export class SaleDetailPage {
   readonly summaryItem = computed<OrderSummaryItem | null>(() => {
     const item = this.sale()?.item;
     return item ? { title: item.title, meta: `${item.brand} · ${item.size}`, photo: item.photo } : null;
-  });
-
-  /** Where the payout of a Completed sale is (mocks sale-detail/completed). */
-  readonly payoutNote = computed(() => {
-    const payout = this.sale()?.payout;
-    if (!payout) return '';
-    const bank = payout.bankDisplay ?? 'your bank';
-    if (payout.status === 'Paid' || (payout.status === 'Sent' && payout.sentAt)) {
-      return `Sent ${formatDay(payout.sentAt!)} to ${bank}.`;
-    }
-    if (payout.status === 'Failed') return 'Your bank returned this payout.';
-    return payout.status === 'Held' ? 'Held until you set up payouts.' : 'On its way soon.';
   });
 
   readonly day = formatDay;
