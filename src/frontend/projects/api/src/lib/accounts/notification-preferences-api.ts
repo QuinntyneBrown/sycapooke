@@ -5,7 +5,7 @@ import { map } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
 import { ApiResult, toResult } from '../api-result';
 
-export type NotificationCategoryKey = 'accountSecurity' | 'orders' | 'reviews' | 'marketing';
+export type NotificationCategoryKey = 'accountSecurity' | 'orders' | 'marketing';
 
 /** One row of the Emails page; a locked category is always on (L2-043). */
 export interface NotificationCategory {
@@ -25,9 +25,8 @@ export interface VersionedNotificationPreferences {
   etag: string;
 }
 
-/** Body of PUT /api/me/notification-preferences: only the two optional categories. */
+/** Body of PUT /api/me/notification-preferences: only the optional category. */
 export interface NotificationPreferencesUpdate {
-  reviewEmails: boolean;
   marketingEmails: boolean;
 }
 

@@ -9,16 +9,15 @@
 
 import { Page, Request } from '@playwright/test';
 
-import { expect, marcus, problem, signInAs, test } from '../fixtures';
+import { expect, ida, marcus, problem, signInAs, test } from '../fixtures';
 import { EmailSettingsPage } from '../pages/email-settings.page';
 
 /** GET /api/me/notification-preferences as Sycapooke API returns it. */
-function preferences(reviews = true, marketing = false): Record<string, unknown> {
+function preferences(marketing = false): Record<string, unknown> {
   return {
     categories: [
       { key: 'accountSecurity', enabled: true, locked: true },
       { key: 'orders', enabled: true, locked: true },
-      { key: 'reviews', enabled: reviews, locked: false },
       { key: 'marketing', enabled: marketing, locked: false },
     ],
   };
@@ -30,8 +29,8 @@ async function servePreferences(page: Page): Promise<Request[]> {
   await page.route('**/api/me/notification-preferences', async (route) => {
     if (route.request().method() === 'PUT') {
       saves.push(route.request());
-      const sent = route.request().postDataJSON() as { reviewEmails: boolean; marketingEmails: boolean };
-      await route.fulfill({ json: preferences(sent.reviewEmails, sent.marketingEmails), headers: { ETag: '"1"' } });
+      const sent = route.request().postDataJSON() as { marketingEmails: boolean };
+      await route.fulfill({ json: preferences(sent.marketingEmails), headers: { ETag: '"1"' } });
       return;
     }
     await route.fulfill({ json: preferences(), headers: { ETag: '"0"' } });
@@ -40,7 +39,7 @@ async function servePreferences(page: Page): Promise<Request[]> {
 }
 
 test.describe('manage notification preferences', () => {
-  test('security and order emails are locked on, reviews on and marketing off by default', async ({
+  test('security and purchase emails are locked on and marketing is off by default', async ({
     page,
     unfixturedApiCalls,
   }) => {
@@ -50,23 +49,33 @@ test.describe('manage notification preferences', () => {
     await emails.goto();
 
     await expect(emails.heading).toHaveText('Emails');
-    await expect(emails.lead).toHaveText('Security and order emails are always on.');
-    await expect(emails.rows).toHaveCount(4);
+    await expect(emails.lead).toHaveText('Security and purchase emails are always on.');
+    await expect(emails.rows).toHaveCount(3);
     await expect(emails.row('Account security')).toContainText('Sign-in alerts, password resets');
-    await expect(emails.row('Orders')).toContainText('Sales, shipping, delivery, refunds');
-    await expect(emails.row('Reviews')).toContainText('When someone reviews you');
+    await expect(emails.row('Purchases')).toContainText('Confirmation, shipping, delivery, refunds');
     await expect(emails.row('News from Sycapooke')).toContainText('New treasures, now and then');
     await expect(emails.security).toBeChecked();
     await expect(emails.security).toBeDisabled();
     await expect(emails.orders).toBeChecked();
     await expect(emails.orders).toBeDisabled();
-    await expect(emails.reviews).toBeChecked();
-    await expect(emails.reviews).toBeEnabled();
     await expect(emails.marketing).not.toBeChecked();
     expect(unfixturedApiCalls).toEqual([]);
   });
 
-  test('saving sends the two optional choices with If-Match and confirms', async ({ page, unfixturedApiCalls }) => {
+  test('the founder sees four locked rows and nothing to save', async ({ page, unfixturedApiCalls }) => {
+    await signInAs(page, ida);
+    await servePreferences(page);
+    const emails = new EmailSettingsPage(page);
+    await emails.goto();
+
+    await expect(emails.lead).toHaveText('Security, sales, ship-by and support emails are always on.');
+    await expect(emails.rows).toHaveCount(4);
+    await expect(page.getByRole('switch', { name: 'Support emails, always on' })).toBeDisabled();
+    await expect(emails.save).toHaveCount(0);
+    expect(unfixturedApiCalls).toEqual([]);
+  });
+
+  test('saving sends the marketing choice with If-Match and confirms', async ({ page, unfixturedApiCalls }) => {
     await signInAs(page, marcus);
     const saves = await servePreferences(page);
     let release: () => void = () => undefined;
@@ -79,20 +88,17 @@ test.describe('manage notification preferences', () => {
     const emails = new EmailSettingsPage(page);
     await emails.goto();
 
-    await emails.reviews.click();
     await emails.marketing.check();
     await emails.save.click();
 
     await expect(emails.save).toHaveAttribute('aria-busy', 'true');
-    await expect(emails.reviews).toBeDisabled();
     await expect(emails.marketing).toBeDisabled();
     release();
     await expect(emails.saved).toBeVisible();
     await expect(emails.save).not.toHaveAttribute('aria-busy', 'true');
-    await expect(emails.reviews).not.toBeChecked();
     await expect(emails.marketing).toBeChecked();
     expect(saves).toHaveLength(1);
-    expect(saves[0].postDataJSON()).toEqual({ reviewEmails: false, marketingEmails: true });
+    expect(saves[0].postDataJSON()).toEqual({ marketingEmails: true });
     expect(await saves[0].headerValue('If-Match')).toBe('"0"');
     expect(unfixturedApiCalls).toEqual([]);
   });
@@ -108,22 +114,22 @@ test.describe('manage notification preferences', () => {
     const emails = new EmailSettingsPage(page);
     await emails.goto();
 
-    await emails.reviews.click();
+    await emails.marketing.check();
     await emails.save.click();
 
     await expect(emails.toast).toHaveClass(/toast--danger/);
     await expect(emails.toast).toHaveAttribute('role', 'alert');
     await expect(emails.toast).toContainText('Something went wrong');
     await expect(emails.toast).toContainText('Ref 5c1d-0e7a');
-    await expect(emails.reviews).not.toBeChecked();
-    await expect(emails.reviews).toBeEnabled();
+    await expect(emails.marketing).toBeChecked();
+    await expect(emails.marketing).toBeEnabled();
     await expect(emails.saved).toHaveCount(0);
 
     await emails.toast.getByRole('button', { name: 'Try again' }).click();
     await expect(emails.saved).toBeVisible();
     await expect(emails.toast).toHaveCount(0);
     expect(saves).toHaveLength(1);
-    expect(saves[0].postDataJSON()).toEqual({ reviewEmails: false, marketingEmails: false });
+    expect(saves[0].postDataJSON()).toEqual({ marketingEmails: true });
   });
 
   test('settings changed elsewhere are reloaded before the member saves again', async ({ page }) => {
@@ -137,18 +143,17 @@ test.describe('manage notification preferences', () => {
         return;
       }
       reads++;
-      await route.fulfill({ json: preferences(true, reads > 1), headers: { ETag: `"${reads - 1}"` } });
+      await route.fulfill({ json: preferences(reads > 1), headers: { ETag: `"${reads - 1}"` } });
     });
     const emails = new EmailSettingsPage(page);
     await emails.goto();
 
-    await emails.reviews.click();
+    await emails.marketing.check();
     await emails.save.click();
 
     await expect(emails.toast).toHaveClass(/toast--warning/);
     await expect(emails.toast).toContainText('Your email settings changed since you opened them');
     await expect(emails.marketing).toBeChecked();
-    await expect(emails.reviews).toBeChecked();
     expect(reads).toBe(2);
   });
 
@@ -176,7 +181,7 @@ test.describe('manage notification preferences', () => {
     await expect(emails.error).toContainText('Ref 5c1d-0e7a');
 
     await emails.tryAgain.click();
-    await expect(emails.rows).toHaveCount(4);
+    await expect(emails.rows).toHaveCount(3);
   });
 
   test('a visitor is sent to sign in and back', async ({ page }) => {

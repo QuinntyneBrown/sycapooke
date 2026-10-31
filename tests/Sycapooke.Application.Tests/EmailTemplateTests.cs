@@ -27,6 +27,7 @@ public sealed class EmailTemplateTests
         { NotificationType.AccountLocked, new AccountLockedEmail(new DateTime(2026, 10, 31, 16, 45, 0)), "https://sycapooke.test/forgot-password" },
         { NotificationType.PasswordReset, new PasswordResetEmail("https://sycapooke.test/reset-password?token=abc"), "https://sycapooke.test/reset-password?token=abc" },
         { NotificationType.PasswordChanged, new PasswordChangedEmail(), "https://sycapooke.test/forgot-password" },
+        { NotificationType.PurchaseConfirmation, new PurchaseConfirmationEmail(OrderId, "SY-10001", "Jordan 1 Retro", 102.34m), $"https://sycapooke.test/orders/{OrderId}" },
         { NotificationType.OrderRefunded, new OrderRefundedEmail(OrderId, "SY-10001", 102.34m, "Visa", "4242"), $"https://sycapooke.test/orders/{OrderId}" },
     };
 

@@ -23,4 +23,5 @@ public enum NotificationType
     AccountLocked,
     PasswordReset,
     PasswordChanged,
+    PurchaseConfirmation,
 }

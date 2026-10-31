@@ -496,9 +496,6 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("MarketingOptedOutAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("ReviewEmails")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 

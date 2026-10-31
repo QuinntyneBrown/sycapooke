@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { ApiProblem, NotificationPreferencesApi, VersionedNotificationPreferences, shortRef } from '@sycapooke/api';
+import {
+  ApiProblem,
+  AuthState,
+  NotificationPreferencesApi,
+  VersionedNotificationPreferences,
+  shortRef,
+} from '@sycapooke/api';
 import {
   AlertComponent,
   ButtonDirective,
@@ -12,8 +18,8 @@ import {
 
 /**
  * The member's email settings at /account/emails (mocks pages/notification-settings, L2-043):
- * account security and order emails locked on, review and marketing emails the member's choice,
- * saved with the ETag they were read with. A visitor is sent to sign in.
+ * account security and order emails locked on, marketing the customer's choice, saved with the ETag
+ * they were read with. The founder sees four locked rows and nothing to save. A visitor is sent to sign in.
  */
 @Component({
   selector: 'sy-notification-settings-page',
@@ -26,11 +32,11 @@ export class NotificationSettingsPage {
   private readonly api = inject(NotificationPreferencesApi);
   private readonly router = inject(Router);
   private readonly toasts = inject(ToastService);
+  readonly founder = inject(AuthState).isFounder;
   private etag = '';
 
   readonly view = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly errorRef = signal('');
-  readonly reviews = signal(true);
   readonly marketing = signal(false);
   readonly saving = signal(false);
   readonly saved = signal(false);
@@ -48,10 +54,7 @@ export class NotificationSettingsPage {
     if (this.saving()) return;
     this.saving.set(true);
     this.saved.set(false);
-    const result = await this.api.update(
-      { reviewEmails: this.reviews(), marketingEmails: this.marketing() },
-      this.etag,
-    );
+    const result = await this.api.update({ marketingEmails: this.marketing() }, this.etag);
     this.saving.set(false);
     if (result.ok) {
       this.apply(result.value);
@@ -89,7 +92,6 @@ export class NotificationSettingsPage {
   private apply({ preferences, etag }: VersionedNotificationPreferences): void {
     this.etag = etag;
     const enabled = (key: string) => preferences.categories.find((category) => category.key === key)?.enabled ?? false;
-    this.reviews.set(enabled('reviews'));
     this.marketing.set(enabled('marketing'));
   }
 

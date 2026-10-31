@@ -9,7 +9,7 @@ namespace Sycapooke.Application.Notifications;
 /// <summary>One category on the settings page; locked categories cannot be turned off (L2-043).</summary>
 public sealed record NotificationCategoryDto(string Key, bool Enabled, bool Locked);
 
-/// <summary>The member's 4 categories in page order, and the version to send back in If-Match.</summary>
+/// <summary>The member's 3 categories in page order, and the version to send back in If-Match.</summary>
 public sealed record NotificationPreferencesDto(IReadOnlyList<NotificationCategoryDto> Categories)
 {
     [System.Text.Json.Serialization.JsonIgnore]
@@ -19,7 +19,6 @@ public sealed record NotificationPreferencesDto(IReadOnlyList<NotificationCatego
     [
         new("accountSecurity", true, true),
         new("orders", true, true),
-        new("reviews", preferences.ReviewEmails, false),
         new("marketing", preferences.MarketingEmails, false),
     ])
     { Version = preferences.Version };
@@ -65,11 +64,11 @@ public sealed class GetNotificationPreferencesQueryHandler(ISycapookeDbContext d
 }
 
 /// <summary>
-/// Saves the two optional choices under the version they were read at (If-Match): a missing
+/// Saves the one optional choice under the version they were read at (If-Match): a missing
 /// version is 428, an old one 412. There is no field for the always-on categories, so no request
-/// can turn them off; both values are required (422).
+/// can turn them off; the value is required (422).
 /// </summary>
-public sealed record UpdateNotificationPreferencesCommand(Guid MemberId, bool? ReviewEmails, bool? MarketingEmails, int? ExpectedVersion)
+public sealed record UpdateNotificationPreferencesCommand(Guid MemberId, bool? MarketingEmails, int? ExpectedVersion)
     : IRequest<Result<NotificationPreferencesDto>>;
 
 public sealed class UpdateNotificationPreferencesCommandHandler(ISycapookeDbContext db, TimeProvider clock)
@@ -78,11 +77,6 @@ public sealed class UpdateNotificationPreferencesCommandHandler(ISycapookeDbCont
     public async Task<Result<NotificationPreferencesDto>> Handle(UpdateNotificationPreferencesCommand command, CancellationToken cancellationToken)
     {
         var errors = new Dictionary<string, FieldError>();
-        if (command.ReviewEmails is null)
-        {
-            errors["reviewEmails"] = new("REQUIRED", "Choose on or off");
-        }
-
         if (command.MarketingEmails is null)
         {
             errors["marketingEmails"] = new("REQUIRED", "Choose on or off");
@@ -111,7 +105,7 @@ public sealed class UpdateNotificationPreferencesCommandHandler(ISycapookeDbCont
             return NotificationRefusals.Changed;
         }
 
-        preferences.Update(command.ReviewEmails!.Value, command.MarketingEmails!.Value, now);
+        preferences.Update(command.MarketingEmails!.Value, now);
         try
         {
             await db.SaveChangesAsync(cancellationToken);

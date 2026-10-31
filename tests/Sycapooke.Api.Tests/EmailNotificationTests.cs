@@ -39,14 +39,15 @@ public sealed partial class EmailNotificationTests : IDisposable
 
         _factory.InDatabase(db =>
         {
-            var queued = Assert.Single(db.OutboxMessages, m => m.Status == OutboxMessageStatus.Pending);
-            Assert.Equal(NotificationType.SaleMade, queued.NotificationType);
+            Assert.Equal(2, db.OutboxMessages.Count(m => m.Status == OutboxMessageStatus.Pending));
+            var queued = Assert.Single(db.OutboxMessages, m => m.NotificationType == NotificationType.SaleMade);
             Assert.True(queued.NextAttemptAt <= queued.CreatedAt, "due at once, so the next poll sends it");
         });
         var sent = await _factory.DispatchEmailsAsync();
 
-        var email = Assert.Single(sent);
-        Assert.Equal(Seller, email.To);
+        var confirmation = Assert.Single(sent, e => e.Subject.StartsWith("Your order SY-10001 is confirmed", StringComparison.Ordinal));
+        Assert.Contains($"https://sycapooke.test/orders/{orderId}", confirmation.Body);
+        var email = Assert.Single(sent, e => e.To == Seller);
         Assert.Equal("You made a sale", email.Subject);
         Assert.Contains("SY-10001", email.Body);
         Assert.Contains($"https://sycapooke.test/shop/sales/{orderId}", email.Body);
@@ -148,8 +149,8 @@ public sealed partial class EmailNotificationTests : IDisposable
 
         _factory.Email.FailWith = null;
         _factory.Clock.Advance(TimeSpan.FromMinutes(2));
-        var sent = Assert.Single(await _factory.DispatchEmailsAsync());
-        Assert.Equal("You made a sale", sent.Subject);
+        var sent = await _factory.DispatchEmailsAsync();
+        Assert.Contains(sent, e => e.Subject == "You made a sale");
     }
 
     [Fact]

@@ -41,7 +41,7 @@ public sealed class NotificationPreferencesTests : IDisposable
         Assert.Equal("\"0\"", response.Headers.ETag?.Tag);
         var preferences = (await response.Content.ReadFromJsonAsync<PreferencesView>())!;
         Assert.Equal(
-            [new("accountSecurity", true, true), new("orders", true, true), new("reviews", true, false), new("marketing", false, false)],
+            [new("accountSecurity", true, true), new("orders", true, true), new("marketing", false, false)],
             preferences.Categories);
     }
 
@@ -51,30 +51,29 @@ public sealed class NotificationPreferencesTests : IDisposable
         var visitor = _factory.CreateMemberClient();
 
         using var read = await visitor.GetAsync("/api/me/notification-preferences");
-        using var save = await visitor.PutAsJsonAsync("/api/me/notification-preferences", new { reviewEmails = false, marketingEmails = false });
+        using var save = await visitor.PutAsJsonAsync("/api/me/notification-preferences", new { marketingEmails = false });
 
         Assert.Equal(HttpStatusCode.Unauthorized, read.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, save.StatusCode);
     }
 
     [Fact]
-    public async Task Saving_turns_reviews_off_and_marketing_on_but_never_the_always_on_categories()
+    public async Task Saving_turns_marketing_on_but_never_the_always_on_categories()
     {
         await _member.SignInVerifiedMemberAsync(_factory);
         var etag = await ReadEtagAsync();
 
-        using var response = await SaveAsync(new { reviewEmails = false, marketingEmails = true, accountSecurity = false, orders = false }, etag);
+        using var response = await SaveAsync(new { marketingEmails = true, accountSecurity = false, orders = false }, etag);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("\"1\"", response.Headers.ETag?.Tag);
         var saved = (await response.Content.ReadFromJsonAsync<PreferencesView>())!;
         Assert.Equal(
-            [new("accountSecurity", true, true), new("orders", true, true), new("reviews", false, false), new("marketing", true, false)],
+            [new("accountSecurity", true, true), new("orders", true, true), new("marketing", true, false)],
             saved.Categories);
         _factory.InDatabase(db =>
         {
             var row = Assert.Single(db.NotificationPreferences);
-            Assert.False(row.ReviewEmails);
             Assert.True(row.MarketingEmails);
             Assert.NotNull(row.MarketingOptedInAt);
             Assert.Equal(MarketingChangeSource.Settings, row.LastMarketingChangeSource);
@@ -86,12 +85,12 @@ public sealed class NotificationPreferencesTests : IDisposable
     {
         await _member.SignInVerifiedMemberAsync(_factory);
         var etag = await ReadEtagAsync();
-        using var first = await SaveAsync(new { reviewEmails = false, marketingEmails = false }, etag);
+        using var first = await SaveAsync(new { marketingEmails = false }, etag);
         first.EnsureSuccessStatusCode();
 
-        using var stale = await SaveAsync(new { reviewEmails = true, marketingEmails = true }, etag);
-        using var missing = await SaveAsync(new { reviewEmails = true, marketingEmails = true }, null);
-        using var invalid = await SaveAsync(new { reviewEmails = true }, "\"1\"");
+        using var stale = await SaveAsync(new { marketingEmails = true }, etag);
+        using var missing = await SaveAsync(new { marketingEmails = true }, null);
+        using var invalid = await SaveAsync(new { }, "\"1\"");
 
         Assert.Equal(HttpStatusCode.PreconditionFailed, stale.StatusCode);
         Assert.Equal("NOTIFICATION_PREFERENCES_CHANGED", (await Problem.ReadAsync(stale)).Code);
@@ -185,7 +184,7 @@ public sealed class NotificationPreferencesTests : IDisposable
     {
         await _member.SignInVerifiedMemberAsync(_factory);
         await _factory.DispatchEmailsAsync();
-        using var response = await SaveAsync(new { reviewEmails = true, marketingEmails = true }, await ReadEtagAsync());
+        using var response = await SaveAsync(new { marketingEmails = true }, await ReadEtagAsync());
         response.EnsureSuccessStatusCode();
     }
 

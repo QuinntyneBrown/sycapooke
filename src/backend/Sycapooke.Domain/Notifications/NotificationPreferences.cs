@@ -2,13 +2,12 @@ namespace Sycapooke.Domain.Notifications;
 
 /// <summary>
 /// The groups of email that share one setting (L2-043). Account security and orders are always
-/// on; reviews and marketing are the member's choice.
+/// on; marketing is the member's choice (reviews are deferred, ADR reviews/0001).
 /// </summary>
 public enum NotificationCategory
 {
     AccountSecurity,
     Orders,
-    Reviews,
     Marketing,
 }
 
@@ -34,7 +33,7 @@ public static class NotificationCategories
 
 /// <summary>
 /// A member's email choices (L2-043), one row per member. A member without a row has the
-/// defaults: review emails on, marketing off until they opt in. <see cref="Version"/> is the
+/// defaults: marketing off until they opt in. <see cref="Version"/> is the
 /// concurrency token the API exposes as the ETag.
 /// </summary>
 public sealed class NotificationPreferences
@@ -44,8 +43,6 @@ public sealed class NotificationPreferences
     }
 
     public Guid MemberId { get; private set; }
-
-    public bool ReviewEmails { get; private set; }
 
     public bool MarketingEmails { get; private set; }
 
@@ -62,15 +59,13 @@ public sealed class NotificationPreferences
     public static NotificationPreferences CreateDefault(Guid memberId, DateTime now) => new()
     {
         MemberId = memberId,
-        ReviewEmails = true,
         MarketingEmails = false,
         UpdatedAt = now,
     };
 
-    /// <summary>The settings page saved both optional choices; a marketing change records its time.</summary>
-    public void Update(bool reviewEmails, bool marketingEmails, DateTime now)
+    /// <summary>The settings page saved the marketing choice; a change records its time.</summary>
+    public void Update(bool marketingEmails, DateTime now)
     {
-        ReviewEmails = reviewEmails;
         SetMarketing(marketingEmails, MarketingChangeSource.Settings, now);
         Touch(now);
     }
@@ -84,7 +79,6 @@ public sealed class NotificationPreferences
 
     public bool IsAllowed(NotificationCategory category) => category switch
     {
-        NotificationCategory.Reviews => ReviewEmails,
         NotificationCategory.Marketing => MarketingEmails,
         _ => true,
     };

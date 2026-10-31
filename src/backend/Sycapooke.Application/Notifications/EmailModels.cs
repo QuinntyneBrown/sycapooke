@@ -15,6 +15,9 @@ public sealed record PasswordResetEmail(string Link);
 /// <summary>Confirms a password change or reset (L2-009 AC3).</summary>
 public sealed record PasswordChangedEmail();
 
+/// <summary>Tells a customer their payment went through and the shop will ship it (L2-042).</summary>
+public sealed record PurchaseConfirmationEmail(Guid OrderId, string OrderReference, string ItemTitle, decimal Total);
+
 public sealed record SaleMadeEmail(Guid OrderId, string OrderReference, string ItemTitle, decimal Total, DateTime ShipBy);
 
 public sealed record OrderShippedEmail(Guid OrderId, string OrderReference, string ItemTitle, string Carrier, string TrackingNumber, string TrackingUrl);

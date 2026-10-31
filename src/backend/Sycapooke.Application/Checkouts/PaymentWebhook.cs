@@ -83,6 +83,10 @@ public sealed class PaymentWebhookHandler(
                 NotificationType.SaleMade,
                 order.SellerId,
                 new SaleMadeEmail(order.Id, order.Reference, listing.Title ?? order.Reference, order.Total, order.ShipBy));
+            notifications.Enqueue(
+                NotificationType.PurchaseConfirmation,
+                checkout.BuyerId,
+                new PurchaseConfirmationEmail(order.Id, order.Reference, listing.Title ?? order.Reference, order.Total));
             var saved = await db.SavedAddresses.SingleOrDefaultAsync(a => a.MemberId == checkout.BuyerId, cancellationToken);
             if (saved is null)
             {

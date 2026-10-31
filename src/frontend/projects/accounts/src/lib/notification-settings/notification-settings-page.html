@@ -2,7 +2,13 @@
   <div>
     <h1>Emails</h1>
     @if (view() !== 'error') {
-      <p class="subtitle">Security and order emails are always on.</p>
+      <p class="subtitle">
+        @if (founder()) {
+          Security, sales, ship-by and support emails are always on.
+        } @else {
+          Security and purchase emails are always on.
+        }
+      </p>
     }
   </div>
 </div>
@@ -45,29 +51,43 @@
         </li>
         <li>
           <div class="settings-list__body">
-            <span class="settings-list__title">Orders</span>
-            <span class="settings-list__meta">Sales, shipping, delivery, refunds</span>
+            <span class="settings-list__title">{{ founder() ? 'Sales' : 'Purchases' }}</span>
+            <span class="settings-list__meta">{{
+              founder() ? 'New sales, cancellations' : 'Confirmation, shipping, delivery, refunds'
+            }}</span>
           </div>
           <sy-switch label="Order emails, always on" [checked]="true" disabled />
         </li>
-        <li>
-          <div class="settings-list__body">
-            <span class="settings-list__title">Reviews</span>
-            <span class="settings-list__meta">When someone reviews you</span>
-          </div>
-          <sy-switch label="Review emails" [(checked)]="reviews" [disabled]="saving()" />
-        </li>
-        <li>
-          <div class="settings-list__body">
-            <span class="settings-list__title">News from Sycapooke</span>
-            <span class="settings-list__meta">New treasures, now and then</span>
-          </div>
-          <sy-switch label="Marketing emails" [(checked)]="marketing" [disabled]="saving()" />
-        </li>
+        @if (founder()) {
+          <li>
+            <div class="settings-list__body">
+              <span class="settings-list__title">Ship-by reminders</span>
+              <span class="settings-list__meta">When a sale is waiting to ship</span>
+            </div>
+            <sy-switch label="Ship-by reminder emails, always on" [checked]="true" disabled />
+          </li>
+          <li>
+            <div class="settings-list__body">
+              <span class="settings-list__title">Support</span>
+              <span class="settings-list__meta">Customer problems and cancellation requests</span>
+            </div>
+            <sy-switch label="Support emails, always on" [checked]="true" disabled />
+          </li>
+        } @else {
+          <li>
+            <div class="settings-list__body">
+              <span class="settings-list__title">News from Sycapooke</span>
+              <span class="settings-list__meta">New treasures, now and then</span>
+            </div>
+            <sy-switch label="Marketing emails" [(checked)]="marketing" [disabled]="saving()" />
+          </li>
+        }
       </ul>
-      <div class="form-actions emails__actions">
-        <button syButton="primary" type="submit" [busy]="saving()">Save</button>
-      </div>
+      @if (!founder()) {
+        <div class="form-actions emails__actions">
+          <button syButton="primary" type="submit" [busy]="saving()">Save</button>
+        </div>
+      }
     </form>
   }
 }

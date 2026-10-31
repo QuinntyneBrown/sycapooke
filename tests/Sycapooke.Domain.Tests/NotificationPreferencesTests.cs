@@ -13,13 +13,12 @@ public sealed class NotificationPreferencesTests
     private static readonly DateTime Now = new(2026, 10, 26, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void Defaults_allow_security_order_and_review_emails_but_not_marketing()
+    public void Defaults_allow_security_and_order_emails_but_not_marketing()
     {
         var preferences = NotificationPreferences.CreateDefault(Guid.NewGuid(), Now);
 
         Assert.True(preferences.IsAllowed(NotificationCategory.AccountSecurity));
         Assert.True(preferences.IsAllowed(NotificationCategory.Orders));
-        Assert.True(preferences.IsAllowed(NotificationCategory.Reviews));
         Assert.False(preferences.IsAllowed(NotificationCategory.Marketing));
     }
 
@@ -28,9 +27,8 @@ public sealed class NotificationPreferencesTests
     {
         var preferences = NotificationPreferences.CreateDefault(Guid.NewGuid(), Now);
 
-        preferences.Update(reviewEmails: false, marketingEmails: false, Now);
+        preferences.Update(marketingEmails: false, Now);
 
-        Assert.False(preferences.IsAllowed(NotificationCategory.Reviews));
         Assert.True(preferences.IsAllowed(NotificationCategory.AccountSecurity));
         Assert.True(preferences.IsAllowed(NotificationCategory.Orders));
     }
@@ -40,7 +38,7 @@ public sealed class NotificationPreferencesTests
     {
         var preferences = NotificationPreferences.CreateDefault(Guid.NewGuid(), Now);
 
-        preferences.Update(reviewEmails: true, marketingEmails: true, Now);
+        preferences.Update(marketingEmails: true, Now);
         Assert.Equal(Now, preferences.MarketingOptedInAt);
         Assert.Equal(MarketingChangeSource.Settings, preferences.LastMarketingChangeSource);
         Assert.Equal(1, preferences.Version);
@@ -59,7 +57,6 @@ public sealed class NotificationPreferencesTests
         {
             var category = NotificationCategories.Of(type);
             Assert.Equal(type == NotificationType.Marketing, category == NotificationCategory.Marketing);
-            Assert.NotEqual(NotificationCategory.Reviews, category);
         }
 
         Assert.Equal(NotificationCategory.AccountSecurity, NotificationCategories.Of(NotificationType.EmailVerification));

@@ -18,12 +18,13 @@ public sealed record RenderedEmail(string Subject, string Body, IReadOnlyList<st
 /// </summary>
 public static class EmailTemplates
 {
-    private const string Footer = "\n\nSycapooke, the marketplace made only for vintage.\nManage your emails: {0}/account/emails";
+    private const string Footer = "\n\nSycapooke, treasures with a story.\nManage your emails: {0}/account/emails";
 
     public static Type ModelType(NotificationType type) => type switch
     {
         NotificationType.EmailVerification => typeof(EmailVerificationEmail),
         NotificationType.SaleMade => typeof(SaleMadeEmail),
+        NotificationType.PurchaseConfirmation => typeof(PurchaseConfirmationEmail),
         NotificationType.OrderShipped => typeof(OrderShippedEmail),
         NotificationType.OrderDelivered => typeof(OrderDeliveredEmail),
         NotificationType.ShipByReminder => typeof(ShipByReminderEmail),
@@ -49,7 +50,10 @@ public static class EmailTemplates
         {
             EmailVerificationEmail m => (
                 "Verify your email for Sycapooke",
-                $"Open this link to verify your email and start buying and selling:\n{m.Link}\n\nThe link works for 24 hours."),
+                $"Open this link to verify your email:\n{m.Link}\n\nThe link works for 24 hours."),
+            PurchaseConfirmationEmail m => (
+                $"Your order {m.OrderReference} is confirmed",
+                $"Thank you. We received {Money(m.Total)} for {m.ItemTitle} (order {m.OrderReference}). The shop will pack it with care and email you the tracking number.\n\nSee your order:\n{root}/orders/{m.OrderId}"),
             SaleMadeEmail m => (
                 "You made a sale",
                 $"{m.ItemTitle} sold for {Money(m.Total)} (order {m.OrderReference}).\n\nShip it by {Day(m.ShipBy)} and add the tracking number:\n{root}/shop/sales/{m.OrderId}"),

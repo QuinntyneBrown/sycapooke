@@ -117,7 +117,7 @@ public sealed class DraftCleanupTests : IDisposable
         var (seller, _) = await SellerWithPhotoDraftAsync();
         using var request = new HttpRequestMessage(HttpMethod.Put, "/api/me/notification-preferences")
         {
-            Content = JsonContent.Create(new { reviewEmails = false, marketingEmails = false }),
+            Content = JsonContent.Create(new { marketingEmails = false }),
         };
         request.Headers.TryAddWithoutValidation("If-Match", "\"0\"");
         using var off = await seller.SendAsync(request);
