@@ -15,6 +15,9 @@ internal sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(m => m.Email).HasMaxLength(254).IsRequired();
         builder.Property(m => m.NormalizedEmail).HasMaxLength(254).IsRequired();
         builder.Property(m => m.PasswordHash).HasMaxLength(256);
+        builder.Property(m => m.StoryBio).HasMaxLength(Member.StoryBioMaxLength);
+        builder.Property(m => m.StoryCity).HasMaxLength(60);
+        builder.Property(m => m.StoryRegion).HasMaxLength(60);
         builder.HasIndex(m => m.NormalizedDisplayName).IsUnique().HasDatabaseName("UX_Members_NormalizedDisplayName");
         builder.HasIndex(m => m.NormalizedEmail).IsUnique().HasDatabaseName("UX_Members_NormalizedEmail");
         builder.Ignore(m => m.IsEmailVerified);

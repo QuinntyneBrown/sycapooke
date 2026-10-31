@@ -40,6 +40,24 @@ public sealed class Member
     /// <summary>When the account was closed (L2-005); a closed member's profile is unavailable (L2-041).</summary>
     public DateTime? ClosedAt { get; private set; }
 
+    /// <summary>The founder's public story, up to 500 characters; null until she writes it (ADR general/0010).</summary>
+    public string? StoryBio { get; private set; }
+
+    /// <summary>The founder's public city, optional; never a street address.</summary>
+    public string? StoryCity { get; private set; }
+
+    /// <summary>The founder's public state or region, optional.</summary>
+    public string? StoryRegion { get; private set; }
+
+    public const int StoryBioMaxLength = 500;
+
+    public void UpdateStory(string? bio, string? city, string? region)
+    {
+        StoryBio = bio;
+        StoryCity = city;
+        StoryRegion = region;
+    }
+
     public bool IsClosed => ClosedAt is not null;
 
     /// <summary>Failed password sign-ins counted since <see cref="FailedSignInsSince"/> (L2-007).</summary>

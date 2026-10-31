@@ -36,6 +36,7 @@ public sealed class MemberProfileTests : IDisposable
     [Fact]
     public async Task A_visitor_sees_the_public_profile_with_no_reviews_yet()
     {
+        _factory.BindFounder(_marcus.Id);
         Seed(ListingStatus.Active);
         Seed(ListingStatus.Active);
         Seed(ListingStatus.Sold);
@@ -51,6 +52,57 @@ public sealed class MemberProfileTests : IDisposable
         Assert.Equal(0, profile.Rating.Count);
         Assert.Equal(0, profile.CompletedSales);
         Assert.Equal(2, profile.ActiveListingCount);
+    }
+
+    [Fact]
+    public async Task A_customer_has_no_public_page()
+    {
+        var other = Member.Register("ida_campbell", "ida@example.com", "hash", _joined);
+        _factory.InDatabase(db =>
+        {
+            db.Members.Add(other);
+            db.SaveChanges();
+        });
+        _factory.BindFounder(other.Id);
+        Seed(ListingStatus.Active);
+
+        using var profile = await _client.GetAsync("/api/members/marcus_12");
+        using var listings = await _client.GetAsync("/api/members/marcus_12/listings");
+
+        Assert.Equal(HttpStatusCode.NotFound, profile.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, listings.StatusCode);
+    }
+
+    [Fact]
+    public async Task The_founder_saves_her_story_and_the_public_page_shows_it()
+    {
+        using var founder = _factory.CreateMemberClient();
+        await founder.SignInFounderAsync(_factory, "ida_campbell", "ida@example.com");
+
+        using var saved = await founder.PutAsJsonAsync("/api/shop/story", new { displayName = "ida_c", story = "Pieces I have kept.", city = "Kingston", region = "Jamaica" });
+        var page = (await _client.GetFromJsonAsync<Profile>("/api/members/ida_c"))!;
+        var edit = await founder.GetFromJsonAsync<JsonElement>("/api/shop/story");
+
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        Assert.Equal("ida_c", page.DisplayName);
+        Assert.Equal("Pieces I have kept.", page.Bio);
+        Assert.Equal("Kingston, Jamaica", page.PublicLocation);
+        Assert.Equal("Kingston", edit.GetProperty("city").GetString());
+    }
+
+    [Fact]
+    public async Task A_story_over_500_characters_is_refused_and_a_customer_cannot_edit()
+    {
+        using var founder = _factory.CreateMemberClient();
+        await founder.SignInFounderAsync(_factory, "ida_campbell", "ida@example.com");
+        using var customer = _factory.CreateMemberClient();
+        await customer.SignInVerifiedMemberAsync(_factory, "jordan_l", "jordan@example.com");
+
+        using var tooLong = await founder.PutAsJsonAsync("/api/shop/story", new { displayName = "ida_campbell", story = new string('a', 501) });
+        using var asCustomer = await customer.PutAsJsonAsync("/api/shop/story", new { displayName = "x", story = "hi" });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, tooLong.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, asCustomer.StatusCode);
     }
 
     [Fact]
@@ -79,6 +131,7 @@ public sealed class MemberProfileTests : IDisposable
     [Fact]
     public async Task The_profile_response_holds_public_fields_only()
     {
+        _factory.BindFounder(_marcus.Id);
         using var response = await _client.GetAsync("/api/members/marcus_12");
 
         var json = await response.Content.ReadAsStringAsync();
@@ -94,6 +147,7 @@ public sealed class MemberProfileTests : IDisposable
     [Fact]
     public async Task Unknown_and_closed_members_are_the_same_404()
     {
+        _factory.BindFounder(_marcus.Id);
         _factory.InDatabase(db =>
         {
             db.Members.Single(m => m.Id == _marcus.Id).Close(DateTime.UtcNow);
@@ -116,6 +170,7 @@ public sealed class MemberProfileTests : IDisposable
     [Fact]
     public async Task Active_listings_page_24_at_a_time_newest_first()
     {
+        _factory.BindFounder(_marcus.Id);
         for (var i = 0; i < 26; i++)
         {
             Seed(ListingStatus.Active, _joined.AddDays(i));
@@ -137,6 +192,7 @@ public sealed class MemberProfileTests : IDisposable
     [Fact]
     public async Task A_page_below_one_is_refused()
     {
+        _factory.BindFounder(_marcus.Id);
         using var response = await _client.GetAsync("/api/members/marcus_12/listings?page=0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

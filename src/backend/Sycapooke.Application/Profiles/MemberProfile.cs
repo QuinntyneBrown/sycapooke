@@ -5,6 +5,7 @@ using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Catalog;
 using Sycapooke.Application.Common;
 using Sycapooke.Application.Listings;
+using Sycapooke.Application.Shop;
 using Sycapooke.Domain.Listings;
 using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Orders;
@@ -30,6 +31,13 @@ public sealed record PublicProfileDto(
     int CompletedSales,
     int ActiveListingCount);
 
+/// <summary>Joins the founder's optional city and region, for example Kingston, Jamaica.</summary>
+public static class PublicLocations
+{
+    public static string? Join(string? city, string? region) =>
+        string.Join(", ", new[] { city, region }.Where(p => !string.IsNullOrWhiteSpace(p))) is { Length: > 0 } text ? text : null;
+}
+
 /// <summary>A member's profile by display name, ignoring case.</summary>
 public sealed record GetPublicProfileQuery(string DisplayName) : IRequest<Result<PublicProfileDto>>;
 
@@ -43,18 +51,19 @@ internal static class PublicMembers
 
     public static readonly Error Unavailable = Error.NotFound("MEMBER_UNAVAILABLE");
 
-    public static Task<Member?> FindAsync(ISycapookeDbContext db, string displayName, CancellationToken cancellationToken)
+    public static Task<Member?> FindAsync(ISycapookeDbContext db, ShopOptions shop, string displayName, CancellationToken cancellationToken)
     {
         var normalized = Member.Normalize(displayName);
-        return db.Members.AsNoTracking().SingleOrDefaultAsync(m => m.NormalizedDisplayName == normalized && m.ClosedAt == null, cancellationToken);
+        var founder = shop.FounderIdOrNone;
+        return db.Members.AsNoTracking().SingleOrDefaultAsync(m => m.Id == founder && m.NormalizedDisplayName == normalized && m.ClosedAt == null, cancellationToken);
     }
 }
 
-public sealed class GetPublicProfileQueryHandler(ISycapookeDbContext db) : IRequestHandler<GetPublicProfileQuery, Result<PublicProfileDto>>
+public sealed class GetPublicProfileQueryHandler(ISycapookeDbContext db, ShopOptions shop) : IRequestHandler<GetPublicProfileQuery, Result<PublicProfileDto>>
 {
     public async Task<Result<PublicProfileDto>> Handle(GetPublicProfileQuery query, CancellationToken cancellationToken)
     {
-        var member = await PublicMembers.FindAsync(db, query.DisplayName, cancellationToken);
+        var member = await PublicMembers.FindAsync(db, shop, query.DisplayName, cancellationToken);
         if (member is null)
         {
             return PublicMembers.Unavailable;
@@ -66,8 +75,8 @@ public sealed class GetPublicProfileQueryHandler(ISycapookeDbContext db) : IRequ
             member.Id,
             member.DisplayName,
             null,
-            null,
-            null,
+            member.StoryBio,
+            PublicLocations.Join(member.StoryCity, member.StoryRegion),
             new DateOnly(member.CreatedAt.Year, member.CreatedAt.Month, 1),
             new RatingSummaryDto(null, 0),
             completedSales,
@@ -75,7 +84,7 @@ public sealed class GetPublicProfileQueryHandler(ISycapookeDbContext db) : IRequ
     }
 }
 
-public sealed class GetMemberListingsQueryHandler(ISycapookeDbContext db, IOptions<PhotoOptions> photoOptions) :
+public sealed class GetMemberListingsQueryHandler(ISycapookeDbContext db, ShopOptions shop, IOptions<PhotoOptions> photoOptions) :
     IRequestHandler<GetMemberListingsQuery, Result<CatalogPageDto>>
 {
     public async Task<Result<CatalogPageDto>> Handle(GetMemberListingsQuery query, CancellationToken cancellationToken)
@@ -85,7 +94,7 @@ public sealed class GetMemberListingsQueryHandler(ISycapookeDbContext db, IOptio
             return new Error(400, "VALIDATION_FAILED", "Page must be 1 or more");
         }
 
-        var member = await PublicMembers.FindAsync(db, query.DisplayName, cancellationToken);
+        var member = await PublicMembers.FindAsync(db, shop, query.DisplayName, cancellationToken);
         if (member is null)
         {
             return PublicMembers.Unavailable;
