@@ -31,7 +31,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task A_valid_jpeg_is_accepted_with_three_sizes_in_two_formats()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.UploadPhotoAsync(Images.Jpeg(1200, 1600));
 
@@ -50,7 +50,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task Versions_are_served_with_a_one_year_immutable_cache_header()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         using var upload = await _client.UploadPhotoAsync(Images.Png(1000, 800), "front.png", "image/png");
         var photo = (await upload.Content.ReadFromJsonAsync<PhotoUpload>())!;
         using var visitor = _factory.CreateMemberClient();
@@ -65,7 +65,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task An_11_mb_file_is_refused_with_photos_must_be_10_mb_or_smaller()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.UploadPhotoAsync(new byte[11 * 1024 * 1024]);
 
@@ -78,7 +78,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task A_600_by_900_image_is_refused_with_a_minimum_size_error()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.UploadPhotoAsync(Images.Jpeg(600, 900));
 
@@ -91,7 +91,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task A_text_file_named_photo_jpg_is_refused_with_415()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.UploadPhotoAsync("not an image at all"u8.ToArray(), "photo.jpg", "image/jpeg");
 
@@ -105,7 +105,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task No_stored_version_keeps_exif_xmp_or_gps_metadata()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var original = Images.JpegWithGps(1200, 1600);
         Assert.True(Images.ContainsAscii(original, "GPSLatitude"));
 
@@ -123,7 +123,7 @@ public sealed class PhotoUploadTests : IDisposable
     [Fact]
     public async Task Another_members_photo_answers_404()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var id = await _client.UploadValidPhotoAsync();
         using var other = _factory.CreateMemberClient();
         await other.SignInVerifiedMemberAsync(_factory, "other_seller", "other.seller@example.com");
@@ -132,7 +132,7 @@ public sealed class PhotoUploadTests : IDisposable
         using var theirs = await other.GetAsync($"/api/photo-uploads/{id}");
 
         Assert.Equal(HttpStatusCode.OK, mine.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, theirs.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, theirs.StatusCode);
     }
 
     public void Dispose()

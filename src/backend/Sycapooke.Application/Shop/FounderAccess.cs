@@ -7,6 +7,9 @@ namespace Sycapooke.Application.Shop;
 /// <summary>Deployment configuration of the shop: the one trusted founder (L2-003, ADR platform/0018).</summary>
 public sealed class ShopOptions
 {
+    /// <summary>The configured founder, or a value no member has, so a shop without a founder lists nothing.</summary>
+    public Guid FounderIdOrNone => FounderMemberId ?? Guid.Empty;
+
     public const string Section = "Shop";
 
     /// <summary>The founder's immutable member ID (<c>Shop:FounderMemberId</c>); null when unset or malformed, which grants no access.</summary>

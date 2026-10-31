@@ -34,20 +34,19 @@ public sealed class CatalogueTests : IDisposable
     }
 
     [Fact]
-    public async Task Selling_options_carry_the_fee_conditions_and_brands()
+    public async Task Selling_options_carry_the_conditions_and_brands()
     {
         var options = await _client.GetFromJsonAsync<SellingOptionsResponse>("/api/selling/options");
 
-        Assert.Equal(10m, options!.FeePercent);
-        Assert.Equal(["New with tags", "New without tags", "Used - Excellent", "Used - Good", "Used - Fair"], options.Conditions);
-        Assert.Contains("Pendleton", options.SuggestedBrands);
+        Assert.Equal(["New with tags", "New without tags", "Used - Excellent", "Used - Good", "Used - Fair"], options!.Conditions);
+        Assert.Contains("Pendleton", options!.SuggestedBrands);
         Assert.Contains("Royal Doulton", options.SuggestedBrands);
         Assert.Equal(8, options.MaxPhotos);
     }
 
     private sealed record CategoryResponse(string Name, List<string> Subcategories, string AcceptedSize, string SizeLabel);
 
-    private sealed record SellingOptionsResponse(decimal FeePercent, List<string> Conditions, List<string> SuggestedBrands, int MaxPhotos);
+    private sealed record SellingOptionsResponse(List<string> Conditions, List<string> SuggestedBrands, int MaxPhotos);
 
     public void Dispose()
     {

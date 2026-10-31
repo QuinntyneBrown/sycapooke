@@ -62,15 +62,17 @@ public static class Checkouts
     public static string SeedActiveListing(this SycapookeApiFactory factory, Guid? sellerId = null, long number = 30001)
     {
         var reference = Listing.ReferenceFor(number);
+        Guid seller = Guid.Empty;
         factory.InDatabase(db =>
         {
-            var seller = sellerId ?? SeedMember(db, $"kicks_{number}", $"kicks{number}@example.com").Id;
+            seller = sellerId ?? SeedMember(db, $"kicks_{number}", $"kicks{number}@example.com").Id;
             var details = new ListingDetails("Clothing", "Dresses", null, "Floral shirtwaist day dress", "Pressed and ready to wear, c. 1960s.", "Pendleton", "Used - Excellent", null, 85m, 9m);
             var listing = Listing.CreateDraft(seller, number, details, DateTime.UtcNow);
             Assert.Empty(listing.Publish(DateTime.UtcNow, photoCount: 1));
             db.Listings.Add(listing);
             db.SaveChanges();
         });
+        factory.BindFounder(seller);
         return reference;
     }
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Common;
 using Sycapooke.Application.Listings;
+using Sycapooke.Application.Shop;
 using Sycapooke.Domain.Listings;
 using Sycapooke.Domain.Orders;
 
@@ -47,13 +48,13 @@ public sealed record GetListingDetailQuery(string Reference, Guid? ViewerId) : I
 /// Hides Draft and Removed listings from everyone but the seller with the same 404 as an unknown
 /// reference (<see cref="ListingDetailVisibility"/>), and reports how the viewer relates to it.
 /// </summary>
-public sealed class GetListingDetailQueryHandler(ISycapookeDbContext db, IOptions<PhotoOptions> photoOptions) :
+public sealed class GetListingDetailQueryHandler(ISycapookeDbContext db, IOptions<PhotoOptions> photoOptions, ShopOptions shop) :
     IRequestHandler<GetListingDetailQuery, Result<ListingDetailDto>>
 {
     public async Task<Result<ListingDetailDto>> Handle(GetListingDetailQuery query, CancellationToken cancellationToken)
     {
         var listing = await db.Listings.AsNoTracking().SingleOrDefaultAsync(l => l.Reference == query.Reference, cancellationToken);
-        if (listing is null || !ListingDetailVisibility.CanView(listing.Status, listing.SellerId, query.ViewerId))
+        if (listing is null || listing.SellerId != shop.FounderIdOrNone || !ListingDetailVisibility.CanView(listing.Status, listing.SellerId, query.ViewerId))
         {
             return Error.NotFound("LISTING_NOT_FOUND");
         }

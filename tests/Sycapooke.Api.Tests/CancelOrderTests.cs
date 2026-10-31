@@ -266,7 +266,7 @@ public sealed class CancelOrderTests : IDisposable
         using var relist = await seller.RelistAsync(reference);
         using var again = await seller.RelistAsync(reference);
 
-        Assert.Equal(HttpStatusCode.NotFound, other.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, other.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, relist.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
         Assert.Equal("LISTING_NOT_RELISTABLE", (await Problem.ReadAsync(again)).Code);

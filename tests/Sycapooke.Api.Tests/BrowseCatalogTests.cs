@@ -29,6 +29,7 @@ public sealed class BrowseCatalogTests : IDisposable
             db.SaveChanges();
         });
         _sellerId = seller.Id;
+        _factory.BindFounder(seller.Id);
     }
 
     [Fact]

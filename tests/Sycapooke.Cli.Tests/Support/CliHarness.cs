@@ -38,8 +38,13 @@ public sealed class CliHarness : IDisposable
     /// <summary>Sends one command or query through the same services a run uses, as the API would.</summary>
     public async Task<T> SendAsync<T>(IRequest<T> request)
     {
+        var founder = InDatabase(db => db.ShopIdentities.Select(i => (Guid?)i.FounderMemberId).SingleOrDefault());
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>(Settings) { ["ConnectionStrings:Sycapooke"] = ConnectionString })
+            .AddInMemoryCollection(new Dictionary<string, string?>(Settings)
+            {
+                ["ConnectionStrings:Sycapooke"] = ConnectionString,
+                ["Shop:FounderMemberId"] = founder?.ToString(),
+            })
             .Build();
         await using var services = CliApp.BuildServices(configuration, s => Substitute(s, null));
         await using var scope = services.CreateAsyncScope();

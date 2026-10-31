@@ -22,6 +22,7 @@ public static class Orders
             db.Members.Add(seller);
             db.SaveChanges();
         });
+        factory.BindFounder(seller.Id);
         var (checkout, payment) = await buyer.CheckoutAndPayAsync(factory.SeedActiveListing(seller.Id, listingNumber));
         using var provider = factory.CreateMemberClient();
         (await provider.PostWebhookAsync(FakePaymentProvider.Webhook(payment.Id))).EnsureSuccessStatusCode();

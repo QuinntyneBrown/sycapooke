@@ -97,7 +97,7 @@ public sealed class WithdrawListingTests : IDisposable
     [Fact]
     public async Task A_draft_cannot_be_withdrawn()
     {
-        await _seller.SignInVerifiedMemberAsync(_factory);
+        await _seller.SignInFounderAsync(_factory);
         var reference = await _seller.CreateDraftAsync(new { category = "Clothing" });
 
         using var response = await WithdrawAsync(reference);
@@ -115,13 +115,13 @@ public sealed class WithdrawListingTests : IDisposable
 
         using var response = await other.PostAsync($"/api/listings/{reference}/withdraw", null);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("Active", (await _seller.GetFromJsonAsync<MyListingView>($"/api/me/listings/{reference}"))!.Status);
     }
 
     private async Task<string> ActiveListingAsync()
     {
-        await _seller.SignInVerifiedMemberAsync(_factory);
+        await _seller.SignInFounderAsync(_factory);
         var reference = await _seller.CreateDraftWithPhotoAsync(Listings.Complete());
         (await _seller.PublishAsync(reference)).EnsureSuccessStatusCode();
         return reference;

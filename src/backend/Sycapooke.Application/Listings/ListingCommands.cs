@@ -40,7 +40,7 @@ public sealed record MyListingDto(
         l.RemovalReason?.ToString(), photos.Select(p => PhotoDto.From(p, options)).ToList(), l.Version);
 }
 
-public sealed record PublishListingResult(string Reference, string Status, bool PayoutOnboardingRequired);
+public sealed record PublishListingResult(string Reference, string Status);
 
 /// <summary>Creates a draft; only an accepted category is required (L2-019). The size comes from the category (L2-013).</summary>
 /// <remarks>PhotoIds sets the photos in display order (L2-017); null leaves them unchanged.</remarks>
@@ -66,7 +66,6 @@ public sealed record GetMyListingQuery(Guid SellerId, string Reference) : IReque
 
 public sealed class ListingCommandHandlers(
     ISycapookeDbContext db,
-    ISellerPayoutAccountReader payouts,
     ListingPhotoAttacher photos,
     IOptions<SellingOptions> options,
     IOptions<PhotoOptions> photoOptions,
@@ -156,8 +155,7 @@ public sealed class ListingCommandHandlers(
         }
 
         await db.SaveChangesAsync(cancellationToken);
-        var onboarded = await payouts.IsOnboardedAsync(command.SellerId, cancellationToken);
-        return new PublishListingResult(listing.Reference, listing.Status.ToString(), !onboarded);
+        return new PublishListingResult(listing.Reference, listing.Status.ToString());
     }
 
     public async Task<Result<MyListingDto>> Handle(GetMyListingQuery query, CancellationToken cancellationToken)

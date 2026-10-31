@@ -58,4 +58,4 @@ public sealed record MyListing(
     DateTime? PublishedAt,
     IReadOnlyList<PhotoUpload> Photos);
 
-public sealed record PublishResult(string Reference, string Status, bool PayoutOnboardingRequired);
+public sealed record PublishResult(string Reference, string Status);

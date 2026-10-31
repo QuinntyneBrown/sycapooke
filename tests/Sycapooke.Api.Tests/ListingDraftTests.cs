@@ -28,20 +28,20 @@ public sealed class ListingDraftTests : IDisposable
     }
 
     [Fact]
-    public async Task An_unverified_member_is_refused_with_email_not_verified()
+    public async Task An_unverified_member_is_refused_as_not_the_founder()
     {
         await _client.SignInUnverifiedMemberAsync();
 
         using var response = await _client.PostAsJsonAsync("/api/listings", Listings.Complete());
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.Equal("EMAIL_NOT_VERIFIED", (await Problem.ReadAsync(response)).Code);
+        Assert.Equal("FOUNDER_REQUIRED", (await Problem.ReadAsync(response)).Code);
     }
 
     [Fact]
     public async Task A_newly_verified_member_saves_a_draft_with_only_a_category_and_title()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.PostAsJsonAsync("/api/listings", new { category = "Clothing", title = "Grey hoodie" });
 
@@ -57,7 +57,7 @@ public sealed class ListingDraftTests : IDisposable
     [Fact]
     public async Task A_dresses_listing_without_a_size_is_stored_as_vintage()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         var reference = await _client.CreateDraftAsync(Listings.Complete());
 
@@ -72,7 +72,7 @@ public sealed class ListingDraftTests : IDisposable
     [InlineData("Clothing", "Shirts and blouses", "XL")]
     public async Task Any_size_other_than_the_accepted_size_is_refused(string category, string subcategory, string size)
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.PostAsJsonAsync("/api/listings", Listings.Complete(category, subcategory).With("size", size));
 
@@ -88,7 +88,7 @@ public sealed class ListingDraftTests : IDisposable
     [InlineData(null, null)]
     public async Task A_category_or_subcategory_outside_the_table_is_refused(string? category, string? subcategory)
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.PostAsJsonAsync("/api/listings", new { category, subcategory });
 
@@ -100,7 +100,7 @@ public sealed class ListingDraftTests : IDisposable
     [Fact]
     public async Task A_condition_outside_the_five_values_is_refused()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         using var response = await _client.PostAsJsonAsync("/api/listings", Listings.Complete().With("condition", "Like new"));
 
@@ -113,7 +113,7 @@ public sealed class ListingDraftTests : IDisposable
     [Fact]
     public async Task Client_cannot_set_the_seller_or_status()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
 
         var reference = await _client.CreateDraftAsync(
             Listings.Complete().With("status", "Active").With("sellerId", Guid.NewGuid()));
@@ -125,7 +125,7 @@ public sealed class ListingDraftTests : IDisposable
     [Fact]
     public async Task Updating_a_draft_to_another_category_keeps_the_size_vintage()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftAsync(Listings.Complete("Clothing", "Shirts and blouses"));
 
         using var response = await _client.PutAsJsonAsync($"/api/listings/{reference}", Listings.Complete("Jewelry", "Brooches and pins"));
@@ -139,7 +139,7 @@ public sealed class ListingDraftTests : IDisposable
     [Fact]
     public async Task Another_member_gets_404_for_a_draft_and_cannot_change_it()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftAsync(Listings.Complete());
         using var other = _factory.CreateMemberClient();
         await other.SignInVerifiedMemberAsync(_factory, "brooch_betty", "betty@example.com");
@@ -147,8 +147,8 @@ public sealed class ListingDraftTests : IDisposable
         using var read = await other.GetAsync($"/api/me/listings/{reference}");
         using var update = await other.PutAsJsonAsync($"/api/listings/{reference}", Listings.Complete().With("title", "Taken over"));
 
-        Assert.Equal(HttpStatusCode.NotFound, read.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, read.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, update.StatusCode);
         var stored = await _client.GetFromJsonAsync<MyListing>($"/api/me/listings/{reference}");
         Assert.Equal("Floral shirtwaist day dress", stored!.Title);
     }

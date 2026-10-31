@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Sycapooke.Api.Http;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Common;
+using Sycapooke.Application.Shop;
 
 namespace Sycapooke.Api.Auth;
 
@@ -16,7 +17,7 @@ public static class Policies
     /// <summary>A signed-in member whose email is verified (L2-002 AC4, L2-003).</summary>
     public const string VerifiedMember = "VerifiedMember";
 
-    /// <summary>A verified member may sell; there is no seller application (L2-003).</summary>
+    /// <summary>Only the shop's founder may manage inventory and fulfil orders (ADR platform/0018).</summary>
     public const string CanSell = "CanSell";
 
     /// <summary>A member holding the Administrator role (L2-010 AC3); only order problems use it (L2-036).</summary>
@@ -43,6 +44,29 @@ public sealed class VerifiedEmailHandler(ISycapookeDbContext db) : Authorization
         else
         {
             context.Fail(new AuthorizationFailureReason(this, "EMAIL_NOT_VERIFIED"));
+        }
+    }
+}
+
+/// <summary>Requires founder access, decided by <see cref="IFounderAccess"/> on every request.</summary>
+public sealed class FounderRequirement : IAuthorizationRequirement;
+
+public sealed class FounderHandler(IFounderAccess founder) : AuthorizationHandler<FounderRequirement>
+{
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, FounderRequirement requirement)
+    {
+        if (context.User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        if (await founder.IsFounderAsync(context.User.MemberId(), CancellationToken.None))
+        {
+            context.Succeed(requirement);
+        }
+        else
+        {
+            context.Fail(new AuthorizationFailureReason(this, "FOUNDER_REQUIRED"));
         }
     }
 }
@@ -88,6 +112,8 @@ public sealed class ProblemAuthorizationResultHandler : IAuthorizationMiddleware
             var reasons = result.AuthorizationFailure?.FailureReasons.Select(r => r.Message).ToList() ?? [];
             return ProblemResults.WriteAsync(context, reasons.Contains("EMAIL_NOT_VERIFIED")
                 ? new Error(403, "EMAIL_NOT_VERIFIED", "Verify your email to sell")
+                : reasons.Contains("FOUNDER_REQUIRED")
+                    ? new Error(403, "FOUNDER_REQUIRED", "Only the shop's founder can do that")
                 : reasons.Contains("ADMINISTRATOR_REQUIRED")
                     ? new Error(403, "ADMINISTRATOR_REQUIRED", "Only Sycapooke administrators can do that")
                     : new Error(403, "FORBIDDEN", "You can't do that"));
@@ -112,6 +138,7 @@ public static class AuthSetup
         services.AddSingleton<GoogleFlowCookie>();
         services.AddScoped<IAuthorizationHandler, VerifiedEmailHandler>();
         services.AddScoped<IAuthorizationHandler, AdministratorHandler>();
+        services.AddScoped<IAuthorizationHandler, FounderHandler>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, ProblemAuthorizationResultHandler>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
@@ -143,7 +170,7 @@ public static class AuthSetup
 
         services.AddAuthorizationBuilder()
             .AddPolicy(Policies.VerifiedMember, p => p.RequireAuthenticatedUser().AddRequirements(new VerifiedEmailRequirement()))
-            .AddPolicy(Policies.CanSell, p => p.RequireAuthenticatedUser().AddRequirements(new VerifiedEmailRequirement()))
+            .AddPolicy(Policies.CanSell, p => p.RequireAuthenticatedUser().AddRequirements(new FounderRequirement()))
             .AddPolicy(Policies.Administrator, p => p.RequireAuthenticatedUser().AddRequirements(new AdministratorRequirement()));
         return services;
     }

@@ -35,6 +35,13 @@ public static class Members
         response.EnsureSuccessStatusCode();
     }
 
+    /// <summary>Signs in a verified member and binds them as the shop's founder, as provisioning does.</summary>
+    public static async Task SignInFounderAsync(this HttpClient client, SycapookeApiFactory factory, string displayName = "marcus_12", string email = "marcus.bell@example.com")
+    {
+        await client.SignInVerifiedMemberAsync(factory, displayName, email);
+        factory.BindFounder(factory.MemberId(email));
+    }
+
     /// <summary>Registers and signs in a member who has not verified their email.</summary>
     public static async Task SignInUnverifiedMemberAsync(this HttpClient client, string displayName = "marcus_12", string email = "marcus.bell@example.com")
     {

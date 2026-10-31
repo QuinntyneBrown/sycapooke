@@ -27,7 +27,7 @@ public sealed class GetCategoriesQueryHandler : IRequestHandler<GetCategoriesQue
             CategoryCatalog.All.Select(c => new CategoryDto(c.Name, c.Subcategories, c.AcceptedSize, c.SizeLabel)).ToList());
 }
 
-public sealed record SellingOptionsDto(decimal FeePercent, IReadOnlyList<string> Conditions, IReadOnlyList<string> SuggestedBrands, int MaxPhotos);
+public sealed record SellingOptionsDto(IReadOnlyList<string> Conditions, IReadOnlyList<string> SuggestedBrands, int MaxPhotos);
 
 public sealed record GetSellingOptionsQuery : IRequest<SellingOptionsDto>;
 
@@ -36,5 +36,5 @@ public sealed class GetSellingOptionsQueryHandler(IOptions<SellingOptions> optio
     public const int MaxPhotos = 8;
 
     public Task<SellingOptionsDto> Handle(GetSellingOptionsQuery query, CancellationToken cancellationToken) =>
-        Task.FromResult(new SellingOptionsDto(options.Value.PlatformFeePercent, ItemConditions.All, options.Value.SuggestedBrands, MaxPhotos));
+        Task.FromResult(new SellingOptionsDto(ItemConditions.All, options.Value.SuggestedBrands, MaxPhotos));
 }

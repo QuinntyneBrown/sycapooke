@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Common;
 using Sycapooke.Application.Listings;
+using Sycapooke.Application.Shop;
 using Sycapooke.Domain.Listings;
 
 namespace Sycapooke.Application.Catalog;
@@ -47,7 +48,7 @@ public sealed record BrowseCatalogQuery(int Page, int? PageSize, CatalogFilters 
 /// Reads Active and Reserved listings only (<see cref="CatalogVisibility"/>) that meet the
 /// <see cref="CatalogCriteria"/>, in its order, with the cover photo at position 0. A page size above the maximum is capped, not refused.
 /// </summary>
-public sealed class BrowseCatalogQueryHandler(ISycapookeDbContext db, IOptions<CatalogOptions> options, IOptions<PhotoOptions> photoOptions) :
+public sealed class BrowseCatalogQueryHandler(ISycapookeDbContext db, IOptions<CatalogOptions> options, IOptions<PhotoOptions> photoOptions, ShopOptions shop) :
     IRequestHandler<BrowseCatalogQuery, Result<CatalogPageDto>>
 {
     public async Task<Result<CatalogPageDto>> Handle(BrowseCatalogQuery query, CancellationToken cancellationToken)
@@ -65,7 +66,7 @@ public sealed class BrowseCatalogQueryHandler(ISycapookeDbContext db, IOptions<C
         }
 
         var pageSize = Math.Min(query.PageSize ?? settings.DefaultPageSize, settings.MaxPageSize);
-        var visible = criteria.Value!.Apply(db.Listings.AsNoTracking());
+        var visible = criteria.Value!.Apply(db.Listings.AsNoTracking().Where(l => l.SellerId == shop.FounderIdOrNone));
         var total = await visible.CountAsync(cancellationToken);
         var listings = await criteria.Value.Order(visible)
             .Skip((query.Page - 1) * pageSize).Take(pageSize)

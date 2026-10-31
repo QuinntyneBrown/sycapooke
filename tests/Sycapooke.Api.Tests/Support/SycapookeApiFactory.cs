@@ -137,6 +137,11 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
     /// <summary>Configures and stores the founder binding, as the operator's provisioning step does.</summary>
     public void BindFounder(Guid memberId)
     {
+        if (Shop.FounderMemberId is not null)
+        {
+            return;
+        }
+
         Shop.FounderMemberId = memberId;
         InDatabase(db =>
         {

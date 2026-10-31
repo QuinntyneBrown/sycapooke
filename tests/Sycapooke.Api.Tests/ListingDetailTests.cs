@@ -30,6 +30,7 @@ public sealed class ListingDetailTests : IDisposable
             db.SaveChanges();
         });
         _sellerId = seller.Id;
+        _factory.BindFounder(seller.Id);
     }
 
     [Fact]
@@ -75,18 +76,26 @@ public sealed class ListingDetailTests : IDisposable
     }
 
     [Fact]
-    public async Task The_seller_is_told_the_listing_is_theirs_and_another_member_is_not()
+    public async Task The_founder_is_told_the_listing_is_theirs_and_a_customer_is_not()
     {
+        var own = Seed();
         await _client.SignInVerifiedMemberAsync(_factory, "jordan_l", "jordan@example.com");
-        var jordanId = MemberIdOf("jordan@example.com");
-        var own = Seed(sellerId: jordanId);
-        var other = Seed();
+        var asCustomer = (await _client.GetFromJsonAsync<Detail>($"/api/catalog/listings/{own}"))!;
+        using var founder = SignedInAsSeller();
+        var asFounder = (await founder.GetFromJsonAsync<Detail>($"/api/catalog/listings/{own}"))!;
 
-        var mine = (await _client.GetFromJsonAsync<Detail>($"/api/catalog/listings/{own}"))!;
-        var theirs = (await _client.GetFromJsonAsync<Detail>($"/api/catalog/listings/{other}"))!;
+        Assert.Equal("Seller", asFounder.Viewer.Relation);
+        Assert.Equal("OtherMember", asCustomer.Viewer.Relation);
+    }
 
-        Assert.Equal("Seller", mine.Viewer.Relation);
-        Assert.Equal("OtherMember", theirs.Viewer.Relation);
+    [Fact]
+    public async Task A_listing_of_anyone_but_the_founder_is_not_found()
+    {
+        var other = Seed(sellerId: SeedCustomer("jordan@example.com"));
+
+        using var response = await _client.GetAsync($"/api/catalog/listings/{other}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Theory]
@@ -120,15 +129,33 @@ public sealed class ListingDetailTests : IDisposable
     }
 
     [Fact]
-    public async Task The_seller_can_open_their_own_draft()
+    public async Task The_founder_can_open_their_own_draft()
     {
-        await _client.SignInVerifiedMemberAsync(_factory, "jordan_l", "jordan@example.com");
-        var reference = Seed(sellerId: MemberIdOf("jordan@example.com"), status: ListingStatus.Draft);
+        using var founder = SignedInAsSeller();
+        var reference = Seed(status: ListingStatus.Draft);
 
-        var detail = (await _client.GetFromJsonAsync<Detail>($"/api/catalog/listings/{reference}"))!;
+        var detail = (await founder.GetFromJsonAsync<Detail>($"/api/catalog/listings/{reference}"))!;
 
         Assert.Equal("Draft", detail.Status);
         Assert.Equal("Seller", detail.Viewer.Relation);
+    }
+
+    private HttpClient SignedInAsSeller()
+    {
+        Member seller = null!;
+        _factory.InDatabase(db => seller = db.Members.Single(m => m.Id == _sellerId));
+        return _factory.CreateMemberClient().WithSession(_factory, seller);
+    }
+
+    private Guid SeedCustomer(string email)
+    {
+        var customer = Member.Register("jordan_l", email, "hash", _start);
+        _factory.InDatabase(db =>
+        {
+            db.Members.Add(customer);
+            db.SaveChanges();
+        });
+        return customer.Id;
     }
 
     private Guid MemberIdOf(string email)

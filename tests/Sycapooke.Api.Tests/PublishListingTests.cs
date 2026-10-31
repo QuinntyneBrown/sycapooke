@@ -20,16 +20,16 @@ public sealed class PublishListingTests : IDisposable
     }
 
     [Fact]
-    public async Task A_complete_confirmed_listing_becomes_active_and_prompts_for_payouts()
+    public async Task A_complete_confirmed_listing_becomes_active()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftWithPhotoAsync(Listings.Complete("Clothing", "Shirts and blouses"));
 
         using var response = await _client.PublishAsync(reference);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = (await response.Content.ReadFromJsonAsync<PublishResult>())!;
-        Assert.Equal(new PublishResult(reference, "Active", PayoutOnboardingRequired: true), result);
+        Assert.Equal(new PublishResult(reference, "Active"), result);
         _factory.InDatabase(db =>
         {
             var listing = db.Listings.Single();
@@ -40,7 +40,7 @@ public sealed class PublishListingTests : IDisposable
     [Fact]
     public async Task An_electronics_listing_publishes_as_vintage()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftWithPhotoAsync(Listings.Complete("Electronics", "Cameras"));
 
         using var response = await _client.PublishAsync(reference);
@@ -58,7 +58,7 @@ public sealed class PublishListingTests : IDisposable
     [Fact]
     public async Task Every_missing_field_is_identified()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftAsync(new { category = "Clothing" });
 
         using var response = await _client.PublishAsync(reference);
@@ -77,7 +77,7 @@ public sealed class PublishListingTests : IDisposable
     [Fact]
     public async Task Used_fair_without_flaws_is_refused_with_describe_the_flaws()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftWithPhotoAsync(Listings.Complete().With("condition", "Used - Fair"));
 
         using var response = await _client.PublishAsync(reference);
@@ -89,7 +89,7 @@ public sealed class PublishListingTests : IDisposable
     [Fact]
     public async Task A_brand_outside_the_suggested_list_and_script_text_are_stored_as_typed()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftWithPhotoAsync(
             Listings.Complete().With("brand", "  Small Batch Cobblers ").With("title", "<script>alert(1)</script>"));
 
@@ -104,7 +104,7 @@ public sealed class PublishListingTests : IDisposable
     [Fact]
     public async Task A_listing_that_is_not_a_draft_cannot_be_published_again()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftWithPhotoAsync(Listings.Complete());
         using var first = await _client.PublishAsync(reference);
 
@@ -117,20 +117,20 @@ public sealed class PublishListingTests : IDisposable
     [Fact]
     public async Task Another_member_cannot_publish_a_draft()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftWithPhotoAsync(Listings.Complete());
         using var other = _factory.CreateMemberClient();
         await other.SignInVerifiedMemberAsync(_factory, "brooch_betty", "betty@example.com");
 
         using var response = await other.PublishAsync(reference);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
     public async Task The_21st_publish_of_a_utc_day_is_429_but_drafts_still_save()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         for (var i = 0; i < 20; i++)
         {
             var draft = await _client.CreateDraftWithPhotoAsync(Listings.Complete());

@@ -22,7 +22,7 @@ public sealed class ListingPhotoAttachTests : IDisposable
     [Fact]
     public async Task Photos_keep_the_order_of_the_save_and_the_first_is_the_cover()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var (a, b, c) = (await _client.UploadValidPhotoAsync(), await _client.UploadValidPhotoAsync(), await _client.UploadValidPhotoAsync());
 
         using var created = await _client.PostAsJsonAsync("/api/listings", Listings.Complete().With("photoIds", new[] { a, b, c }));
@@ -36,7 +36,7 @@ public sealed class ListingPhotoAttachTests : IDisposable
     [Fact]
     public async Task Moving_the_third_photo_first_makes_it_the_cover()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var (a, b, c) = (await _client.UploadValidPhotoAsync(), await _client.UploadValidPhotoAsync(), await _client.UploadValidPhotoAsync());
         var reference = await _client.CreateDraftAsync(Listings.Complete().With("photoIds", new[] { a, b, c }));
 
@@ -51,7 +51,7 @@ public sealed class ListingPhotoAttachTests : IDisposable
     [Fact]
     public async Task A_photo_left_out_of_the_save_is_removed_from_the_listing()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var (a, b) = (await _client.UploadValidPhotoAsync(), await _client.UploadValidPhotoAsync());
         var reference = await _client.CreateDraftAsync(Listings.Complete().With("photoIds", new[] { a, b }));
 
@@ -65,7 +65,7 @@ public sealed class ListingPhotoAttachTests : IDisposable
     [Fact]
     public async Task A_save_without_photo_ids_keeps_the_photos()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var a = await _client.UploadValidPhotoAsync();
         var reference = await _client.CreateDraftAsync(Listings.Complete().With("photoIds", new[] { a }));
 
@@ -78,7 +78,7 @@ public sealed class ListingPhotoAttachTests : IDisposable
     [Fact]
     public async Task A_ninth_photo_is_refused_by_the_api()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var ids = new List<Guid>();
         for (var i = 0; i < 9; i++)
         {
@@ -94,25 +94,21 @@ public sealed class ListingPhotoAttachTests : IDisposable
     }
 
     [Fact]
-    public async Task Another_members_photo_cannot_be_attached()
+    public async Task A_customer_cannot_upload_a_photo_to_attach()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
         using var other = _factory.CreateMemberClient();
         await other.SignInVerifiedMemberAsync(_factory, "brooch_betty", "betty@example.com");
-        var theirs = await other.UploadValidPhotoAsync();
 
-        using var response = await _client.PostAsJsonAsync("/api/listings", Listings.Complete().With("photoIds", new[] { theirs }));
+        using var response = await other.UploadPhotoAsync(Images.Jpeg(1200, 1600));
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        var problem = await Problem.ReadAsync(response);
-        Assert.Equal("PHOTO_NOT_FOUND", problem.Code);
-        Assert.Equal("That photo is no longer available. Upload it again.", problem.Errors!["photos"].Message);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("FOUNDER_REQUIRED", (await Problem.ReadAsync(response)).Code);
     }
 
     [Fact]
     public async Task Publishing_a_listing_with_no_photos_is_refused_with_add_at_least_one_photo()
     {
-        await _client.SignInVerifiedMemberAsync(_factory);
+        await _client.SignInFounderAsync(_factory);
         var reference = await _client.CreateDraftAsync(Listings.Complete());
 
         using var response = await _client.PublishAsync(reference);

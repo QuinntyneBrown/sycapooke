@@ -174,13 +174,13 @@ public sealed class EditListingTests : IDisposable
 
         using var response = await PutAsync(other, reference, Edited(), etag);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     /// <summary>The seller signs in and publishes the Complete party dress ($60.00) with one photo.</summary>
     private async Task<string> ActiveListingAsync()
     {
-        await _seller.SignInVerifiedMemberAsync(_factory);
+        await _seller.SignInFounderAsync(_factory);
         var reference = await _seller.CreateDraftWithPhotoAsync(Listings.Complete());
         (await _seller.PublishAsync(reference)).EnsureSuccessStatusCode();
         return reference;

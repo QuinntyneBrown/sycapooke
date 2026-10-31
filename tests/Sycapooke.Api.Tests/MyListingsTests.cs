@@ -59,7 +59,7 @@ public sealed class MyListingsTests : IDisposable
     [Fact]
     public async Task A_seller_with_no_listings_gets_an_empty_page()
     {
-        await _buyer.SignInVerifiedMemberAsync(_factory);
+        await _buyer.SignInFounderAsync(_factory);
         _factory.SeedActiveListing();
 
         var page = await _buyer.GetFromJsonAsync<MyListingsView>("/api/me/listings");
@@ -71,7 +71,7 @@ public sealed class MyListingsTests : IDisposable
     [Fact]
     public async Task An_unknown_status_is_refused()
     {
-        await _buyer.SignInVerifiedMemberAsync(_factory);
+        await _buyer.SignInFounderAsync(_factory);
 
         using var response = await _buyer.GetAsync("/api/me/listings?status=Lost");
 
