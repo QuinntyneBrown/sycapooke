@@ -16,7 +16,6 @@ using Sycapooke.Api.Tests.Support;
 using Sycapooke.Application.Orders;
 using Sycapooke.Domain.Notifications;
 using Sycapooke.Domain.Orders;
-using Sycapooke.Domain.Payouts;
 
 namespace Sycapooke.Api.Tests;
 
@@ -34,10 +33,10 @@ public sealed class ResolveOrderProblemsTests : IDisposable
     }
 
     [Fact]
-    public async Task The_buyer_reports_wrong_size_on_a_delivered_order_and_the_payout_is_held()
+    public async Task The_buyer_reports_wrong_size_on_a_delivered_order_and_the_founder_is_emailed()
     {
         var (orderId, seller) = await DeliveredOrderAsync();
-        using var admin = _factory.CreateAdministratorClient();
+        var admin = seller;
         using var stranger = await StrangerAsync();
         await _factory.DispatchEmailsAsync();
 
@@ -53,9 +52,6 @@ public sealed class ResolveOrderProblemsTests : IDisposable
         Assert.Equal(2, problem.Photos.Count);
         _factory.InDatabase(db =>
         {
-            var payout = db.Payouts.Single();
-            Assert.Equal(PayoutStatus.Held, payout.Status);
-            Assert.Equal(PayoutHoldReason.OpenProblem, payout.HoldReason);
             Assert.Equal(OrderStatus.Delivered, db.Orders.Single().Status);
         });
 
@@ -72,11 +68,9 @@ public sealed class ResolveOrderProblemsTests : IDisposable
         Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync(problem.Photos[0].Url)).StatusCode);
 
         var sent = await _factory.DispatchEmailsAsync();
-        var toSeller = Assert.Single(sent, e => e.To == SellerEmail);
-        Assert.Contains("Wrong size", toSeller.Body);
-        Assert.Contains($"https://sycapooke.test/sales/{orderId}", toSeller.Body);
-        var toAdmin = Assert.Single(sent, e => e.To == "ana_ruiz@sycapooke.test");
-        Assert.Contains("https://sycapooke.test/admin/problems/P-1001", toAdmin.Body);
+        var toFounder = Assert.Single(sent, e => e.To == SellerEmail);
+        Assert.Contains("Wrong size", toFounder.Body);
+        Assert.Contains("https://sycapooke.test/shop/problems/P-1001", toFounder.Body);
 
         var purchase = (await _buyer.GetFromJsonAsync<PurchaseWithProblemView>($"/api/purchases/{orderId}"))!;
         Assert.False(purchase.CanReportProblem);
@@ -164,7 +158,7 @@ public sealed class ResolveOrderProblemsTests : IDisposable
     {
         var (orderId, seller) = await DeliveredOrderAsync();
         var reported = await ReportAsync(orderId);
-        using var admin = _factory.CreateAdministratorClient();
+        var admin = seller;
 
         using var blank = await seller.RespondToProblemAsync(orderId, "  ");
         Assert.Equal(HttpStatusCode.UnprocessableEntity, blank.StatusCode);
@@ -177,13 +171,12 @@ public sealed class ResolveOrderProblemsTests : IDisposable
 
         var purchase = (await _buyer.GetFromJsonAsync<PurchaseWithProblemView>($"/api/purchases/{orderId}"))!;
         Assert.Equal("My mistake, happy to take them back.", purchase.Problem!.SellerResponse);
-        var detail = (await admin.GetFromJsonAsync<ProblemDetailView>($"/api/admin/problems/{reported.Reference}"))!;
+        var detail = (await admin.GetFromJsonAsync<ProblemDetailView>($"/api/shop/problems/{reported.Reference}"))!;
         Assert.Equal("My mistake, happy to take them back.", detail.Problem.SellerResponse);
         Assert.Equal("marcus_12", detail.BuyerDisplayName);
         Assert.Equal("kicks_30001", detail.SellerDisplayName);
         Assert.Equal("Delivered", detail.Order.Status);
         Assert.Equal("102.34", detail.Order.Total);
-        Assert.Equal("Held", detail.Payout);
     }
 
     [Fact]
@@ -204,22 +197,53 @@ public sealed class ResolveOrderProblemsTests : IDisposable
     }
 
     [Fact]
-    public async Task A_full_refund_makes_the_order_refunded_refunds_the_buyer_and_cancels_the_payout()
+    public async Task A_refund_the_provider_could_not_take_stays_pending_and_is_issued_once_by_the_retry()
     {
         var (orderId, seller) = await DeliveredOrderAsync();
         var reported = await ReportAsync(orderId);
-        using var admin = _factory.CreateAdministratorClient();
+        _factory.Payments.RefundsUnavailable = true;
+
+        using var response = await seller.ResolveProblemAsync(reported.Reference, "RefundBuyer", "Not as described.");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Guid refundId = Guid.Empty;
+        _factory.InDatabase(db =>
+        {
+            var refund = db.Refunds.Single();
+            refundId = refund.Id;
+            Assert.Equal(RefundStatus.Pending, refund.Status);
+        });
+        Assert.Empty(_factory.Payments.Refunds);
+
+        _factory.Payments.RefundsUnavailable = false;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<ISender>().Send(new RetryPendingRefundsCommand()));
+            Assert.Equal(0, await scope.ServiceProvider.GetRequiredService<ISender>().Send(new RetryPendingRefundsCommand()));
+        }
+
+        var sent = Assert.Single(_factory.Payments.Refunds);
+        Assert.Equal(refundId, sent.Key);
+        _factory.InDatabase(db => Assert.Equal(RefundStatus.Issued, db.Refunds.Single().Status));
+        Assert.Contains(await _factory.DispatchEmailsAsync(), e => e.To == BuyerEmail && e.Subject.Contains("refund", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_full_refund_makes_the_order_refunded_refunds_the_buyer_()
+    {
+        var (orderId, seller) = await DeliveredOrderAsync();
+        var reported = await ReportAsync(orderId);
+        var admin = seller;
         await _factory.DispatchEmailsAsync();
 
-        using var response = await admin.ResolveProblemAsync(reported.Reference, "FullRefund", "  Hole by the left cuff wasn't disclosed. ");
+        using var response = await admin.ResolveProblemAsync(reported.Reference, "RefundBuyer", "  Hole by the left cuff wasn't disclosed. ");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var detail = (await response.Content.ReadFromJsonAsync<ProblemDetailView>())!;
         Assert.Equal("Resolved", detail.Problem.Status);
-        Assert.Equal("FullRefund", detail.Problem.Outcome);
+        Assert.Equal("RefundBuyer", detail.Problem.Outcome);
         Assert.Equal("Hole by the left cuff wasn't disclosed.", detail.Problem.ResolutionReason);
         Assert.Equal("Refunded", detail.Order.Status);
-        Assert.Equal("Cancelled", detail.Payout);
         var refund = Assert.Single(_factory.Payments.Refunds);
         Assert.Equal(102.34m, refund.Amount);
         _factory.InDatabase(db =>
@@ -228,19 +252,18 @@ public sealed class ResolveOrderProblemsTests : IDisposable
             Assert.Equal(OrderActor.Administrator, db.Set<OrderStatusChange>().Single(c => c.To == OrderStatus.Refunded).Actor);
             Assert.Equal(RefundReason.ProblemResolved, db.Refunds.Single().Reason);
             Assert.Equal(RefundStatus.Issued, db.Refunds.Single().Status);
-            Assert.Equal(PayoutStatus.Cancelled, db.Payouts.Single().Status);
             Assert.NotNull(db.OrderProblems.Single().ResolvedBy);
         });
 
         var sent = await _factory.DispatchEmailsAsync();
         Assert.Contains(sent, e => e.To == BuyerEmail && e.Body.Contains("Hole by the left cuff", StringComparison.Ordinal));
-        Assert.Contains(sent, e => e.To == SellerEmail && e.Body.Contains("Hole by the left cuff", StringComparison.Ordinal));
+        Assert.DoesNotContain(sent, e => e.To == SellerEmail);
         Assert.Contains(sent, e => e.To == BuyerEmail && e.Subject.Contains("refund", StringComparison.Ordinal));
 
         var purchase = (await _buyer.GetFromJsonAsync<PurchaseWithProblemView>($"/api/purchases/{orderId}"))!;
         Assert.Equal("Refunded", purchase.Status);
         Assert.Equal("Resolved", purchase.Problem!.Status);
-        using var twice = await admin.ResolveProblemAsync(reported.Reference, "ReleaseToSeller", "Changed my mind.");
+        using var twice = await admin.ResolveProblemAsync(reported.Reference, "CloseWithoutRefund", "Changed my mind.");
         Assert.Equal(HttpStatusCode.Conflict, twice.StatusCode);
         Assert.Equal("PROBLEM_ALREADY_RESOLVED", (await Problem.ReadAsync(twice)).Code);
         using var reply = await seller.RespondToProblemAsync(orderId, "Too late?");
@@ -248,25 +271,23 @@ public sealed class ResolveOrderProblemsTests : IDisposable
     }
 
     [Fact]
-    public async Task Release_to_the_seller_completes_the_order_and_releases_the_payout()
+    public async Task Closing_without_a_refund_completes_the_order()
     {
         var (orderId, seller) = await DeliveredOrderAsync();
-        await _factory.OnboardAsync(seller);
         var reported = await ReportAsync(orderId);
-        using var admin = _factory.CreateAdministratorClient();
+        var admin = seller;
 
-        using var response = await admin.ResolveProblemAsync(reported.Reference, "ReleaseToSeller", "The photos show the right size.");
+        using var response = await admin.ResolveProblemAsync(reported.Reference, "CloseWithoutRefund", "The photos show the right size.");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var detail = (await response.Content.ReadFromJsonAsync<ProblemDetailView>())!;
         Assert.Equal("Completed", detail.Order.Status);
-        Assert.Equal("ReleaseToSeller", detail.Problem.Outcome);
+        Assert.Equal("CloseWithoutRefund", detail.Problem.Outcome);
         Assert.Empty(_factory.Payments.Refunds);
         Assert.Equal(orderId, Assert.Single(_factory.Completed.Events).OrderId);
         _factory.InDatabase(db =>
         {
             Assert.Equal(OrderActor.Administrator, db.Set<OrderStatusChange>().Single(c => c.To == OrderStatus.Completed).Actor);
-            Assert.Equal(PayoutStatus.Releasable, db.Payouts.Single().Status);
         });
     }
 
@@ -277,39 +298,39 @@ public sealed class ResolveOrderProblemsTests : IDisposable
         var (orderId, seller) = await _factory.SeedPaidOrderAsync(_buyer);
         (await seller.AddTrackingAsync(orderId)).EnsureSuccessStatusCode();
         var reported = await ReportAsync(orderId);
-        using var admin = _factory.CreateAdministratorClient();
+        var admin = seller;
 
-        using var noReason = await admin.ResolveProblemAsync(reported.Reference, "FullRefund", " ");
+        using var noReason = await admin.ResolveProblemAsync(reported.Reference, "RefundBuyer", " ");
         using var noOutcome = await admin.ResolveProblemAsync(reported.Reference, "PartialRefund", "Half.");
-        using var release = await admin.ResolveProblemAsync(reported.Reference, "ReleaseToSeller", "Should arrive soon.");
-        using var missing = await admin.ResolveProblemAsync("P-9999", "FullRefund", "x");
+        using var release = await admin.ResolveProblemAsync(reported.Reference, "CloseWithoutRefund", "Should arrive soon.");
+        using var missing = await admin.ResolveProblemAsync("P-9999", "RefundBuyer", "x");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, noReason.StatusCode);
-        Assert.Equal("Add a reason. Both members see it.", (await Problem.ReadAsync(noReason)).Errors!["reason"].Message);
+        Assert.Equal("Add a reason. The buyer sees it.", (await Problem.ReadAsync(noReason)).Errors!["reason"].Message);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, noOutcome.StatusCode);
         Assert.Equal("OUTCOME_INVALID", (await Problem.ReadAsync(noOutcome)).Errors!["outcome"].Code);
         Assert.Equal(HttpStatusCode.Conflict, release.StatusCode);
         Assert.Equal("ORDER_INVALID_TRANSITION", (await Problem.ReadAsync(release)).Code);
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
 
-        using var refund = await admin.ResolveProblemAsync(reported.Reference, "FullRefund", "Lost in transit.");
+        using var refund = await admin.ResolveProblemAsync(reported.Reference, "RefundBuyer", "Lost in transit.");
         Assert.Equal(HttpStatusCode.OK, refund.StatusCode);
     }
 
     [Fact]
-    public async Task Administrator_endpoints_need_the_administrator_role()
+    public async Task Shop_problem_endpoints_need_the_founder()
     {
         var (orderId, seller) = await DeliveredOrderAsync();
         var reported = await ReportAsync(orderId);
         using var anonymous = _factory.CreateMemberClient();
 
-        using var buyerReads = await _buyer.AdminProblemAsync(reported.Reference);
-        using var sellerResolves = await seller.ResolveProblemAsync(reported.Reference, "ReleaseToSeller", "Mine.");
-        using var visitorReads = await anonymous.AdminProblemAsync(reported.Reference);
+        using var buyerReads = await _buyer.ShopProblemAsync(reported.Reference);
+        using var buyerResolves = await _buyer.ResolveProblemAsync(reported.Reference, "CloseWithoutRefund", "Mine.");
+        using var visitorReads = await anonymous.ShopProblemAsync(reported.Reference);
 
         Assert.Equal(HttpStatusCode.Forbidden, buyerReads.StatusCode);
-        Assert.Equal("ADMINISTRATOR_REQUIRED", (await Problem.ReadAsync(buyerReads)).Code);
-        Assert.Equal(HttpStatusCode.Forbidden, sellerResolves.StatusCode);
+        Assert.Equal("FOUNDER_REQUIRED", (await Problem.ReadAsync(buyerReads)).Code);
+        Assert.Equal(HttpStatusCode.Forbidden, buyerResolves.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, visitorReads.StatusCode);
         _factory.InDatabase(db => Assert.Equal(ProblemStatus.Open, db.OrderProblems.Single().Status));
     }

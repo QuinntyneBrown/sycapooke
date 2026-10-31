@@ -31,7 +31,6 @@ public sealed class PaymentWebhookHandler(
     ISycapookeDbContext db,
     IPaymentProvider provider,
     IEmailOutbox notifications,
-    IOptions<SellingOptions> selling,
     TimeProvider clock) :
     IRequestHandler<HandlePaymentWebhookCommand, Result<WebhookOutcome>>
 {
@@ -76,10 +75,8 @@ public sealed class PaymentWebhookHandler(
         if (!sold && stillOurs)
         {
             var last = await db.Orders.MaxAsync(o => (long?)o.Number, cancellationToken);
-            var feeRate = PayoutFees.RateFromPercent(selling.Value.PlatformFeePercent);
-            var order = Order.CreatePaid((last ?? FirstOrderNumber - 1) + 1, checkout, listing.SellerId, payment, feeRate, now);
+            var order = Order.CreatePaid((last ?? FirstOrderNumber - 1) + 1, checkout, listing.SellerId, payment, 0m, now);
             db.Orders.Add(order);
-            db.Payouts.Add(Payout.CreateHeld(order, now));
             listing.MarkSold(now);
             checkout.MarkPaid(order.Id, now);
             notifications.Enqueue(

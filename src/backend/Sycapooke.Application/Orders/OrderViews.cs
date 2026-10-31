@@ -3,7 +3,6 @@ using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Catalog;
 using Sycapooke.Application.Checkouts;
 using Sycapooke.Application.Listings;
-using Sycapooke.Application.Payouts;
 using Sycapooke.Domain.Listings;
 using Sycapooke.Domain.Orders;
 
@@ -24,7 +23,7 @@ public sealed record CancellationRequestDto(string? Message, string Status, Date
 /// <summary>
 /// One order as its seller's sale page shows it (mocks pages/sale-detail): ship-by date, the
 /// buyer's address under "Ship to" (L2-033), the summary, the timeline, the tracking once shipped,
-/// the payout after the fee (L2-031), and the cancellation, the buyer's request to cancel and
+/// and the cancellation, the buyer's request to cancel and
 /// whether the listing can be relisted (L2-035), and the buyer's problem with the seller's reply
 /// (L2-036).
 /// </summary>
@@ -43,7 +42,6 @@ public sealed record SaleDto(
     AddressDto? ShipTo,
     IReadOnlyList<TimelineStepDto> Timeline,
     TrackingDto? Tracking,
-    SalePayoutDto? Payout,
     CancellationDto? Cancellation,
     CancellationRequestDto? CancellationRequest,
     bool CanRelist,
@@ -99,7 +97,6 @@ public static class OrderViews
             AddressDto.From(order.ShippingAddress),
             Timeline(order),
             Tracking(order),
-            await SalePayouts.ForAsync(db, order, cancellationToken),
             Cancellation(order),
             CancellationRequest(order),
             order.Status == OrderStatus.Cancelled && await db.Listings.AsNoTracking().AnyAsync(l => l.Id == order.ListingId && l.Status == ListingStatus.Removed && l.RemovalReason == ListingRemovalReason.OrderCancelled, cancellationToken),

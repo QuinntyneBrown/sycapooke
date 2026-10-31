@@ -10,7 +10,6 @@ using Sycapooke.Application.Notifications;
 using Sycapooke.Domain.Listings;
 using Sycapooke.Domain.Notifications;
 using Sycapooke.Domain.Orders;
-using Sycapooke.Domain.Payouts;
 
 namespace Sycapooke.Application.Orders;
 
@@ -64,7 +63,7 @@ public sealed record ProblemDto(
         problem.OpenedAt,
         problem.SellerResponse,
         problem.SellerRespondedAt,
-        problem.Outcome?.ToString(),
+        problem.Outcome?.ToLabel(),
         problem.ResolutionReason,
         problem.ResolvedAt);
 }
@@ -93,7 +92,7 @@ public sealed record ReportProblemCommand(Guid BuyerId, Guid OrderId, string? Re
 /// <summary>
 /// Validates, then checks each photo's size and sniffed type as listing photos do (L2-017, without
 /// the 800-pixel minimum, ADR orders/0007), strips its metadata by re-encoding it as one JPEG of at
-/// most 1600 pixels and stores it privately. In one save it opens the problem, holds the payout
+/// most 1600 pixels and stores it privately. In one save it opens the problem
 /// and queues the emails to the seller and to every administrator.
 /// </summary>
 public sealed class ReportProblemCommandHandler(
@@ -180,20 +179,10 @@ public sealed class ReportProblemCommandHandler(
         }
 
         db.OrderProblems.Add(problem);
-        var payout = await db.Payouts.SingleOrDefaultAsync(p => p.OrderId == order.Id, cancellationToken);
-        if (payout?.Status == PayoutStatus.Held)
-        {
-            payout.HoldForProblem();
-        }
 
         var title = await OrderEmails.ItemTitleAsync(db, order, cancellationToken);
         var label = reason.ToLabel();
-        notifications.Enqueue(NotificationType.ProblemReported, order.SellerId, new ProblemReportedEmail(order.Id, order.Reference, problem.Reference, title, label, problem.Description, ToAdministrator: false));
-        var administrators = await db.Members.Where(m => m.IsAdministrator).Select(m => m.Id).ToListAsync(cancellationToken);
-        foreach (var administrator in administrators)
-        {
-            notifications.Enqueue(NotificationType.ProblemReported, administrator, new ProblemReportedEmail(order.Id, order.Reference, problem.Reference, title, label, problem.Description, ToAdministrator: true));
-        }
+        notifications.Enqueue(NotificationType.ProblemReported, order.SellerId, new ProblemReportedEmail(order.Id, order.Reference, problem.Reference, title, label, problem.Description, ToAdministrator: true));
 
         try
         {
@@ -269,10 +258,9 @@ public sealed record ProblemOrderDto(Guid Id, string Reference, string Status, s
 
 /// <summary>
 /// The administrator's problem page (mocks pages/problem-detail): the claim with photos, the
-/// seller's reply, both members' names, the order and where the payout is (Held, Releasable,
-/// Cancelled...).
+/// seller's reply, both members' names and the order.
 /// </summary>
-public sealed record ProblemDetailDto(ProblemDto Problem, string BuyerDisplayName, string SellerDisplayName, ProblemOrderDto Order, string Payout);
+public sealed record ProblemDetailDto(ProblemDto Problem, string BuyerDisplayName, string SellerDisplayName, ProblemOrderDto Order);
 
 public sealed record GetProblemDetailQuery(string Reference) : IRequest<Result<ProblemDetailDto>>;
 
@@ -299,24 +287,22 @@ internal static class ProblemDetails
         var names = await db.Members.AsNoTracking()
             .Where(m => m.Id == order.BuyerId || m.Id == order.SellerId)
             .ToDictionaryAsync(m => m.Id, m => m.DisplayName, cancellationToken);
-        var payout = await db.Payouts.AsNoTracking().Where(p => p.OrderId == order.Id).Select(p => (PayoutStatus?)p.Status).SingleOrDefaultAsync(cancellationToken);
         return new ProblemDetailDto(
             ProblemDto.From(problem),
             names[order.BuyerId],
             names[order.SellerId],
-            new ProblemOrderDto(order.Id, order.Reference, order.Status.ToString(), CheckoutMoney.Format(order.Total), order.DeliveredAt, await OrderViews.ItemAsync(db, order.ListingId, photos, cancellationToken)),
-            payout?.ToString() ?? "None");
+            new ProblemOrderDto(order.Id, order.Reference, order.Status.ToString(), CheckoutMoney.Format(order.Total), order.DeliveredAt, await OrderViews.ItemAsync(db, order.ListingId, photos, cancellationToken)));
     }
 }
 
-/// <summary>An administrator decides a problem with an outcome and a reason both members see (L2-036 AC3, AC4).</summary>
-public sealed record ResolveProblemCommand(Guid AdministratorId, string Reference, string? Outcome, string? Reason) : IRequest<Result<ProblemDetailDto>>;
+/// <summary>The founder decides a problem with an outcome and a reason both members see (L2-036 AC3, AC4).</summary>
+public sealed record ResolveProblemCommand(Guid FounderId, string Reference, string? Outcome, string? Reason) : IRequest<Result<ProblemDetailDto>>;
 
 /// <summary>
-/// In one save: FullRefund moves the order to Refunded, records a full refund and cancels the
-/// payout; ReleaseToSeller completes a Delivered order, whose OrderCompleted event makes the
-/// payout releasable. Either way the problem is resolved and both members are emailed the
-/// decision; a refund is then issued through the provider with its ID as the key.
+/// In one save: RefundBuyer moves the order to Refunded and records a full refund;
+/// CloseWithoutRefund completes a Delivered order with no refund. Either way the problem is
+/// resolved and the buyer is emailed the decision; a refund is then issued through the provider
+/// with its ID as the key, and a temporary failure leaves it Pending for the retry job.
 /// </summary>
 public sealed class ResolveProblemCommandHandler(
     ISycapookeDbContext db,
@@ -337,7 +323,8 @@ public sealed class ResolveProblemCommandHandler(
         }
 
         var errors = new Dictionary<string, FieldError>();
-        if (!Enum.TryParse<ProblemOutcome>(command.Outcome, out var outcome) || !Enum.IsDefined(outcome) || int.TryParse(command.Outcome, out _))
+        var outcome = ProblemOutcomes.Parse(command.Outcome);
+        if (outcome is null)
         {
             errors["outcome"] = new FieldError("OUTCOME_INVALID", "Choose a decision");
         }
@@ -345,10 +332,10 @@ public sealed class ResolveProblemCommandHandler(
         var reason = ProblemErrors.Clean(command.Reason);
         if (reason is null)
         {
-            errors["reason"] = new FieldError("REASON_REQUIRED", "Add a reason. Both members see it.");
+            errors["reason"] = new FieldError("REASON_REQUIRED", "Add a reason. The buyer sees it.");
         }
 
-        if (errors.Count > 0)
+        if (errors.Count > 0 || outcome is null)
         {
             return ProblemErrors.Invalid("PROBLEM_RESOLUTION_INVALID", errors);
         }
@@ -359,7 +346,6 @@ public sealed class ResolveProblemCommandHandler(
         }
 
         var order = await db.Orders.Include(o => o.StatusChanges).SingleAsync(o => o.Id == problem.OrderId, cancellationToken);
-        var payout = await db.Payouts.SingleOrDefaultAsync(p => p.OrderId == order.Id, cancellationToken);
         var payment = await db.Payments.SingleAsync(p => p.Id == order.PaymentId, cancellationToken);
         var now = clock.GetUtcNow().UtcDateTime;
         Refund? refund = null;
@@ -370,21 +356,16 @@ public sealed class ResolveProblemCommandHandler(
                 order.RefundForProblem(now);
                 refund = Refund.ForProblem(payment, now);
                 db.Refunds.Add(refund);
-                if (payout?.Status == PayoutStatus.Held)
-                {
-                    payout.Cancel();
-                }
             }
             else
             {
                 order.Complete(OrderActor.Administrator, now);
             }
 
-            problem.Resolve(outcome, refund?.Amount, reason!, command.AdministratorId, now);
+            problem.Resolve(outcome.Value, refund?.Amount, reason!, command.FounderId, now);
             var title = await OrderEmails.ItemTitleAsync(db, order, cancellationToken);
-            var decision = outcome == ProblemOutcome.FullRefund ? "refund the buyer in full" : "release the payment to the seller";
+            var decision = outcome == ProblemOutcome.FullRefund ? "refund you in full" : "close the problem without a refund";
             notifications.Enqueue(NotificationType.ProblemResolved, order.BuyerId, new ProblemResolvedEmail(order.Id, order.Reference, title, decision, reason!, ToSeller: false));
-            notifications.Enqueue(NotificationType.ProblemResolved, order.SellerId, new ProblemResolvedEmail(order.Id, order.Reference, title, decision, reason!, ToSeller: true));
             await db.SaveChangesAsync(cancellationToken);
         }
         catch (Exception exception) when (exception is InvalidOrderTransitionException or DbUpdateConcurrencyException)
@@ -394,8 +375,8 @@ public sealed class ResolveProblemCommandHandler(
         }
 
         logger.LogInformation(
-            "Administrator {AdministratorId} resolved problem {ProblemReference} on order {OrderReference} with {Outcome}",
-            command.AdministratorId,
+            "Founder {FounderId} resolved problem {ProblemReference} on order {OrderReference} with {Outcome}",
+            command.FounderId,
             problem.Reference,
             order.Reference,
             outcome);
@@ -410,4 +391,21 @@ public sealed class ResolveProblemCommandHandler(
 
         return await ProblemDetails.ForAsync(db, problem, photoOptions.Value, cancellationToken);
     }
+}
+
+/// <summary>The founder's two decisions as the API names them; history keeps the stored names (ADR orders/0007).</summary>
+public static class ProblemOutcomes
+{
+    public const string RefundBuyer = "RefundBuyer";
+    public const string CloseWithoutRefund = "CloseWithoutRefund";
+
+    public static ProblemOutcome? Parse(string? value) => value switch
+    {
+        RefundBuyer => ProblemOutcome.FullRefund,
+        CloseWithoutRefund => ProblemOutcome.ReleaseToSeller,
+        _ => null,
+    };
+
+    /// <summary>A stored FullRefund is RefundBuyer; a stored ReleaseToSeller reads as CloseWithoutRefund.</summary>
+    public static string ToLabel(this ProblemOutcome outcome) => outcome == ProblemOutcome.FullRefund ? RefundBuyer : CloseWithoutRefund;
 }

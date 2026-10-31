@@ -115,12 +115,6 @@ public sealed record EmailMessage(string To, string Subject, string Body, Guid I
 /// <summary>The provider refused the email for good, for example a rejected address (HTTP 4xx other than 429).</summary>
 public sealed class EmailRejectedException(string reason) : Exception(reason);
 
-/// <summary>Reads whether a seller finished payout onboarding (L2-031). Owned by seller-payouts.</summary>
-public interface ISellerPayoutAccountReader
-{
-    Task<bool> IsOnboardedAsync(Guid sellerId, CancellationToken cancellationToken);
-}
-
 /// <summary>An image identified from its content (magic bytes and header), not its name (L2-017).</summary>
 public sealed record ImageInfo(string ContentType, int Width, int Height);
 
@@ -208,49 +202,6 @@ public interface IPaymentProvider
 
     /// <summary>The event when the signature over the raw body is valid, otherwise null (L2-030 AC4).</summary>
     PaymentEvent? ReadWebhook(string body, string? signature);
-}
-
-/// <summary>Kinds of payout webhook events Sycapooke acts on.</summary>
-public enum PayoutEventType
-{
-    AccountUpdated,
-    PayoutPaid,
-    PayoutFailed,
-}
-
-/// <summary>
-/// One verified payout webhook event. Account events carry the provider account ID, whether
-/// onboarding is complete and the bank's display name and last four digits; payout events carry
-/// the Sycapooke payout ID sent as the idempotency key (L2-031).
-/// </summary>
-public sealed record PayoutEvent(
-    string EventId,
-    PayoutEventType Type,
-    string? ProviderAccountId,
-    bool AccountComplete,
-    string? BankName,
-    string? BankLast4,
-    Guid? PayoutId,
-    string? FailureReason);
-
-/// <summary>
-/// The payout side of the payment provider (L2-031, ADR orders/0005): connected accounts, the
-/// provider-hosted onboarding, transfers to the seller's bank and their webhook. Failures throw
-/// <see cref="HttpRequestException"/>. Tests use a fake; no real credentials exist yet.
-/// </summary>
-public interface IPayoutProvider
-{
-    /// <summary>Creates the seller's connected account; returns the provider account ID.</summary>
-    Task<string> CreateConnectedAccountAsync(Guid memberId, string email, CancellationToken cancellationToken);
-
-    /// <summary>A short-lived link to the provider-hosted onboarding for the account.</summary>
-    Task<string> CreateOnboardingLinkAsync(string accountId, string returnUrl, string refreshUrl, CancellationToken cancellationToken);
-
-    /// <summary>Pays the amount to the account; the key makes a repeated call pay once. Returns the provider payout ID.</summary>
-    Task<string> CreatePayoutAsync(string accountId, decimal amount, Guid idempotencyKey, CancellationToken cancellationToken);
-
-    /// <summary>The event when the signature over the raw body is valid, otherwise null.</summary>
-    PayoutEvent? ReadWebhook(string body, string? signature);
 }
 
 /// <summary>One verified carrier tracking event: the number as the carrier stores it and whether it reports delivery.</summary>

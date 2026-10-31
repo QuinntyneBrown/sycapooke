@@ -19,7 +19,7 @@ namespace Sycapooke.Api.Tests.Support;
 
 /// <summary>
 /// Hosts Sycapooke.Api in memory with SQLite in-memory in place of SQL Server, a captured email
-/// sender, in-memory photo storage, a fake payment provider, a fake carrier tracking service, a fake payout provider, a fake Google and a controllable clock. No real database or external system is touched (AGENTS.md).
+/// sender, in-memory photo storage, a fake payment provider, a fake carrier tracking service, a fake Google and a controllable clock. No real database or external system is touched (AGENTS.md).
 /// </summary>
 public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
 {
@@ -49,7 +49,6 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
 
     public FakeCarrierTracking Carriers { get; } = new();
 
-    public FakePayoutProvider PayoutProvider { get; } = new();
 
     public RecordingOrderCompleted Completed { get; } = new();
 
@@ -89,8 +88,6 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IPaymentProvider>(Payments);
             services.RemoveAll<ICarrierTracking>();
             services.AddSingleton<ICarrierTracking>(Carriers);
-            services.RemoveAll<IPayoutProvider>();
-            services.AddSingleton<IPayoutProvider>(PayoutProvider);
             services.AddSingleton<INotificationHandler<OrderCompleted>>(Completed);
             services.RemoveAll<ShopOptions>();
             services.AddSingleton(Shop);

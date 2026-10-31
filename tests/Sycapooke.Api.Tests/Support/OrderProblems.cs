@@ -34,24 +34,24 @@ public static class OrderProblems
     public static Task<HttpResponseMessage> RespondToProblemAsync(this HttpClient client, Guid orderId, string? message) =>
         client.PostAsJsonAsync($"/api/orders/{orderId}/problem/response", new { message });
 
-    public static Task<HttpResponseMessage> AdminProblemAsync(this HttpClient client, string reference) =>
-        client.GetAsync($"/api/admin/problems/{reference}");
+    public static Task<HttpResponseMessage> ShopProblemAsync(this HttpClient client, string reference) =>
+        client.GetAsync($"/api/shop/problems/{reference}");
 
     public static Task<HttpResponseMessage> ResolveProblemAsync(this HttpClient client, string reference, string? outcome, string? reason) =>
-        client.PostAsJsonAsync($"/api/admin/problems/{reference}/resolution", new { outcome, reason });
+        client.PostAsJsonAsync($"/api/shop/problems/{reference}/resolution", new { outcome, reason });
 
-    /// <summary>A client signed in as a new verified member who holds the Administrator role.</summary>
-    public static HttpClient CreateAdministratorClient(this SycapookeApiFactory factory, string displayName = "ana_ruiz")
+    /// <summary>A client signed in as the shop founder, a new verified member bound by provisioning.</summary>
+    public static HttpClient CreateFounderClient(this SycapookeApiFactory factory, string displayName = "ana_ruiz")
     {
         Member admin = null!;
         factory.InDatabase(db =>
         {
             admin = Member.Register(displayName, $"{displayName}@sycapooke.test", "hash", DateTime.UtcNow);
             admin.MarkEmailVerified(DateTime.UtcNow);
-            admin.GrantAdministrator();
             db.Members.Add(admin);
             db.SaveChanges();
         });
+        factory.BindFounder(admin.Id);
         return factory.CreateMemberClient().WithSession(factory, admin);
     }
 }
@@ -74,7 +74,7 @@ public sealed record ProblemView(
 
 public sealed record PurchaseWithProblemView(Guid Id, string Status, bool CanReportProblem, DateTime? ProblemDeadline, ProblemView? Problem);
 
-public sealed record SaleWithProblemView(Guid Id, string Status, ProblemView? Problem, SalePayoutView? Payout);
+public sealed record SaleWithProblemView(Guid Id, string Status, ProblemView? Problem);
 
 public sealed record ProblemOrderView(Guid Id, string Reference, string Status, string Total, DateTime? DeliveredAt, CheckoutItemView Item);
 
@@ -82,5 +82,4 @@ public sealed record ProblemDetailView(
     ProblemView Problem,
     string BuyerDisplayName,
     string SellerDisplayName,
-    ProblemOrderView Order,
-    string Payout);
+    ProblemOrderView Order);

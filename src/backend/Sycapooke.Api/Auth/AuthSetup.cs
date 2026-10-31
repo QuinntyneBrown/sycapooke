@@ -20,8 +20,6 @@ public static class Policies
     /// <summary>Only the shop's founder may manage inventory and fulfil orders (ADR platform/0018).</summary>
     public const string CanSell = "CanSell";
 
-    /// <summary>A member holding the Administrator role (L2-010 AC3); only order problems use it (L2-036).</summary>
-    public const string Administrator = "Administrator";
 }
 
 /// <summary>Requires a verified email, read from Sycapooke database so verification takes effect at once.</summary>
@@ -71,30 +69,6 @@ public sealed class FounderHandler(IFounderAccess founder) : AuthorizationHandle
     }
 }
 
-/// <summary>Requires the Administrator role, read from Sycapooke database so a granted or removed role takes effect at once.</summary>
-public sealed class AdministratorRequirement : IAuthorizationRequirement;
-
-public sealed class AdministratorHandler(ISycapookeDbContext db) : AuthorizationHandler<AdministratorRequirement>
-{
-    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, AdministratorRequirement requirement)
-    {
-        if (context.User.Identity?.IsAuthenticated != true)
-        {
-            return;
-        }
-
-        var memberId = context.User.MemberId();
-        if (await db.Members.AnyAsync(m => m.Id == memberId && m.IsAdministrator))
-        {
-            context.Succeed(requirement);
-        }
-        else
-        {
-            context.Fail(new AuthorizationFailureReason(this, "ADMINISTRATOR_REQUIRED"));
-        }
-    }
-}
-
 /// <summary>Answers 401 and 403 as problem details; 403 for an unverified member carries EMAIL_NOT_VERIFIED.</summary>
 public sealed class ProblemAuthorizationResultHandler : IAuthorizationMiddlewareResultHandler
 {
@@ -114,8 +88,6 @@ public sealed class ProblemAuthorizationResultHandler : IAuthorizationMiddleware
                 ? new Error(403, "EMAIL_NOT_VERIFIED", "Verify your email to sell")
                 : reasons.Contains("FOUNDER_REQUIRED")
                     ? new Error(403, "FOUNDER_REQUIRED", "Only the shop's founder can do that")
-                : reasons.Contains("ADMINISTRATOR_REQUIRED")
-                    ? new Error(403, "ADMINISTRATOR_REQUIRED", "Only Sycapooke administrators can do that")
                     : new Error(403, "FORBIDDEN", "You can't do that"));
         }
 
@@ -137,7 +109,6 @@ public static class AuthSetup
         services.AddSingleton<IGoogleIdentityProvider, GoogleIdentityProvider>();
         services.AddSingleton<GoogleFlowCookie>();
         services.AddScoped<IAuthorizationHandler, VerifiedEmailHandler>();
-        services.AddScoped<IAuthorizationHandler, AdministratorHandler>();
         services.AddScoped<IAuthorizationHandler, FounderHandler>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, ProblemAuthorizationResultHandler>();
 
@@ -170,8 +141,7 @@ public static class AuthSetup
 
         services.AddAuthorizationBuilder()
             .AddPolicy(Policies.VerifiedMember, p => p.RequireAuthenticatedUser().AddRequirements(new VerifiedEmailRequirement()))
-            .AddPolicy(Policies.CanSell, p => p.RequireAuthenticatedUser().AddRequirements(new FounderRequirement()))
-            .AddPolicy(Policies.Administrator, p => p.RequireAuthenticatedUser().AddRequirements(new AdministratorRequirement()));
+            .AddPolicy(Policies.CanSell, p => p.RequireAuthenticatedUser().AddRequirements(new FounderRequirement()));
         return services;
     }
 }

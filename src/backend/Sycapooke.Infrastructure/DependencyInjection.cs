@@ -10,7 +10,6 @@ using Sycapooke.Infrastructure.Accounts;
 using Sycapooke.Infrastructure.Carriers;
 using Sycapooke.Infrastructure.Email;
 using Sycapooke.Infrastructure.Payments;
-using Sycapooke.Infrastructure.Payouts;
 using Sycapooke.Infrastructure.Persistence;
 using Sycapooke.Infrastructure.Photos;
 
@@ -28,7 +27,6 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<IBreachedPasswords, BundledBreachedPasswords>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
-        services.AddScoped<ISellerPayoutAccountReader, PayoutAccountReader>();
         services.AddSingleton(ShopConfiguration.Read(configuration));
         services.Configure<AppOptions>(configuration.GetSection("App"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
@@ -41,7 +39,6 @@ public static class DependencyInjection
         services.AddSingleton<IPhotoStorage, FileSystemPhotoStorage>();
         services.AddSingleton<IPaymentProvider, UnconfiguredPaymentProvider>();
         services.AddSingleton<ICarrierTracking, UnconfiguredCarrierTracking>();
-        services.AddSingleton<IPayoutProvider, UnconfiguredPayoutProvider>();
         return services;
     }
 }

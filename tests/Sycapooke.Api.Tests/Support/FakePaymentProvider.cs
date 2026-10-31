@@ -37,8 +37,16 @@ public sealed class FakePaymentProvider : IPaymentProvider
         return Task.FromResult(ProviderIdOf(charge.PaymentId));
     }
 
+    /// <summary>When true the provider is unreachable: refunds throw like a network failure.</summary>
+    public bool RefundsUnavailable { get; set; }
+
     public Task<string> RefundAsync(string providerPaymentId, decimal amount, Guid idempotencyKey, CancellationToken cancellationToken)
     {
+        if (RefundsUnavailable)
+        {
+            throw new HttpRequestException("The payment provider is unreachable");
+        }
+
         Refunds.Enqueue((providerPaymentId, amount, idempotencyKey));
         return Task.FromResult($"re_{idempotencyKey:N}");
     }
