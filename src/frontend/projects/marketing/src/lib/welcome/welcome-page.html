@@ -5,8 +5,16 @@
 >
   <ng-container title>A home for the things that <em>mattered.</em></ng-container>
   <ng-container actions>
-    <a syButton="primary" size="lg" [routerLink]="catalogHref" [attr.href]="catalogExternal">Shop the catalog</a>
-    <a syButton size="lg" [routerLink]="sellHref()" [attr.href]="sellExternal()">Start selling</a>
+    @if (origin) {
+      <a syButton="primary" size="lg" [href]="catalogExternal">Shop the catalog</a>
+    } @else {
+      <a syButton="primary" size="lg" [routerLink]="catalogHref">Shop the catalog</a>
+    }
+    @if (origin) {
+      <a syButton size="lg" [href]="sellExternal()">Start selling</a>
+    } @else {
+      <a syButton size="lg" [routerLink]="sellHref()">Start selling</a>
+    }
   </ng-container>
   <sy-video-poster media poster="/media/sycapooke-hero.jpg" label="Play" duration="0:29" (watch)="openVideo()" />
 </sy-marketing-hero>
@@ -17,7 +25,11 @@
   heading="Every piece is at least 20 years old."
   [points]="shopperPoints"
 >
-  <a syButton="primary" [routerLink]="catalogHref" [attr.href]="catalogExternal" actions>Browse the catalog</a>
+  @if (origin) {
+    <a syButton="primary" [href]="catalogExternal" actions>Browse the catalog</a>
+  } @else {
+    <a syButton="primary" [routerLink]="catalogHref" actions>Browse the catalog</a>
+  }
 </sy-feature-band>
 
 <sy-feature-band
@@ -27,7 +39,11 @@
   tone="sell"
   [points]="sellerPoints"
 >
-  <a syButton="inverse" [routerLink]="sellHref()" [attr.href]="sellExternal()" actions>List your first item</a>
+  @if (origin) {
+    <a syButton="inverse" [href]="sellExternal()" actions>List your first item</a>
+  } @else {
+    <a syButton="inverse" [routerLink]="sellHref()" actions>List your first item</a>
+  }
 </sy-feature-band>
 
 <sy-feature-band headingId="how-title" eyebrow="How it works" heading="Three steps. That’s it." [stacked]="true">
@@ -58,5 +74,9 @@
   [closing]="true"
 >
   <ng-container title>Treasures with a <em>story.</em></ng-container>
-  <a syButton="inverse" size="lg" [routerLink]="catalogHref" [attr.href]="catalogExternal" actions>Shop the catalog</a>
+  @if (origin) {
+    <a syButton="inverse" size="lg" [href]="catalogExternal" actions>Shop the catalog</a>
+  } @else {
+    <a syButton="inverse" size="lg" [routerLink]="catalogHref" actions>Shop the catalog</a>
+  }
 </sy-feature-band>

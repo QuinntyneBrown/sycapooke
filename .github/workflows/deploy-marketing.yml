@@ -1,6 +1,6 @@
 name: Deploy marketing
 
-# Deploys the marketing site (www.<SITE_HOST>) on every push to main once CI (npm run verify) has passed on it,
+# Deploys the marketing site (/welcome/ on the Azure SITE_HOST) on every push to main once CI (npm run verify) has passed on it,
 # independently of the application (ADR platform/0015, L2-084, L2-087). Run by hand with an older commit SHA to
 # roll back (L2-086).
 on:
@@ -83,20 +83,26 @@ jobs:
       - name: Copy compose file and edge config
         run: |
           ssh "azureuser@${DEPLOY_HOST}" mkdir -p /opt/sycapooke/edge
-          scp deploy/docker-compose.yml "azureuser@${DEPLOY_HOST}:/opt/sycapooke/docker-compose.yml"
-          scp deploy/edge/Caddyfile "azureuser@${DEPLOY_HOST}:/opt/sycapooke/edge/Caddyfile"
+          scp deploy/docker-compose.yml "azureuser@${DEPLOY_HOST}:/opt/sycapooke/docker-compose-${GITHUB_RUN_ID}.yml"
+          scp deploy/edge/Caddyfile "azureuser@${DEPLOY_HOST}:/opt/sycapooke/edge/Caddyfile-${GITHUB_RUN_ID}"
       - name: Log in to the registry
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: printf '%s' "$GHCR_TOKEN" | ssh "azureuser@${DEPLOY_HOST}" docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+        run: printf '%s' "$GHCR_TOKEN" | ssh "azureuser@${DEPLOY_HOST}" env DOCKER_CONFIG=/tmp/sycapooke-registry-${GITHUB_RUN_ID} docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
       - name: Restart the marketing site
         run: |
           ssh "azureuser@${DEPLOY_HOST}" bash -s <<'REMOTE'
             set -euo pipefail
             cd /opt/sycapooke
+            exec 9>.deploy.lock
+            flock -x 9
+            cp "docker-compose-${{ github.run_id }}.yml" docker-compose.yml
+            cp "edge/Caddyfile-${{ github.run_id }}" edge/Caddyfile
+            rm "docker-compose-${{ github.run_id }}.yml" "edge/Caddyfile-${{ github.run_id }}"
+            export DOCKER_CONFIG=/tmp/sycapooke-registry-${{ github.run_id }}
             trap 'docker logout ghcr.io >/dev/null' EXIT
             sed -i '/^MARKETING_TAG=/d' .env && echo "MARKETING_TAG=${{ env.DEPLOY_SHA }}" >> .env
-            sed -i '/^SITE_ADDRESS=/d' .env && printf 'SITE_ADDRESS=%s, www.%s, app.%s\n' "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" "${{ env.SITE_HOST }}" >> .env
+            sed -i '/^SITE_ADDRESS=/d' .env && printf 'SITE_ADDRESS=%s\n' "${{ env.SITE_HOST }}" >> .env
             docker compose pull --quiet marketing edge
             docker compose up -d --no-deps marketing edge
             docker compose exec -T edge caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
@@ -105,7 +111,9 @@ jobs:
       - name: Smoke test marketing
         run: |
           for i in $(seq 1 20); do
-            curl -fsS "https://www.${SITE_HOST}/" | grep -q "Sycapooke" && exit 0
+            curl -fsS --max-time 10 "https://${SITE_HOST}/welcome/" -o marketing.html &&
+              grep -q 'Sycapooke' marketing.html &&
+              grep -q '<base href="/welcome/">' marketing.html && exit 0
             sleep 6
           done
           echo "marketing check failed" && exit 1

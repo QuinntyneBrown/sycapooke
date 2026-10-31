@@ -2,9 +2,9 @@ import { EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from '
 
 /**
  * Origin of the full application, for links that leave the current build. Empty in the application
- * itself, so links stay in-app router links; `https://app.sycapooke.com` in the marketing build, so
- * "Shop the catalog", "Start selling", the category links and the footer go to the application host
- * (ADR platform/0015).
+ * itself, so links stay in-app router links; the Azure origin in the marketing build, so
+ * "Shop the catalog", "Start selling", category links and the footer leave the /welcome/ base
+ * and load the application (ADR platform/0016).
  */
 export const APP_ORIGIN = new InjectionToken<string>('APP_ORIGIN', { providedIn: 'root', factory: () => '' });
 

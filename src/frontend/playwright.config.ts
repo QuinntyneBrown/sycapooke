@@ -14,6 +14,6 @@ export default defineConfig({
   webServer: {
     command: 'node e2e/serve.mjs',
     url: `http://localhost:${port}`,
-    reuseExistingServer: !process.env['CI'],
+    reuseExistingServer: false,
   },
 });

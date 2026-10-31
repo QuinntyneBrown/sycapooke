@@ -5,8 +5,8 @@
 Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics, used by only a few members. This
 feature, part of the `platform` subsystem, takes every push to `main` that passes CI live
 with no manual step, on one low-cost Azure Linux VM running Docker Compose, Caddy and an
-Azure SQL Basic database: the marketing site at `https://www.sycapooke.com` and the full
-application at `https://app.sycapooke.com`, each from its own image and its own workflow.
+Azure SQL Basic database: the marketing site at `https://sycapooke.canadacentral.cloudapp.azure.com/welcome/` and the full
+application at `https://sycapooke.canadacentral.cloudapp.azure.com`, each from its own image and its own workflow.
 It mirrors 12L's pipeline (12L commits `dac2085` and `56e2df9`) and refines `L1-018` and
 `L1-019` through `L2-084` to `L2-087` ([ADR platform/0012](../../../adr/platform/0012-low-cost-single-vm-continuous-deployment.md),
 [ADR platform/0015](../../../adr/platform/0015-separate-marketing-and-application-deployments.md)).
@@ -19,7 +19,7 @@ Terms used below:
 - **Deploy app** — `.github/workflows/deploy-app.yml`, which owns `api`, `worker`,
   `migrator`, `app` and `APP_TAG`
 - **the edge** — the `edge` service: the official Caddy image with `deploy/edge/Caddyfile`,
-  terminating TLS and routing by host
+  terminating TLS and routing by path
 - **the VM** — the B1s or B1ms Ubuntu host built by `deploy/cloud-init.yaml`
 - **the stack** — `deploy/docker-compose.yml` in `/opt/sycapooke` on the VM
 - **deploy SHA** — the commit deployed: the `ref` input when run by hand, otherwise the
@@ -69,13 +69,14 @@ shares the first three steps:
    `docker login ghcr.io --password-stdin`; it never appears in the script text.
 
 Then each runs one `bash -s` script under `set -euo pipefail` that rewrites `SITE_ADDRESS`
-in `.env` from `SITE_HOST` as the apex, `www` and `app` hosts, so the edge holds a
-certificate for each:
+in `.env` from the Azure DNS name `SITE_HOST`, so no custom domain is needed. Each
+script takes the shared `.deploy.lock` with `flock` and uses a run-specific Docker registry
+configuration so concurrent workflow logins cannot interfere:
 
 - **Deploy marketing** sets `MARKETING_TAG` in `.env`, `docker compose pull marketing edge`,
   `docker compose up -d --no-deps marketing edge`, prunes images older than 72 hours and
   logs out. It never writes `APP_TAG`, never names the migrator and never restarts `api`,
-  `worker` or `app`. **Smoke test**: poll `https://www.$SITE_HOST/` 20 times, 6 seconds
+  `worker` or `app`. **Smoke test**: poll `https://$SITE_HOST/welcome/` 20 times, 6 seconds
   apart, until it answers 200 and contains "Sycapooke"; otherwise the run fails.
 - **Deploy app** sets `APP_TAG` in `.env`, pulls `api worker migrator app edge`, runs
   `docker compose run --rm -T migrator < /dev/null` (without `-T` and `/dev/null` the
@@ -83,8 +84,8 @@ certificate for each:
   `docker compose up -d --no-deps api worker app edge`, prunes and logs out. A failed
   migration exits the script before `up -d`, so the old containers keep running. It never
   writes `MARKETING_TAG` and never restarts `marketing`. **Smoke tests**: poll
-  `https://app.$SITE_HOST/api/health` 20 times, 6 seconds apart; no 200 fails the run; then
-  the same for `https://app.$SITE_HOST/`. The health endpoint needs no database
+  `https://$SITE_HOST/api/health` 20 times, 6 seconds apart; no 200 fails the run; then
+  the same for `https://$SITE_HOST/`. The health endpoint needs no database
   ([ADR platform/0004](../../../adr/platform/0004-health-check-without-database.md)).
 
 `edge` is in both `up -d` lists so that a changed compose definition of the edge is applied
@@ -94,27 +95,21 @@ both scripts end with `caddy reload` inside the edge container, which applies it
 
 ### The edge and the application origin (`L2-087`)
 
-`deploy/edge/Caddyfile` has one site block for `{$SITE_ADDRESS}`: a permanent redirect of
-the apex host to `https://www.sycapooke.com{uri}`, `handle @app { reverse_proxy app:80 }`
-for `app.sycapooke.com`, and a catch-all `handle { reverse_proxy marketing:80 }`. Only the
-`app` Caddyfile proxies the API, so the marketing host has no `/api` at all.
+`deploy/edge/Caddyfile` has one HTTPS site block for the Azure `SITE_ADDRESS`. It redirects
+`/welcome` to `/welcome/`, strips that prefix with `handle_path /welcome/*` and proxies to
+`marketing:80`; all other paths proxy to `app:80`. The marketing build uses base href
+`/welcome/`. Only the app service proxies `/api` and `/photos` to the backend.
 
-Because the two sites are different origins, the marketing build must link across hosts.
-`projects/sycapooke/src/environments/environment.marketing.ts` (an `angular.json`
-`fileReplacement` of the `marketing` configuration) sets
-`appOrigin: 'https://app.sycapooke.com'`; `app.config.ts` passes it to `provideAppOrigin`
-from `@sycapooke/components` (`projects/components/src/lib/app-origin.ts`), which provides
-the `APP_ORIGIN` token. `externalHref(origin, path)` returns an absolute URL when the origin
-is set and `null` otherwise, so `sy-top-bar`, `sy-nav-menu`, `sy-footer` and the welcome
-page's calls to action render `<a href="https://app.sycapooke.com/…">` in the marketing
-build and `routerLink` in the application; "About Sycapooke" stays a local link on both.
-The marketing top-bar search navigates to `https://app.sycapooke.com/?q=<terms>`.
+The marketing environment sets `appOrigin` to `https://sycapooke.canadacentral.cloudapp.azure.com`.
+`provideAppOrigin` makes application links absolute, so Shop and search leave the marketing
+base path and load the full application. In the application build the origin is empty,
+so the same components use router links. See ADR platform/0016.
 
 ### Stack on a small VM (`L2-084`)
 
 | Service | Memory limit | Notes |
 |---------|-------------:|-------|
-| `edge` (Caddy, official image) | 64 MB | Ports 80/443, Let's Encrypt for every host in `SITE_ADDRESS`; routes by host; `edge/Caddyfile` mounted read-only |
+| `edge` (Caddy, official image) | 64 MB | Ports 80/443, Let's Encrypt for every host in `SITE_ADDRESS`; routes by path; `edge/Caddyfile` mounted read-only |
 | `marketing` (Caddy) | 64 MB | `sycapooke-marketing:${MARKETING_TAG}`; `/srv/marketing`; `Cache-Control: no-cache` for `index.html` and SPA routes |
 | `app` (Caddy) | 64 MB | `sycapooke-app:${APP_TAG}`; `/srv/app`; proxies `/api` and `/photos` to `api`; same `no-cache` rule; `depends_on: api` |
 | `api` | 512 MB | `sycapooke-api:${APP_TAG}`; TCP health check on 8080; photos on the `photos` volume |
@@ -153,7 +148,7 @@ writes only its own tag, restarts only its own services and has its own concurre
 the `-T migrator < /dev/null` line before `up -d` in the app workflow; the four smoke tests;
 the memory limits and log rotation of all six services; the per-tag images; the two build
 commands and output folders; the `no-cache` rule in both web Caddyfiles; and the edge's
-host routing, apex redirect and the absence of `reverse_proxy` in the marketing Caddyfile
+path routing, trailing-slash redirect and the absence of `reverse_proxy` in the marketing Caddyfile
 (`L2-084` to `L2-087`). `HealthEndpointTests` keeps covering `/api/health` without a database.
 
 ## Requirements
@@ -163,7 +158,7 @@ host routing, apex redirect and the absence of `reverse_proxy` in the marketing 
 | `L2-084` | `L1-018`, `L1-019` | Deploy every green push to `main` through both workflows; migrate before the application restart; health and page checks fail the run; small-VM limits for all six services; `no-cache` entry page. |
 | `L2-085` | `L1-013`, `L1-018` | Secrets only in the `production` environment and the VM `.env`; least permissions in each workflow. |
 | `L2-086` | `L1-018` | Roll back either unit by redeploying an older SHA or setting `MARKETING_TAG` or `APP_TAG`. |
-| `L2-087` | `L1-018`, `L1-019` | Separate marketing and application images, workflows and tags; the edge routes by host; `SITE_ADDRESS` covers apex, `www` and `app`; the marketing build links to the application origin. |
+| `L2-087` | `L1-018`, `L1-019` | Separate marketing and application images, workflows and tags; the edge routes by path; `SITE_ADDRESS` is the Azure DNS name; the marketing build links to the application origin. |
 
 Related requirements applied without restating them: `L2-052` (secrets), `L2-060`
 (stateless API), `L2-070` (health checks), `L2-071` (verify command).
@@ -188,7 +183,7 @@ Related requirements applied without restating them: `L2-052` (secrets), `L2-060
   `DEPLOY_HOST_KEY` secret would be stricter; deferred while the VM keeps its static IP.
 - `L2-066` asks for failover between API instances; one VM cannot give it. Accepted for a
   few users by ADR platform/0012.
-- Both workflows copy the same compose file and edge Caddyfile. The copies only differ
-  between two runs of the same commit, never in content, so no ordering is needed.
+- Both workflows share one VM and the edge. Remote mutations use a shared file lock.
+  Configuration copies for the same commit have identical content.
 - `actionlint` was not available where this was built; the workflows are checked by the
   static test, a YAML parse and by GitHub on push.

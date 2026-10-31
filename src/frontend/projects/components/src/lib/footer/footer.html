@@ -17,13 +17,37 @@
       '
       <ul>
         '
-        <li><a [routerLink]="origin ? null : '/jewelry'" [attr.href]="href('/jewelry')">Jewelry</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/jewelry')">Jewelry</a>
+          } @else {
+            <a [routerLink]="'/jewelry'">Jewelry</a>
+          }
+        </li>
         '
-        <li><a [routerLink]="origin ? null : '/clothing'" [attr.href]="href('/clothing')">Clothing</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/clothing')">Clothing</a>
+          } @else {
+            <a [routerLink]="'/clothing'">Clothing</a>
+          }
+        </li>
         '
-        <li><a [routerLink]="origin ? null : '/housewares'" [attr.href]="href('/housewares')">Housewares</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/housewares')">Housewares</a>
+          } @else {
+            <a [routerLink]="'/housewares'">Housewares</a>
+          }
+        </li>
         '
-        <li><a [routerLink]="origin ? null : '/electronics'" [attr.href]="href('/electronics')">Electronics</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/electronics')">Electronics</a>
+          } @else {
+            <a [routerLink]="'/electronics'">Electronics</a>
+          }
+        </li>
         '
       </ul>
       '
@@ -35,9 +59,21 @@
       '
       <ul>
         '
-        <li><a [routerLink]="origin ? null : '/sell'" [attr.href]="href('/sell')">Start selling</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/sell')">Start selling</a>
+          } @else {
+            <a [routerLink]="'/sell'">Start selling</a>
+          }
+        </li>
         '
-        <li><a [routerLink]="origin ? null : '/rules'" [attr.href]="href('/rules')">Marketplace rules</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/rules')">Marketplace rules</a>
+          } @else {
+            <a [routerLink]="'/rules'">Marketplace rules</a>
+          }
+        </li>
         '
       </ul>
       '
@@ -51,9 +87,21 @@
         '
         <li><a routerLink="/welcome">About Sycapooke</a></li>
         '
-        <li><a [routerLink]="origin ? null : '/privacy'" [attr.href]="href('/privacy')">Privacy</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/privacy')">Privacy</a>
+          } @else {
+            <a [routerLink]="'/privacy'">Privacy</a>
+          }
+        </li>
         '
-        <li><a [routerLink]="origin ? null : '/terms'" [attr.href]="href('/terms')">Terms</a></li>
+        <li>
+          @if (origin) {
+            <a [href]="href('/terms')">Terms</a>
+          } @else {
+            <a [routerLink]="'/terms'">Terms</a>
+          }
+        </li>
         '
         <li><button class="footer__link" type="button" (click)="cookieSettings.emit()">Cookie settings</button></li>
         '

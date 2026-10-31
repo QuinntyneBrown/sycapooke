@@ -37,6 +37,7 @@
 &lt;a class="nav-link" href="/clothing" aria-current="page"&gt;Clothing&lt;/a&gt;</code></pre><table class="ds-table"><thead><tr><th scope="col">Class / attribute</th><th scope="col">Effect</th></tr></thead><tbody><tr><td><code>a</code></td><td>Inline link, underlined.</td></tr><tr><td><code>.nav-link</code></td><td>Top bar and sidebar link.</td></tr><tr><td><code>aria-current="page"</code></td><td>Current page bar.</td></tr></tbody></table></section>
 <section class="ds-section" id="sources"><h2><a href="#sources">Sources</a></h2><p>Extracted from these mocks:</p><ul><li><a href="../../mocks/pages/catalog/guest.html">pages/catalog/guest</a> (nav and footer links)</li><li><a href="../../mocks/pages/rules/default.html">pages/rules/default</a> (inline links)</li></ul><p>Drift fixed during extraction: none; the mocks use the kit classes unchanged.</p></section>
 <footer class="ds-footer"><span>Heirloom · Sycapooke design system · aligned to the Magic Patterns landing page on 2026-10-30</span><a href="#top">Back to top</a></footer>
+<p>Application links in the marketing build use a plain anchor with an absolute href to the Azure application origin. Render router links only in the application branch; a disabled RouterLink clears href and must never share an anchor with an external href binding. This applies to the top bar, navigation sheet, footer and welcome calls to action (L2-087).</p>
 </main>
 </div>
 <script src="../assets/ds.js"></script>

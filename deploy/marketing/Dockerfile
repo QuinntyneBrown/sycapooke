@@ -6,7 +6,7 @@ WORKDIR /src
 COPY src/frontend/package.json src/frontend/package-lock.json ./
 RUN npm ci
 COPY src/frontend/ .
-RUN npm run build:marketing
+RUN npm run build:marketing -- --base-href /welcome/
 
 FROM caddy:2-alpine
 COPY deploy/marketing/Caddyfile /etc/caddy/Caddyfile

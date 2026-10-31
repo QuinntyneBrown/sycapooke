@@ -32,7 +32,7 @@ else verify passes
     compose -> ghcr : pull marketing:{sha}
     compose -> mkt : up -d --no-deps marketing edge; prune images older than 72h
     loop up to 20 times, 6 s apart
-      dm -> mkt : GET https://www.SITE_HOST/ contains "Sycapooke"?
+      dm -> mkt : GET https://SITE_HOST/welcome/ contains "Sycapooke"?
     end
     alt 200 with "Sycapooke"
       dm --> owner : green run; marketing live (no-cache index.html)
@@ -52,8 +52,8 @@ else verify passes
     else migrations applied
       compose -> stack : up -d --no-deps api worker app edge; prune images older than 72h
       loop up to 20 times, 6 s apart
-        da -> stack : GET https://app.SITE_HOST/api/health
-        da -> stack : then GET https://app.SITE_HOST/
+        da -> stack : GET https://SITE_HOST/api/health
+        da -> stack : then GET https://SITE_HOST/
       end
       alt 200
         da --> owner : green run; application live (no-cache index.html)

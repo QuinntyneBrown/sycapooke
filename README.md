@@ -180,7 +180,7 @@ Backend tests use in-memory substitutes and never connect to a real database. Pl
 
 ## Deployment
 
-Every push to `main` deploys `https://www.sycapooke.com` (the marketing site) and `https://app.sycapooke.com` (the full application) once CI's `npm run verify` passes, through two independent workflows on one small Azure Linux VM: *Deploy marketing* builds `sycapooke-marketing`, pushes it to GitHub Container Registry, restarts the `marketing` service and checks `https://www.sycapooke.com/`; *Deploy app* builds `sycapooke-api`, `sycapooke-worker`, `sycapooke-migrator` and `sycapooke-app`, migrates the database, restarts the application services and checks `/api/health` and `/` on the app host. An `edge` Caddy service terminates TLS and routes by host. Each workflow moves only its own image tag, so run either by hand with an older commit SHA to roll that site back on its own. See [docs/deployment.md](docs/deployment.md), ADR platform/0012 and ADR platform/0015.
+Every green push to `main` automatically publishes to Azure: [the main application](https://sycapooke.canadacentral.cloudapp.azure.com/) and [marketing](https://sycapooke.canadacentral.cloudapp.azure.com/welcome/). Two independent workflows build SHA-tagged images in GHCR and deploy them to the Azure VM after CI passes. The app deploy migrates first, then checks `/api/health` and `/`; marketing checks `/welcome/`. Caddy supplies HTTPS using Azure's DNS name, so no custom domain is required. Either site can roll back independently. See [deployment instructions](docs/deployment.md) and ADR platform/0016.
 
 ## API reference
 

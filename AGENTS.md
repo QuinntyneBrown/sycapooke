@@ -84,8 +84,8 @@ sycapooke/
 ├── .github/workflows/          ci.yml runs `npm run verify` on ubuntu-latest; deploy-marketing.yml and deploy-app.yml each deploy green pushes to main (ADR platform/0015)
 ├── deploy/                      production stack on one VM (ADR platform/0012, 0015)
 │   ├── edge/                    Caddyfile for the `edge` service (official Caddy image): TLS, apex → www, routes by host to marketing or app
-│   ├── marketing/               Dockerfile + Caddyfile of the `sycapooke-marketing` image (www.sycapooke.com)
-│   ├── app/                     Dockerfile + Caddyfile of the `sycapooke-app` image (app.sycapooke.com; proxies /api and /photos)
+│   ├── marketing/               Dockerfile + Caddyfile of the `sycapooke-marketing` image (/welcome/ on the Azure host)
+│   ├── app/                     Dockerfile + Caddyfile of the `sycapooke-app` image (/ on the Azure host; proxies /api and /photos)
 │   ├── backend.Dockerfile       api, worker and migrator from one restore
 │   ├── docker-compose.yml       edge, marketing, app, api, worker, migrator (MARKETING_TAG, APP_TAG)
 │   └── cloud-init.yaml          the VM's first-boot script

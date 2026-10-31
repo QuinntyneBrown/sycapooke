@@ -78,10 +78,10 @@ public sealed partial class DeploymentPipelineTests
     [Fact]
     public void A_failed_smoke_test_fails_the_run()
     {
-        Assert.Contains("curl -fsS \"https://app.${SITE_HOST}/api/health\" && exit 0", AppWorkflow);
+        Assert.Contains("curl -fsS \"https://${SITE_HOST}/api/health\" && exit 0", AppWorkflow);
         Assert.Contains("echo \"health check failed\" && exit 1", AppWorkflow);
-        Assert.Contains("curl -fsS -o /dev/null \"https://app.${SITE_HOST}/\" && exit 0", AppWorkflow);
-        Assert.Contains("curl -fsS \"https://www.${SITE_HOST}/\" | grep -q \"Sycapooke\" && exit 0", MarketingWorkflow);
+        Assert.Contains("curl -fsS -o /dev/null \"https://${SITE_HOST}/\" && exit 0", AppWorkflow);
+        Assert.Contains("grep -q '<base href=\"/welcome/\">' marketing.html && exit 0", MarketingWorkflow);
         Assert.Contains("echo \"marketing check failed\" && exit 1", MarketingWorkflow);
     }
 
@@ -110,10 +110,15 @@ public sealed partial class DeploymentPipelineTests
 
     [Theory]
     [MemberData(nameof(Workflows))]
-    public void Each_deploy_sets_every_site_host(string workflow)
+    public void Each_deploy_sets_the_Azure_site_host_and_serializes_shared_mutations(string workflow)
     {
-        Assert.Contains("printf 'SITE_ADDRESS=%s, www.%s, app.%s\\n'", workflow);
+        Assert.Contains("printf 'SITE_ADDRESS=%s\\n'", workflow);
         Assert.Contains("scp deploy/edge/Caddyfile", workflow);
+        Assert.Contains("exec 9>.deploy.lock", workflow);
+        Assert.Contains("flock -x 9", workflow);
+        Assert.Contains("export DOCKER_CONFIG=/tmp/sycapooke-registry-${{ github.run_id }}", workflow);
+        Assert.DoesNotContain("https://app.${SITE_HOST}", workflow);
+        Assert.DoesNotContain("https://www.${SITE_HOST}", workflow);
     }
 
     [Theory]
@@ -164,12 +169,12 @@ public sealed partial class DeploymentPipelineTests
     }
 
     [Fact]
-    public void The_edge_routes_by_host_and_only_the_application_proxies_the_api()
+    public void The_edge_serves_both_builds_on_the_Azure_host_and_only_the_application_proxies_the_api()
     {
-        Assert.Contains("@app host {$APP_HOST:app.sycapooke.com}", EdgeCaddyfile);
-        Assert.Matches(@"handle @app \{\s*\n\s+reverse_proxy app:80", EdgeCaddyfile);
-        Assert.Matches(@"handle \{\s*\n\s+reverse_proxy marketing:80", EdgeCaddyfile);
-        Assert.Contains("redir @apex https://{$MARKETING_HOST:www.sycapooke.com}{uri} permanent", EdgeCaddyfile);
+        Assert.Contains("redir /welcome /welcome/ permanent", EdgeCaddyfile);
+        Assert.Matches(@"handle_path /welcome/\* \{\s*\n\s+reverse_proxy marketing:80", EdgeCaddyfile);
+        Assert.Matches(@"handle \{\s*\n\s+reverse_proxy app:80", EdgeCaddyfile);
+        Assert.Contains("--base-href /welcome/", MarketingDockerfile);
         Assert.Matches(@"handle /api/\* \{\s*\n\s+reverse_proxy api:8080", AppCaddyfile);
         Assert.Matches(@"handle /photos/\* \{\s*\n\s+reverse_proxy api:8080", AppCaddyfile);
         Assert.DoesNotContain("reverse_proxy", MarketingCaddyfile);

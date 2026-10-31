@@ -24,9 +24,11 @@ export interface NavMenuLink {
         <ul class="menu-sheet__links" role="list">
           @for (item of links; track item.path) {
             <li>
-              <a [routerLink]="origin ? null : item.path" [attr.href]="href(item.path)" (click)="ref.close()">{{
-                item.label
-              }}</a>
+              @if (origin) {
+                <a [href]="href(item.path)" (click)="ref.close()">{{ item.label }}</a>
+              } @else {
+                <a [routerLink]="item.path" (click)="ref.close()">{{ item.label }}</a>
+              }
             </li>
           }
         </ul>
