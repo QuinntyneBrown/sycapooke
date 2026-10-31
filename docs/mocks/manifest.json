@@ -46,8 +46,7 @@
       "route": "/account/profile",
       "requirements": [
         "L2-004",
-        "L2-001",
-        "L2-041"
+        "L2-001"
       ],
       "states": [
         "default",
@@ -512,6 +511,7 @@
         "problem",
         "completed",
         "address-hidden",
+        "former-customer",
         "cancelled",
         "loading",
         "error"
@@ -708,7 +708,7 @@
       "id": "problem-detail",
       "kind": "page",
       "title": "Problem detail",
-      "route": "/shop/support/{id}",
+      "route": "/shop/problems/{reference}",
       "requirements": [
         "L2-036",
         "L2-030",
@@ -829,6 +829,7 @@
         "invalid",
         "busy",
         "google",
+        "google-expired",
         "blocked"
       ]
     },

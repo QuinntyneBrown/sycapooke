@@ -138,7 +138,7 @@ def problem_main(mode: str) -> str:
     return head("Not as described", "Order problem P-0912 · opened yesterday", crumb=("Support", P("support"))) + f'<div class="split">{body}{side}</div>'
 
 
-pr = screen("problem-detail", "page", "Problem detail", route="/shop/support/{id}", reqs=["L2-036", "L2-030", "L2-034"],
+pr = screen("problem-detail", "page", "Problem detail", route="/shop/problems/{reference}", reqs=["L2-036", "L2-030", "L2-034"],
             na={"empty": "A problem always has a customer claim and an order."})
 
 

@@ -483,6 +483,15 @@ def _():
     return sale_page("SY-47511", "Completed", body, eyebrow="Order SY-47511 · Fri 2 Oct")
 
 
+@sd.state("former-customer", "The customer closed her account and her data was erased: the sale stays, the name reads “Former customer”.")
+def _():
+    body = (timeline("Completed", {"Paid": "Fri 2 Oct", "Shipped": "Sat 3 Oct", "Delivered": "Tue 6 Oct", "Completed": "Wed 7 Oct"}) +
+            f'<div class="stack stack--sm"><h2 class="panel__title">Ship to</h2><p class="text-muted text-sm">{ic("eye-off", "icon icon--sm")} The address was erased with the closed account.</p></div>')
+    pg = sale_page("SY-47511", "Completed", body, eyebrow="Order SY-47511 · Fri 2 Oct")
+    pg.main = pg.main.replace(PEOPLE[ORDERS["SY-47511"]["buyer"]]["name"], "Former customer")
+    return pg
+
+
 @sd.state("cancelled", "Cancelled order: customer refunded, item stays off the catalog until relisted.")
 def _():
     body = (alert("info", "Cancelled · Customer refunded in full", "The item stays off the catalog until you relist it.") +

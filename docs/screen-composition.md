@@ -28,7 +28,7 @@ one founder is the sole seller, customers have private buyer accounts, and there
 commissions, payouts, fees or administrator role. So there is no admin shell, no payouts
 page and no payout banner; the founder's pages (shop, inventory, sales, support, story) use the
 app shell with a founder sub-navigation. The `sy-earnings` component is retired with seller
-payouts and no screen uses it; `sy-seller-summary` is the founder summary (avatar, name, "No
+payouts and no screen uses it; `sy-founder-summary` is the founder summary (avatar, name, "No
 reviews yet", completed sales). Entries marked **not yet built** are composed from existing
 catalogue components but their journey is not implemented.
 
@@ -253,7 +253,7 @@ shows one founder block and no seller choice.
 - Library: `sy-gallery` (main photo track, dots, thumbnails), `sy-size-tag` (lg), `sy-buy-bar`
   (default and guest: "Buy now" as `syButton="primary"` lg; own: "Edit listing" with icon
   `edit` and secondary lg "Withdraw" through `DialogService`; absent for Reserved and Sold), `sy-alert` (reserved: warning, icon `clock`, "In
-  someone’s checkout"), `sy-seller-summary` (the founder summary: avatar, name linking to the
+  someone’s checkout"), `sy-founder-summary` (the founder summary: avatar, name linking to the
   founder page, "Founder of Sycapooke · {n} completed sales", "No reviews yet" and the link "Read her
   story and see her collection"; zero-sales shows "0 completed sales" and no "New seller" label),
   `sy-listing-grid` (sold:
@@ -343,7 +343,7 @@ built by order-history. The account sub-navigation is the shell's customer tabs.
 - Local: the page header with the counts subtitle ("{n} on the way · {n} to confirm"), the `.order-list` rows linking to `/orders/{id}`
   with the price, and the three skeleton rows
 
-### Sale (founder) — `/shop/sales/{id}` (`pages/sale-detail`: default, shipped, cancel-requested, problem, completed, address-hidden, cancelled, loading, error)
+### Sale (founder) — `/shop/sales/{id}` (`pages/sale-detail`: default, shipped, cancel-requested, problem, completed, address-hidden, former-customer, cancelled, loading, error)
 
 Founder only; App shell, Sales tab. Built by ship-order in `@sycapooke/orders` (`src/lib/sale-detail/`)
 for default (Paid), shipped, cancelled, loading and error. cancel-order adds "Cancel order",
@@ -362,7 +362,7 @@ seller-payouts journey is retired).
   tax, Total; no visible heading), `sy-center-state` (error,
   with "Try again" and "Back to sales"), and for problem `sy-alert` (warning, icon `flag`,
   "Problem reported · {reason}" / "Completion is paused until you resolve it." with primary
-  "Resolve the problem" projected as `actions`, linking to `/shop/support/{id}`),
+  "Resolve the problem" projected as `actions`, linking to `/shop/problems/{reference}`),
   `sy-thread`, `sy-form-field` (textarea "Your reply", help "Visible to the customer.") and
   `sy-button` ("Send reply" with busy, "Try again" after a failure) until the founder has replied
 - Local: the breadcrumb, eyebrow and heading block, "Ship by {date}." lead, the "Ship to"
@@ -392,7 +392,7 @@ requests, newest first; the founder handles them herself (no separate administra
   `check-circle`, "No requests", "When a customer reports a problem or asks to cancel, it shows up
   here."; error tone "Couldn’t load support requests" with the reference)
 - Local: the page header with "{n} open", the `.cluster` filter group ("Filter support requests"),
-  the `.order-list` rows linking to `/shop/support/{id}` (problems) or `/shop/sales/{id}`
+  the `.order-list` rows linking to `/shop/problems/{reference}` (problems) or `/shop/sales/{id}`
   (cancellation requests) with the price, and the 4 skeleton rows
 
 ### Edit listing — `/items/{id}/edit` (`pages/edit-listing`: default, loading, error, invalid, submitting, success, locked, changed, sold, withdrawn)
@@ -508,7 +508,7 @@ new or reproduction goods ([ADR general/0005](adr/general/0005-marketing-wording
 - Library: not yet composed
 - Local: not yet composed
 
-### Problem detail — `/shop/support/{id}` (`pages/problem-detail`: default, replied, resolved, closed-no-refund, refund-pending, refund-failed, loading, error)
+### Problem detail — `/shop/problems/{reference}` (`pages/problem-detail`: default, replied, resolved, closed-no-refund, refund-pending, refund-failed, loading, error)
 
 Built by resolve-order-problems in `@sycapooke/orders` (`src/lib/problem-detail/`) as a founder page
 in the app shell (Support tab); there is no admin shell and no payout hold. The founder replies and
@@ -555,7 +555,7 @@ Renamed from Marketplace rules; the footer link reads "Shop policies". Static, g
 | Dialog (mock folder: states) | Overlay surface | Library components | Local UI |
 |---|---|---|---|
 | Change password (`dialogs/change-password`: default, invalid, busy, failed) | `DialogService` | not yet composed | not yet composed |
-| Close account (`dialogs/close-account`: default, invalid, busy, google, blocked) | `DialogService` | `sy-dialog` (icon `trash`, danger; description "Your data is erased within 30 days. This can’t be undone."), `sy-form-field` (password "Enter your password to confirm", with the error), `sy-alert` (warning "Finish your open orders first" for blocked), `sy-button` (Cancel, disabled while busy; danger "Close account" with busy, never the default focus; google: danger "Continue with Google" with icon `external`; blocked: primary "Close"), `sy-status` (blocked list) | Not yet built. The google state (a Google-only account has no password) replaces the password field with a line asking for a fresh Google sign-in; the blocked state lists the open orders as links with their status; customers only, the founder account cannot be closed here |
+| Close account (`dialogs/close-account`: default, invalid, busy, google, google-expired, blocked) | `DialogService` | `sy-dialog` (icon `trash`, danger; description "Your data is erased within 30 days. This can’t be undone."), `sy-form-field` (password "Enter your password to confirm", with the error), `sy-alert` (warning "Finish your open orders first" for blocked), `sy-button` (Cancel, disabled while busy; danger "Close account" with busy, never the default focus; google: danger "Continue with Google" with icon `external`; blocked: primary "Close"), `sy-status` (blocked list) | Not yet built. The google state (a Google-only account has no password) replaces the password field with a line asking for a fresh Google sign-in; the blocked state lists the open orders as links with their status; customers only, the founder account cannot be closed here |
 | Sign out everywhere (`dialogs/sign-out-everywhere`: default, busy, failed) | `DialogService` | not yet composed | not yet composed |
 | Verify email prompt (`dialogs/verify-email-prompt`: default, busy, sent, limited) | `DialogService` | `sy-dialog` (mail icon, description "Open the link we sent to {email} to buy."), `sy-alert` (sent success, limited warning) in the top slot, `sy-button` (Not now, Resend link with busy, Done) | `VerifyEmailPromptComponent` in `@sycapooke/listings`, opened from Buy now for an unverified customer (listing detail); it moves to a shared place when checkout also opens it |
 | Filters (`dialogs/filters`: default, invalid, busy) | `SheetService` | `sy-sheet` (`side`, heading "Filters", close "Close filters"), `sy-error-summary` (heading "Check the price range"), `sy-choice`, `sy-input-group`, `sy-button` (Clear; primary "Show {n} items" with `aria-busy`, disabled when invalid) | `FiltersSheet` and `FilterForm` in `@sycapooke/catalog` |

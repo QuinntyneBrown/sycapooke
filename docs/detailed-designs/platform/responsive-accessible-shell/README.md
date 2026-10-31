@@ -62,12 +62,12 @@ Per `AGENTS.md`, the application project holds `AppComponent`, the four shell co
   - Search form `role="search"` with visually hidden label "Search Sycapooke" and
     placeholder "Search brands and items"; full field from 992 px, an icon link
     "Search" below 992 px.
-  - Customer: private account and Purchases links. Founder: inventory, Sales and Support links from `AuthState.isFounder`. Guest: Sign in and shopping links. No public selling action is rendered.
+  - Guest: Sign in. Customer: the avatar menu only (private account, Purchases, Emails, Settings). Founder (`AuthState.isFounder`): Inventory, the "Sell an item" pill and the avatar menu, whose founder subnav adds Shop, Sales, Support and Story. No selling action is rendered for guests or customers.
 - **`AuthShellComponent`** — large logo above a centred card (`main#main`).
 - **`BareShellComponent`** — logo-only top bar, used for the maintenance and
   offline pages.
 - **`AccountSubnavComponent`** shows private account, Purchases, Emails and Settings for customers. Founder navigation adds Inventory, Sales and Support. The component remains horizontally scrollable below 576 px without page-level overflow.
-- **`FooterComponent`** — links "Shop rules", "Privacy", "Terms",
+- **`FooterComponent`** — links "Shop policies", "Privacy", "Terms",
   a "Cookie settings" button (emits `cookieSettings`; the shell opens the
   cookie-settings dialog of `@sycapooke/privacy`) and
   "© 2026 Sycapooke" (year from the clock).

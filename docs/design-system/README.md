@@ -2,11 +2,11 @@
 
 The look is taken from the Sycapooke landing page on [Magic Patterns](https://project-vintage-marketplace-landing-page-451.magicpatterns.app) (Oct 2026); the layout, component set and states come from [docs/mocks](../mocks/README.md). Open [index.html](index.html) locally; press `t` to toggle dark mode.
 
-Sycapooke is the marketplace made only for vintage: jewelry, clothing, housewares and electronics, every piece at
-least 20 years old and listed by a real person with a real story. "Treasures with a story." Heirloom is its look:
+Sycapooke is the shop of one older Caribbean woman, its founder and only seller: jewelry, clothing, housewares and electronics, every piece at
+least 20 years old, each with a story she tells herself (ADR general/0010). "Treasures with a story." Heirloom is its look:
 ink on paper, terracotta for action, flat terracotta, forest and ink bands, a mustard rule, Fraunces 600 headings
-over Source Sans 3, flat pill buttons that only change colour on hover, and 0.375rem / 1rem / 2rem corners. Sycapooke keeps the 12L marketplace layout and component
-set it inherited through its clone origin (ADR general/0009); only the domain words, the vintage rule and the look differ.
+over Source Sans 3, flat pill buttons that only change colour on hover, and 0.375rem / 1rem / 2rem corners. Sycapooke keeps the layout and component
+set it inherited through its clone origin (ADR general/0009); the founder-only shop, the vintage rule and the look are its own.
 
 ## Palette
 

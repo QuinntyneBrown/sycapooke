@@ -531,7 +531,7 @@ def _():
 # ---------------------------------------------------------------------------
 # Account details (L2-004 AC1): a customer's private display name only
 # ---------------------------------------------------------------------------
-ep = screen("edit-profile", "page", "Account details", route="/account/profile", reqs=["L2-004", "L2-001", "L2-041"],
+ep = screen("edit-profile", "page", "Account details", route="/account/profile", reqs=["L2-004", "L2-001"],
             na={"empty": "An account always has a display name."})
 
 
@@ -934,6 +934,16 @@ def _():
             'Choose Continue with Google and sign in again to finish closing it.</p>')
     foot = cancel() + btn("Continue with Google", "danger", icon="external")
     return Dialog(bg=("settings", "default"), html=dialog("Close your account?", body, foot, icon="trash", icon_kind="danger",
+                                                          desc="Your data is erased within 30 days. This can’t be undone."))
+
+
+@ca.state("google-expired", "The fresh Google sign-in proof expired or was already used: start again (L2-005 AC5).")
+def _():
+    body = ('<p>This account signs in with Google, so there is no password to confirm. '
+            'Choose Continue with Google and sign in again to finish closing it.</p>')
+    foot = cancel() + btn("Continue with Google", "danger", icon="external")
+    top = alert("danger", "That Google sign-in has expired", "Sign in with Google again to confirm. Each confirmation works once.")
+    return Dialog(bg=("settings", "default"), html=dialog("Close your account?", body, foot, icon="trash", icon_kind="danger", top=top,
                                                           desc="Your data is erased within 30 days. This can’t be undone."))
 
 

@@ -37,7 +37,7 @@ Screens and copy come from `docs/mocks/pages/listing-detail/` (states `default`,
   - `loaded` — breadcrumb "Shop / {category} / {subcategory}", `sy-gallery`, the info column, and for a Sold listing the section "More treasures" with up to 4 cards in `sy-listing-grid`.
   - `unavailable` — API returned 404: `sy-center-state` with code "404", heading "This item isn’t available", text "It may have been sold or taken down.", primary action "Shop similar items" to `/`.
   - `error` — any other failure: heading "Couldn’t load this item", text "It’s us, not you. Try again in a moment.", "Ref {correlationId}", actions "Try again" and "Back to shop".
-- **Info column** (local markup on the kit classes) — "Reserved" or "Sold" stamp; brand eyebrow; title as `<h1>`; `sy-size-tag` and condition; price "$85.00" and the line "{shipping} · {total} total before tax", where shipping reads "$9.00 shipping" or "Free shipping" when 0 (`L2-018`); the buy bar; for Reserved the warning `sy-alert` "In someone’s checkout" with "If they don’t finish within 10 minutes, it’s back on sale."; the flaws block "Flaws: {flaws}" for Used - Fair; the description; the facts "Size" ("Vintage"), "Category" ("Jewelry · Brooches and pins"), "Condition", "Listed" (relative time inside `<time datetime>`); and `sy-seller-summary`. All listing text is bound as text and never as HTML (`L2-015`).
+- **Info column** (local markup on the kit classes) — "Reserved" or "Sold" stamp; brand eyebrow; title as `<h1>`; `sy-size-tag` and condition; price "$85.00" and the line "{shipping} · {total} total before tax", where shipping reads "$9.00 shipping" or "Free shipping" when 0 (`L2-018`); the buy bar; for Reserved the warning `sy-alert` "In someone’s checkout" with "If they don’t finish within 10 minutes, it’s back on sale."; the flaws block "Flaws: {flaws}" for Used - Fair; the description; the facts "Size" ("Vintage"), "Category" ("Jewelry · Brooches and pins"), "Condition", "Listed" (relative time inside `<time datetime>`); and `sy-founder-summary`. All listing text is bound as text and never as HTML (`L2-015`).
 - **`ListingDetailStore`** — signal store: `listing`, `view`, `errorRef`, `similar`, and the computed `primaryAction: 'buy' | 'sign-in-to-buy' | 'manage' | 'none'`:
 
   | `status` | `viewer.relation` | `primaryAction` |
@@ -49,7 +49,7 @@ Screens and copy come from `docs/mocks/pages/listing-detail/` (states `default`,
 
   For a Sold listing it calls `CatalogApi.listings(1, category)` and keeps up to 4 cards other than the listing itself.
 - **`sy-gallery`** (`@sycapooke/components`) — a horizontal CSS scroll-snap track holding every photo (WebP and JPEG `srcset`, `sizes="(min-width: 992px) 50vw, 100vw"`, the first eager with `fetchpriority="high"`), dots below 992 px, and thumbnail buttons labelled "Show photo {i} of {n}" with `aria-current` on the selected one. Selecting a thumbnail scrolls the track to that photo (`L2-025` acceptance criterion 4); a swipe updates the selection from the scroll position (`L2-063`). Left and Right arrows move between thumbnails. Thumbnails are at least 44 × 44 px.
-- **`sy-seller-summary`** remains the existing reusable component. Its target input describes the founder alone, links to her story, shows completed sales and `No reviews yet`, and renders no sample stars or customer profile.
+- **`sy-founder-summary`** is the reusable component (renamed from `sy-seller-summary`). Its target input describes the founder alone, links to her story, shows completed sales and `No reviews yet`, and renders no sample stars or customer profile.
 - **`sy-buy-bar`** (`@sycapooke/components`) — the total with caption "incl. shipping" and the projected actions:
   - `buy` — primary "Buy now" linking to `/checkout/{reference}` (orders subsystem).
   - `sign-in-to-buy` — primary "Buy now" linking to `/sign-in?returnUrl=%2Fitems%2F{reference}`. The accounts sign-in page shows "Sign in to buy" with "You’ll go straight back to the item." and, after sign-in, navigates to the validated relative `returnUrl` (`L2-026` acceptance criterion 3).
@@ -128,7 +128,7 @@ Visitors and members view listings in Sycapooke and load the photos from the CDN
 
 ### Components
 
-`ListingDetailPage` in `@sycapooke/catalog` composes `sy-gallery`, `sy-seller-summary` and `sy-buy-bar` from `@sycapooke/components` with `ListingDetailStore`, which calls `CatalogApi` in `@sycapooke/api`. `GetListingDetailQueryHandler` applies `ListingDetailVisibility` and the viewer relation, reading through `ISycapookeDbContext`.
+`ListingDetailPage` in `@sycapooke/catalog` composes `sy-gallery`, `sy-founder-summary` and `sy-buy-bar` from `@sycapooke/components` with `ListingDetailStore`, which calls `CatalogApi` in `@sycapooke/api`. `GetListingDetailQueryHandler` applies `ListingDetailVisibility` and the viewer relation, reading through `ISycapookeDbContext`.
 
 ![C4 component view for viewing a listing's detail](diagrams/c4-component.png)
 
