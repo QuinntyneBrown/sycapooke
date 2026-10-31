@@ -6,6 +6,15 @@ namespace Sycapooke.Application.Notifications;
 
 public sealed record EmailVerificationEmail(string Link);
 
+/// <summary>The account was locked after repeated failed sign-ins (L2-007 AC4).</summary>
+public sealed record AccountLockedEmail(DateTime Until);
+
+/// <summary>The single-use reset link, valid for one hour (L2-009); the token appears only inside the link.</summary>
+public sealed record PasswordResetEmail(string Link);
+
+/// <summary>Confirms a password change or reset (L2-009 AC3).</summary>
+public sealed record PasswordChangedEmail();
+
 public sealed record SaleMadeEmail(Guid OrderId, string OrderReference, string ItemTitle, decimal Total, DateTime ShipBy);
 
 public sealed record OrderShippedEmail(Guid OrderId, string OrderReference, string ItemTitle, string Carrier, string TrackingNumber, string TrackingUrl);

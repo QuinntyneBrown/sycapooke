@@ -305,8 +305,17 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("EmailVerifiedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("FailedSignIns")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FailedSignInsSince")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsAdministrator")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("NormalizedDisplayName")
                         .IsRequired()

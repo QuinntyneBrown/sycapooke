@@ -2,8 +2,10 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Common;
+using Sycapooke.Application.Notifications;
 using Sycapooke.Application.Shop;
 using Sycapooke.Domain.Members;
+using Sycapooke.Domain.Notifications;
 
 namespace Sycapooke.Application.Accounts;
 
@@ -29,21 +31,41 @@ public static class SessionIssuer
 /// </summary>
 public sealed record SignInCommand(string? Email, string? Password) : IRequest<Result<SignedIn>>;
 
-public sealed class SignInCommandHandler(ISycapookeDbContext db, IPasswordHasher hasher, TimeProvider clock)
+public sealed class SignInCommandHandler(ISycapookeDbContext db, IPasswordHasher hasher, TimeProvider clock, IEmailOutbox notifications)
     : IRequestHandler<SignInCommand, Result<SignedIn>>
 {
     public static readonly Error Incorrect = new(401, "SIGN_IN_FAILED", "Email or password is incorrect");
+
+    public static readonly Error Locked = new(429, "SIGN_IN_LOCKED", "Too many sign-in attempts. Try again in 15 minutes");
 
     public async Task<Result<SignedIn>> Handle(SignInCommand command, CancellationToken cancellationToken)
     {
         var normalized = Member.Normalize(command.Email ?? string.Empty);
         var member = await db.Members.SingleOrDefaultAsync(m => m.NormalizedEmail == normalized, cancellationToken);
-        if (member is null || member.PasswordHash is null || !hasher.Verify(member.PasswordHash, command.Password ?? string.Empty))
+        var now = clock.GetUtcNow().UtcDateTime;
+        if (member is null)
         {
             return Incorrect;
         }
 
-        return await SessionIssuer.StartAsync(db, member.Id, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        if (member.IsLocked(now))
+        {
+            return Locked;
+        }
+
+        if (member.PasswordHash is null || !hasher.Verify(member.PasswordHash, command.Password ?? string.Empty))
+        {
+            if (member.RecordFailedSignIn(now))
+            {
+                notifications.Enqueue(NotificationType.AccountLocked, member.Id, new AccountLockedEmail(member.LockedUntil!.Value));
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            return Incorrect;
+        }
+
+        member.ClearSignInFailures();
+        return await SessionIssuer.StartAsync(db, member.Id, now, cancellationToken);
     }
 }
 
@@ -114,6 +136,29 @@ public sealed class SignOutCommandHandler(ISycapookeDbContext db, TimeProvider c
         }
 
         return Unit.Value;
+    }
+}
+
+/// <summary>Revokes every session of the caller on every device (L2-008 AC5).</summary>
+public sealed record SignOutEverywhereCommand(Guid MemberId) : IRequest<Unit>;
+
+public sealed class SignOutEverywhereCommandHandler(ISycapookeDbContext db, TimeProvider clock) : IRequestHandler<SignOutEverywhereCommand, Unit>
+{
+    public async Task<Unit> Handle(SignOutEverywhereCommand command, CancellationToken cancellationToken)
+    {
+        await SessionRevoker.RevokeAllAsync(db, command.MemberId, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        return Unit.Value;
+    }
+}
+
+/// <summary>Revokes all of a member's sessions; shared by sign-out-everywhere and password reset.</summary>
+public static class SessionRevoker
+{
+    public static async Task RevokeAllAsync(ISycapookeDbContext db, Guid memberId, DateTime now, CancellationToken cancellationToken)
+    {
+        var sessions = await db.Sessions.Where(s => s.MemberId == memberId && s.RevokedAt == null).ToListAsync(cancellationToken);
+        sessions.ForEach(s => s.Revoke(now));
+        await db.SaveChangesAsync(cancellationToken);
     }
 }
 

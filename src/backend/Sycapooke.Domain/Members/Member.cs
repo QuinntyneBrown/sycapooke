@@ -42,6 +42,48 @@ public sealed class Member
 
     public bool IsClosed => ClosedAt is not null;
 
+    /// <summary>Failed password sign-ins counted since <see cref="FailedSignInsSince"/> (L2-007).</summary>
+    public int FailedSignIns { get; private set; }
+
+    public DateTime? FailedSignInsSince { get; private set; }
+
+    /// <summary>While in the future, password sign-in is refused even with the right password (L2-007).</summary>
+    public DateTime? LockedUntil { get; private set; }
+
+    public static readonly TimeSpan LockoutWindow = TimeSpan.FromMinutes(15);
+
+    public const int MaxFailedSignIns = 5;
+
+    public bool IsLocked(DateTime now) => LockedUntil is { } until && until > now;
+
+    /// <summary>Counts a failed sign-in inside the 15-minute window; returns true when this one locks the account.</summary>
+    public bool RecordFailedSignIn(DateTime now)
+    {
+        if (FailedSignInsSince is not { } since || now - since > LockoutWindow)
+        {
+            FailedSignInsSince = now;
+            FailedSignIns = 0;
+        }
+
+        FailedSignIns++;
+        if (FailedSignIns < MaxFailedSignIns)
+        {
+            return false;
+        }
+
+        LockedUntil = now + LockoutWindow;
+        FailedSignIns = 0;
+        FailedSignInsSince = null;
+        return true;
+    }
+
+    public void ClearSignInFailures()
+    {
+        FailedSignIns = 0;
+        FailedSignInsSince = null;
+        LockedUntil = null;
+    }
+
     public static Member Register(string displayName, string email, string passwordHash, DateTime now) => new()
     {
         Id = Guid.NewGuid(),
@@ -70,6 +112,13 @@ public sealed class Member
     public void MarkEmailVerified(DateTime now)
     {
         EmailVerifiedAt ??= now;
+    }
+
+    /// <summary>Changes the private display name; the caller has validated the format and uniqueness.</summary>
+    public void Rename(string displayName)
+    {
+        DisplayName = displayName;
+        NormalizedDisplayName = Normalize(displayName);
     }
 
     public void GrantAdministrator()

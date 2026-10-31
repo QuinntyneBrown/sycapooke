@@ -34,6 +34,9 @@ public static class EmailTemplates
         NotificationType.ProblemResolved => typeof(ProblemResolvedEmail),
         NotificationType.Marketing => typeof(MarketingEmail),
         NotificationType.DraftExpiryReminder => typeof(DraftExpiryReminderEmail),
+        NotificationType.AccountLocked => typeof(AccountLockedEmail),
+        NotificationType.PasswordReset => typeof(PasswordResetEmail),
+        NotificationType.PasswordChanged => typeof(PasswordChangedEmail),
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "No template for this notification type."),
     };
 
@@ -87,12 +90,22 @@ public static class EmailTemplates
             DraftExpiryReminderEmail m => (
                 $"Your draft {m.Title} will be deleted on {Day(m.DeleteOn)}",
                 $"You have not edited your draft {m.Title} for a while. Drafts not edited for 90 days are deleted with their photos.\n\nEdit or publish it before {Day(m.DeleteOn)} to keep it:\n{root}/sell/{m.ListingReference}"),
+            AccountLockedEmail m => (
+                "Your Sycapooke account was temporarily locked",
+                $"There were too many failed sign-in attempts, so your account is locked until {m.Until.ToString("h:mm tt", CultureInfo.InvariantCulture)} UTC. If this was not you, choose a new one here:\n{root}/forgot-password"),
+            PasswordResetEmail m => (
+                "Reset your Sycapooke password",
+                $"Open this link to choose a new one:\n{m.Link}\n\nThe link works once and expires in 1 hour. If you did not ask for it, you can ignore this email."),
+            PasswordChangedEmail => (
+                "Your Sycapooke password was changed",
+                $"Your password was changed and every session was signed out. If this was not you, reset your password now:\n{root}/forgot-password"),
             _ => throw new InvalidOperationException($"No template for {type}."),
         };
 
         IReadOnlyList<string> identifiers = model switch
         {
             EmailVerificationEmail m => [m.Link],
+            PasswordResetEmail m => [m.Link],
             OrderShippedEmail m => [m.TrackingNumber, m.TrackingUrl],
             _ => [],
         };

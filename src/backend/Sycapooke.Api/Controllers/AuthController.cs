@@ -76,6 +76,15 @@ public sealed class AuthController(ISender sender, SessionCookies cookies, IGoog
     }
 
     [Authorize]
+    [HttpPost("sign-out-everywhere")]
+    public async Task<IActionResult> SignOutEverywhere(CancellationToken cancellationToken)
+    {
+        await sender.Send(new SignOutEverywhereCommand(User.MemberId()), cancellationToken);
+        SessionCookies.Clear(Response);
+        return NoContent();
+    }
+
+    [Authorize]
     [HttpGet("me")]
     public Task<IActionResult> Me(CancellationToken cancellationToken) => Me(User.MemberId(), cancellationToken);
 

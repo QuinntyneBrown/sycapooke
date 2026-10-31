@@ -12,14 +12,14 @@ namespace Sycapooke.Application.Accounts;
 /// </summary>
 public static partial class MemberRegistrationRules
 {
-    /// <summary>Adds a <c>displayName</c> error when the trimmed name breaks the format or is taken ignoring case.</summary>
-    public static async Task ValidateDisplayNameAsync(ISycapookeDbContext db, string displayName, Dictionary<string, FieldError> errors, CancellationToken cancellationToken)
+    /// <summary>Adds a <c>displayName</c> error when the trimmed name breaks the format or is taken ignoring case by anyone but <paramref name="excluding"/>.</summary>
+    public static async Task ValidateDisplayNameAsync(ISycapookeDbContext db, string displayName, Dictionary<string, FieldError> errors, CancellationToken cancellationToken, Guid? excluding = null)
     {
         if (!DisplayNamePattern().IsMatch(displayName))
         {
             errors["displayName"] = new("DISPLAY_NAME_FORMAT", "Use 3 to 30 letters, numbers, _ or -");
         }
-        else if (await db.Members.AnyAsync(m => m.NormalizedDisplayName == Member.Normalize(displayName), cancellationToken))
+        else if (await db.Members.AnyAsync(m => m.NormalizedDisplayName == Member.Normalize(displayName) && m.Id != excluding, cancellationToken))
         {
             errors["displayName"] = new("DISPLAY_NAME_TAKEN", "That display name is taken");
         }
