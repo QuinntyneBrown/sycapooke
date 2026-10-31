@@ -180,7 +180,7 @@ Backend tests use in-memory substitutes and never connect to a real database. Pl
 
 ## Deployment
 
-Every green push to `main` automatically publishes to Azure: [the main application](https://sycapooke.canadacentral.cloudapp.azure.com/) and [marketing](https://sycapooke.canadacentral.cloudapp.azure.com/welcome/). Two independent workflows build SHA-tagged images in GHCR and deploy them to the Azure VM after CI passes. The app deploy migrates first, then checks `/api/health` and `/`; marketing checks `/welcome/`. Caddy supplies HTTPS using Azure's DNS name, so no custom domain is required. Either site can roll back independently. See [deployment instructions](docs/deployment.md) and ADR platform/0016.
+Every green push to `main` automatically publishes to Azure: [the main application](https://sycapooke.canadacentral.cloudapp.azure.com/) and [marketing](https://sycapooke.canadacentral.cloudapp.azure.com/welcome/). Two independent workflows build SHA-tagged images in GHCR and deploy them to the Azure VM after CI passes. The app deploy migrates first, then checks `/api/health` and `/`; marketing checks `/welcome/`. Caddy supplies HTTPS using Azure's DNS name, and [sycapooke.com](https://sycapooke.com/) shows the marketing site (ADR platform/0017). Either site can roll back independently. See [deployment instructions](docs/deployment.md) and ADR platform/0016.
 
 ## API reference
 

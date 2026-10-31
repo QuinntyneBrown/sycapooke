@@ -181,6 +181,19 @@ public sealed partial class DeploymentPipelineTests
         Assert.Contains("./edge/Caddyfile:/etc/caddy/Caddyfile:ro", Service("edge"));
     }
 
+    [Fact]
+    public void The_registered_domain_shows_the_marketing_site_and_hands_other_paths_to_the_azure_host()
+    {
+        // ADR platform/0017: sycapooke.com lands on the marketing page; www redirects to the apex.
+        Assert.Matches(@"www\.sycapooke\.com \{\s*\n\s+redir https://sycapooke\.com\{uri\} permanent", EdgeCaddyfile);
+
+        var domain = EdgeCaddyfile[EdgeCaddyfile.IndexOf("\nsycapooke.com {", StringComparison.Ordinal)..];
+        Assert.Contains("redir / /welcome/", domain);
+        Assert.Matches(@"handle_path /welcome/\* \{\s*\n\s+reverse_proxy marketing:80", domain);
+        Assert.Matches(@"handle \{\s*\n\s+redir https://\{\$SITE_ADDRESS:localhost\}\{uri\}", domain);
+        Assert.DoesNotContain("reverse_proxy app:80", domain);
+    }
+
     private static string Job(string workflow, string name)
     {
         var start = workflow.IndexOf($"\n  {name}:\n", StringComparison.Ordinal);

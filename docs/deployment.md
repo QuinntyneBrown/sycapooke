@@ -5,9 +5,13 @@ Every green push to `main` publishes both sites to the existing Azure VM automat
 - Main application: https://sycapooke.canadacentral.cloudapp.azure.com/
 - Marketing: https://sycapooke.canadacentral.cloudapp.azure.com/welcome/
 - API health: https://sycapooke.canadacentral.cloudapp.azure.com/api/health
+- Domain: https://sycapooke.com/ shows the marketing site (`www` redirects to the apex)
 
-The public IP has Azure DNS label `sycapooke`, maintained by Azure. No custom domain,
-registrar or manual DNS update is required. See [ADR platform/0016](adr/platform/0016-publish-with-azure-dns.md).
+The public IP has Azure DNS label `sycapooke`, maintained by Azure. See
+[ADR platform/0016](adr/platform/0016-publish-with-azure-dns.md). The registered domain
+`sycapooke.com` (Namecheap) also points at the VM and shows the marketing site; any other path
+on it redirects to the application on the Azure name. See
+[ADR platform/0017](adr/platform/0017-sycapooke-com-shows-the-marketing-site.md).
 
 ## Pipeline
 
@@ -38,7 +42,7 @@ One Ubuntu VM runs `deploy/docker-compose.yml` with Docker and a 2 GB swap file:
 
 | Service | Memory | Purpose |
 | --- | ---: | --- |
-| edge | 64 MB | Official Caddy image, public ports 80/443, managed HTTPS; strips `/welcome/` to marketing, other paths to app |
+| edge | 64 MB | Official Caddy image, public ports 80/443, managed HTTPS; strips `/welcome/` to marketing, other paths to app; `sycapooke.com` serves marketing |
 | marketing | 64 MB | Separate Angular marketing image; static files only |
 | app | 64 MB | Full Angular image; proxies `/api` and `/photos` to API |
 | api | 512 MB | ASP.NET Core API; photos on Docker volume |
@@ -58,6 +62,7 @@ a few seconds of unavailability.
 | VM | `sycapooke-vm`, Ubuntu 24.04, Standard_B1s, 30 GB Standard SSD |
 | Static public IP | `sycapooke-vmPublicIP`, `20.63.41.137` |
 | Azure DNS | `sycapooke.canadacentral.cloudapp.azure.com` |
+| Domain (Namecheap) | `sycapooke.com`: `A @ → 20.63.41.137`, `CNAME www → sycapooke.com.` |
 | NSG | `sycapooke-vmNSG`, inbound 22, 80, 443 |
 | SQL server | `sycapooke-sql-8b1047.database.windows.net` |
 | Database | `Sycapooke`, Basic; firewall rule `vm` permits `20.63.41.137` |
@@ -89,7 +94,8 @@ docker compose exec -T edge caddy reload --config /etc/caddy/Caddyfile --adapter
 ## Recreate the Azure host
 
 1. Create the VM with `deploy/cloud-init.yaml`, static public IP and NSG ports 22/80/443.
-2. Set the public IP DNS label to `sycapooke` (or update all origin settings if unavailable).
+2. Set the public IP DNS label to `sycapooke` (or update all origin settings if unavailable),
+   and point the Namecheap `@` A record for `sycapooke.com` at the new static IP.
 3. Create Azure SQL Basic and allow only the VM IP in its firewall.
 4. Provision `/opt/sycapooke/.env` and the SSH public key for `azureuser`.
 5. Set the three GitHub production environment secrets listed above.
