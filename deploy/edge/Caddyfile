@@ -24,3 +24,9 @@ sycapooke.com, www.sycapooke.com {
 		reverse_proxy marketing:8080
 	}
 }
+
+# The application on its own host (ADR platform/0017); the app image proxies /api and /photos to the API.
+app.sycapooke.com {
+	encode zstd gzip
+	reverse_proxy app:80
+}

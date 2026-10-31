@@ -23,10 +23,14 @@ deployed.
   port 80, for the Azure host) and `/srv/marketing-root` (the same files with base href `/`,
   port 8080). The edge sends both domain hosts to `marketing:8080`. Caddy obtains both
   certificates from Let's Encrypt on its own.
-- **Nothing else moves.** The marketing build keeps base href `/welcome/` and its absolute links
-  to the application origin on the Azure name; `SITE_HOST`, `App__BaseUrl`, the Google OAuth
-  client, both workflows and their smoke tests are unchanged. ADR platform/0016 still governs the
-  application and the Azure name.
+- **The application on `app.sycapooke.com`.** `CNAME app → sycapooke.com.` at Namecheap and an
+  `app.sycapooke.com` site in the edge that proxies to `app:80`. The marketing build's
+  `appOrigin` is `https://app.sycapooke.com`, so its links open the application there; share tags
+  and the canonical URL use `https://www.sycapooke.com/`. `App__BaseUrl` in
+  `/opt/sycapooke/.env` should be `https://app.sycapooke.com` so emails link there.
+- **The Azure name keeps working.** `SITE_HOST` and both smoke tests stay on the Azure name, so a
+  deploy never waits on a new certificate. If Google sign-in is turned on, the OAuth client needs
+  `https://app.sycapooke.com` as an origin and `/api/auth/google/callback` on it as a redirect URI.
 
 ## Options Considered
 

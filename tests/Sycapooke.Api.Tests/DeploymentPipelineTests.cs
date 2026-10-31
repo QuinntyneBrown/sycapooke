@@ -194,6 +194,13 @@ public sealed partial class DeploymentPipelineTests
         Assert.Contains("/srv/marketing-root", MarketingDockerfile);
     }
 
+    [Fact]
+    public void The_application_has_its_own_host()
+    {
+        // ADR platform/0017: app.sycapooke.com serves the full application; the app image proxies the API.
+        Assert.Matches(@"app\.sycapooke\.com \{\s*\n\s+encode zstd gzip\s*\n\s+reverse_proxy app:80", EdgeCaddyfile);
+    }
+
     private static string Job(string workflow, string name)
     {
         var start = workflow.IndexOf($"\n  {name}:\n", StringComparison.Ordinal);

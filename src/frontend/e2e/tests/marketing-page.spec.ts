@@ -84,11 +84,11 @@ test.describe('marketing page', () => {
       html.match(new RegExp(`<meta\\s+(?:property|name)="${key}"\\s+content="([^"]*)"`))?.[1];
     expect(meta('og:title')).toBe('Sycapooke · Treasures with a story');
     expect(meta('og:type')).toBe('website');
-    expect(meta('og:image')).toBe('https://sycapooke.canadacentral.cloudapp.azure.com/media/sycapooke-share.jpg');
+    expect(meta('og:image')).toBe('https://www.sycapooke.com/media/sycapooke-share.jpg');
     expect(meta('og:image:width')).toBe('1200');
     expect(meta('og:image:height')).toBe('630');
     expect(meta('twitter:card')).toBe('summary_large_image');
-    expect(meta('twitter:image')).toBe('https://sycapooke.canadacentral.cloudapp.azure.com/media/sycapooke-share.jpg');
+    expect(meta('twitter:image')).toBe('https://www.sycapooke.com/media/sycapooke-share.jpg');
     expect(meta('og:description')).toMatch(/made only for vintage/);
     const image = await page.request.get('/media/sycapooke-share.jpg');
     expect(image.status()).toBe(200);

@@ -6,6 +6,7 @@ Every green push to `main` publishes both sites to the existing Azure VM automat
 - Marketing: https://sycapooke.canadacentral.cloudapp.azure.com/welcome/
 - API health: https://sycapooke.canadacentral.cloudapp.azure.com/api/health
 - Marketing on the domain: https://www.sycapooke.com/ and https://sycapooke.com/
+- Application on the domain: https://app.sycapooke.com/
 
 The public IP has Azure DNS label `sycapooke`, maintained by Azure. See
 [ADR platform/0016](adr/platform/0016-publish-with-azure-dns.md). The registered domain
@@ -62,7 +63,7 @@ a few seconds of unavailability.
 | VM | `sycapooke-vm`, Ubuntu 24.04, Standard_B1s, 30 GB Standard SSD |
 | Static public IP | `sycapooke-vmPublicIP`, `20.63.41.137` |
 | Azure DNS | `sycapooke.canadacentral.cloudapp.azure.com` |
-| Domain (Namecheap) | `sycapooke.com`: `A @ → 20.63.41.137`, `CNAME www → sycapooke.com.` |
+| Domain (Namecheap) | `sycapooke.com`: `A @ → 20.63.41.137`, `CNAME www → sycapooke.com.`, `CNAME app → sycapooke.com.` |
 | NSG | `sycapooke-vmNSG`, inbound 22, 80, 443 |
 | SQL server | `sycapooke-sql-8b1047.database.windows.net` |
 | Database | `Sycapooke`, Basic; firewall rule `vm` permits `20.63.41.137` |
@@ -70,7 +71,7 @@ a few seconds of unavailability.
 GitHub's `production` environment contains `DEPLOY_HOST` (VM IP), `DEPLOY_SSH_KEY` and
 `SITE_HOST` (`sycapooke.canadacentral.cloudapp.azure.com`). Application secrets stay only in
 `/opt/sycapooke/.env`. Use `deploy/.env.example` as the template. `App__BaseUrl` must be
-`https://sycapooke.canadacentral.cloudapp.azure.com`. `MARKETING_TAG` and `APP_TAG` are
+`https://app.sycapooke.com`. `MARKETING_TAG` and `APP_TAG` are
 managed independently by their workflows. The deploy private key is locally available at
 `~/.ssh/sycapooke_deploy`. Never commit the private key or `.env`.
 
