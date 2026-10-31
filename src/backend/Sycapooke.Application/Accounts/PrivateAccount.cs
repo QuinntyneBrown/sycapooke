@@ -6,7 +6,7 @@ using Sycapooke.Application.Common;
 namespace Sycapooke.Application.Accounts;
 
 /// <summary>The signed-in member's own private account: nothing public, nothing about anyone else (L2-004).</summary>
-public sealed record PrivateAccountDto(string DisplayName, string Email, bool EmailVerified);
+public sealed record PrivateAccountDto(string DisplayName, string Email, bool EmailVerified, DateOnly MemberSince);
 
 public sealed record GetPrivateAccountQuery(Guid MemberId) : IRequest<Result<PrivateAccountDto>>;
 
@@ -16,7 +16,7 @@ public sealed class GetPrivateAccountQueryHandler(ISycapookeDbContext db) : IReq
     {
         var account = await db.Members.AsNoTracking()
             .Where(m => m.Id == query.MemberId && m.ClosedAt == null)
-            .Select(m => new PrivateAccountDto(m.DisplayName, m.Email, m.EmailVerifiedAt != null))
+            .Select(m => new PrivateAccountDto(m.DisplayName, m.Email, m.EmailVerifiedAt != null, DateOnly.FromDateTime(m.CreatedAt)))
             .SingleOrDefaultAsync(cancellationToken);
         return account is null ? new Error(401, "SESSION_EXPIRED", "Sign in again") : account;
     }
@@ -45,6 +45,6 @@ public sealed class UpdatePrivateAccountHandler(ISycapookeDbContext db) : IReque
 
         member.Rename(name);
         await db.SaveChangesAsync(cancellationToken);
-        return new PrivateAccountDto(member.DisplayName, member.Email, member.IsEmailVerified);
+        return new PrivateAccountDto(member.DisplayName, member.Email, member.IsEmailVerified, DateOnly.FromDateTime(member.CreatedAt));
     }
 }

@@ -1,0 +1,30 @@
+<div class="page-header">
+  <div><h1>Settings</h1></div>
+</div>
+@if (passwordChanged()) {
+  <div class="page--form">
+    <sy-alert tone="success" heading="Password changed" live="polite">Other devices have been signed out.</sy-alert>
+  </div>
+}
+<ul class="settings-list page--form">
+  <li>
+    <div class="settings-list__body">
+      <span class="settings-list__title">Email</span>
+      <span class="settings-list__meta">{{ auth.member()?.email }}</span>
+    </div>
+  </li>
+  <li>
+    <div class="settings-list__body">
+      <span class="settings-list__title">Password</span>
+      <span class="settings-list__meta">At least 12 characters</span>
+    </div>
+    <button syButton type="button" (click)="changePassword()">Change</button>
+  </li>
+  <li>
+    <div class="settings-list__body">
+      <span class="settings-list__title">Sessions</span>
+      <span class="settings-list__meta">Signs out every device, this one included</span>
+    </div>
+    <button syButton type="button" (click)="signOutEverywhere()">Sign out everywhere</button>
+  </li>
+</ul>

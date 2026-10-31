@@ -8,7 +8,7 @@ import { ButtonDirective, CenterStateComponent } from '@sycapooke/components';
   imports: [RouterLink, ButtonDirective, CenterStateComponent],
   template: `
     <sy-center-state code="403" heading="You can’t open this">
-      <p class="text-muted">{{ reason() }}</p>
+      <p class="text-muted">{{ message() }}</p>
       <a actions syButton="primary" routerLink="/account">Go to your account</a>
     </sy-center-state>
   `,
@@ -16,10 +16,10 @@ import { ButtonDirective, CenterStateComponent } from '@sycapooke/components';
 })
 export class ForbiddenPage {
   /** `management` when a signed-in customer opened a founder-only route. */
-  readonly reason = computed(() =>
-    this.kind() === 'management'
+  readonly reason = input<string>('');
+  readonly message = computed(() =>
+    this.reason() === 'management'
       ? 'Shop management is only for the shop’s founder.'
       : 'It belongs to another customer’s account.',
   );
-  readonly kind = input<string>('', { alias: 'reason' });
 }

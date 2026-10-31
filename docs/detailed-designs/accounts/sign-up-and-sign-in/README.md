@@ -32,7 +32,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and covered: persisted lockout (5 failures in 15 minutes), password reset by emailed one-hour link, the locked, welcome-back and forgot-password screens (`SignInLockoutTests`, `PasswordResetTests`, `password-recovery.spec.ts`). Remaining: the per-IP throttle with `Retry-After` (Phase 5) and the leftover "Start selling" calls to action on the footer and welcome page.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

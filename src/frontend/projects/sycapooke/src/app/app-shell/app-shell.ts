@@ -1,14 +1,36 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRouteSnapshot, NavigationEnd, ResolveEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AuthState } from '@sycapooke/api';
-import { FooterComponent, LogoComponent, TopBarComponent } from '@sycapooke/components';
+import { FooterComponent, LogoComponent, SubnavComponent, SubnavItem, TopBarComponent } from '@sycapooke/components';
 import { PayoutBannerComponent } from '@sycapooke/orders';
 import { CookieSettingsDialogService } from '@sycapooke/privacy';
 
 /** Shell named by the deepest route's data.shell: 'app' (default), 'auth' or 'admin'. */
 type Shell = 'app' | 'auth' | 'admin' | 'marketing';
+
+/** The customer's account tabs (mocks pages/account). */
+const CUSTOMER_TABS: readonly SubnavItem[] = [
+  { label: 'Overview', path: '/account' },
+  { label: 'Purchases', path: '/account/purchases' },
+  { label: 'Emails', path: '/account/emails' },
+  { label: 'Settings', path: '/account/settings' },
+];
+
+/** The founder's shop-management tabs; each joins when its page is built. */
+const FOUNDER_TABS: readonly SubnavItem[] = [
+  { label: 'Inventory', path: '/account/listings' },
+  { label: 'Emails', path: '/account/emails' },
+  { label: 'Settings', path: '/account/settings' },
+];
+
+/** True when the deepest route says it belongs to the account and shop-management area. */
+function inAccountArea(route: ActivatedRouteSnapshot): boolean {
+  let deepest = route;
+  while (deepest.firstChild) deepest = deepest.firstChild;
+  return deepest.data['area'] === 'account';
+}
 
 function shellOf(route: ActivatedRouteSnapshot): Shell {
   let deepest = route;
@@ -25,7 +47,7 @@ function shellOf(route: ActivatedRouteSnapshot): Shell {
  */
 @Component({
   selector: 'sy-app-shell',
-  imports: [RouterOutlet, TopBarComponent, FooterComponent, LogoComponent, PayoutBannerComponent],
+  imports: [RouterOutlet, TopBarComponent, FooterComponent, LogoComponent, PayoutBannerComponent, SubnavComponent],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +64,19 @@ export class AppShellComponent {
     ),
     { initialValue: 'app' as Shell },
   );
+
+  /** True on pages of the account area, which show the subnav under the top bar. */
+  readonly accountArea = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof ResolveEnd),
+      map((event) => inAccountArea(event.state.root)),
+    ),
+    { initialValue: false },
+  );
+
+  /** The founder sees shop management; a customer sees the account tabs. */
+  readonly tabs = computed(() => (this.auth.isFounder() ? FOUNDER_TABS : CUSTOMER_TABS));
+  readonly tabsLabel = computed(() => (this.auth.isFounder() ? 'Shop management' : 'Account'));
 
   /** The keyword of the catalog URL, so the top-bar box keeps it. */
   readonly query = toSignal(

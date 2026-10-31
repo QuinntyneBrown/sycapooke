@@ -28,7 +28,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and covered: the `ShopIdentity` singleton, `Shop:FounderMemberId` validation, `IFounderAccess`, `--provision-founder`, server-derived `isFounder`, founder-only navigation, `signedInGuard`/`founderGuard`, the `/403` page (`FounderAccessTests`, `ProvisionFounderTests`, `founder-navigation.spec.ts`, `manage-private-account.spec.ts`). Remaining: the `CanSell` and `Administrator` policy change and founder checks in the listing and order handlers (Phases 2 and 3).
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

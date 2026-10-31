@@ -1,10 +1,7 @@
 import { Routes } from '@angular/router';
+import { signedInGuard } from '@sycapooke/api';
 
-/**
- * Lazy routes of the accounts feature area, mounted at the root because /join, /join/google,
- * /verify and /sign-in are top-level paths. They and the public /emails/unsubscribe render in the auth shell;
- * the Emails settings page at /account/emails renders in the app shell.
- */
+/** The catch-all page for any unknown address. */
 export const notFoundRoutes: Routes = [
   {
     path: '**',
@@ -13,6 +10,11 @@ export const notFoundRoutes: Routes = [
   },
 ];
 
+/**
+ * Lazy routes of the accounts feature area, mounted at the root because /join, /join/google,
+ * /verify and /sign-in are top-level paths. They and the public /emails/unsubscribe render in the auth shell;
+ * the Emails settings page at /account/emails renders in the app shell.
+ */
 export const routes: Routes = [
   {
     path: 'join',
@@ -66,5 +68,28 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./notification-settings/notification-settings-page').then((m) => m.NotificationSettingsPage),
     title: 'Emails · Sycapooke',
+    canActivate: [signedInGuard],
+    data: { area: 'account' },
+  },
+  {
+    path: 'account',
+    loadComponent: () => import('./account/account-page').then((m) => m.AccountPage),
+    title: 'Your account · Sycapooke',
+    canActivate: [signedInGuard],
+    data: { area: 'account' },
+  },
+  {
+    path: 'account/profile',
+    loadComponent: () => import('./account/profile-page').then((m) => m.ProfilePage),
+    title: 'Account details · Sycapooke',
+    canActivate: [signedInGuard],
+    data: { area: 'account' },
+  },
+  {
+    path: 'account/settings',
+    loadComponent: () => import('./settings/settings-page').then((m) => m.SettingsPage),
+    title: 'Settings · Sycapooke',
+    canActivate: [signedInGuard],
+    data: { area: 'account' },
   },
 ];

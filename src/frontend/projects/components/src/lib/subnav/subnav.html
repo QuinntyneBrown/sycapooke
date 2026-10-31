@@ -1,0 +1,12 @@
+<nav class="subnav" [attr.aria-label]="label()">
+  @for (item of items(); track item.path) {
+    <a
+      class="tab"
+      [routerLink]="item.path"
+      routerLinkActive
+      ariaCurrentWhenActive="page"
+      [routerLinkActiveOptions]="{ exact: true }"
+      >{{ item.label }}</a
+    >
+  }
+</nav>

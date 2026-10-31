@@ -1,0 +1,14 @@
+<sy-dialog heading="Sign out everywhere?" icon="info">
+  <span description>Every device, including this one, will need to sign in again.</span>
+  @if (state() === 'failed') {
+    <sy-alert top tone="danger" heading="Couldn’t sign you out"
+      >Try again. <span class="ref">{{ failure() }}</span></sy-alert
+    >
+  }
+  <ng-container ngProjectAs="[footer]">
+    <button syButton type="button" [disabled]="state() === 'busy'" (click)="ref.close()">Cancel</button>
+    <button syButton="primary" type="button" data-autofocus [busy]="state() === 'busy'" (click)="submit()">
+      {{ state() === 'failed' ? 'Try again' : 'Sign out everywhere' }}
+    </button>
+  </ng-container>
+</sy-dialog>

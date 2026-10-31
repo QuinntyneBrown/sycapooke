@@ -64,6 +64,7 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 |---|---|---|---|
 | [Skip link](components/skip-link.html) | one | hidden, focused | every page |
 | [Top bar](components/top-bar.html) | guest (Sign in pill), customer (avatar only), founder (Inventory link, Sell an item pill, avatar), bare | default, hover, current | catalog/guest, catalog/default, shop/default, maintenance |
+| [Subnav](components/subnav.html) | customer (Account tabs), founder (Shop management tabs) | default, current, hover, focus | account/default, shop/default |
 | [Footer](components/footer.html) | one (ink; brand column and two link columns: Shop, Sycapooke with Shop policies) | default, hover | catalog |
 | [Consent banner](components/consent-banner.html) | one | shown until a choice, then gone | notifications/cookie-consent/info |
 | [Toast](components/toast.html) | info, success, warning, danger; optional action; `ToastService` | entering, leaving, paused | notifications/toast |

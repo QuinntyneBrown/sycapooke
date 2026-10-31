@@ -28,6 +28,8 @@ export interface PrivateAccount {
   displayName: string;
   email: string;
   emailVerified: boolean;
+  /** The day the account was created, as yyyy-MM-dd. */
+  memberSince: string;
 }
 
 /** Typed client for registration, email verification and the Google join steps (L2-001, L2-002, L2-088). */

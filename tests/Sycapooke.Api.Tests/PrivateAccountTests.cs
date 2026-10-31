@@ -30,7 +30,8 @@ public sealed class PrivateAccountTests : IDisposable
         Assert.Equal("marcus_12", account.GetProperty("displayName").GetString());
         Assert.Equal("marcus.bell@example.com", account.GetProperty("email").GetString());
         Assert.True(account.GetProperty("emailVerified").GetBoolean());
-        Assert.Equal(3, account.EnumerateObject().Count());
+        Assert.Equal(DateOnly.FromDateTime(_factory.Clock.GetUtcNow().UtcDateTime).ToString("yyyy-MM-dd"), account.GetProperty("memberSince").GetString());
+        Assert.Equal(4, account.EnumerateObject().Count());
     }
 
     [Fact]

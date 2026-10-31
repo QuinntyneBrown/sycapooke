@@ -26,7 +26,7 @@ export const routes: Routes = [
     path: 'account/purchases',
     loadComponent: () => import('./order-history/order-history-page').then((m) => m.OrderHistoryPage),
     title: 'Purchases · Sycapooke',
-    data: { list: 'purchases' },
+    data: { list: 'purchases', area: 'account' },
   },
   {
     path: 'account/sales',

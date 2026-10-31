@@ -26,7 +26,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and covered: `GET`/`PATCH /api/account`, change password, sign-out-everywhere, and the account, details and settings pages with both dialogs (`PrivateAccountTests`, `ChangePasswordTests`, `SignOutEverywhereTests`, `manage-private-account.spec.ts`). Remaining: the purchase counts on the overview and the Cookies and Close account rows.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

@@ -1,0 +1,44 @@
+<div class="page-header">
+  <div><h1>Account details</h1></div>
+</div>
+@switch (view()) {
+  @case ('loading') {
+    <div class="page--form" aria-busy="true"><span class="skeleton skeleton--text"></span></div>
+  }
+  @case ('error') {
+    <sy-empty-state icon="refresh" heading="Couldn’t save or load your details" tone="error">
+      Something went wrong on our side. <span class="ref">{{ failure() }}</span>
+      <button actions syButton="primary" type="button" (click)="load()"><sy-icon name="refresh" />Try again</button>
+    </sy-empty-state>
+  }
+  @default {
+    <div class="page--form">
+      @if (view() === 'saved') {
+        <sy-alert tone="success" heading="Details saved" live="polite" />
+      }
+      <form class="stack stack--lg" novalidate [formGroup]="form" (ngSubmit)="save()">
+        <sy-form-field
+          fieldId="display-name"
+          label="Display name"
+          help="3–30 letters, numbers, _ or -. Private: only you see it. It is never shown on a public page."
+          [error]="nameError()"
+        >
+          <input
+            class="input"
+            id="display-name"
+            type="text"
+            autocomplete="username"
+            formControlName="displayName"
+            [attr.aria-invalid]="nameError() ? 'true' : null"
+          />
+        </sy-form-field>
+        <sy-form-field fieldId="email" label="Email" help="Change your sign-in details under Settings.">
+          <input class="input" id="email" type="email" formControlName="email" readonly />
+        </sy-form-field>
+        <div class="form-actions" style="justify-content: flex-start">
+          <button syButton="primary" type="submit" [busy]="view() === 'saving'">Save details</button>
+        </div>
+      </form>
+    </div>
+  }
+}

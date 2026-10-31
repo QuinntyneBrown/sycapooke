@@ -13,6 +13,9 @@
 } @else {
   <sy-payout-banner />
   <sy-top-bar [member]="auth.member()" [query]="query()" (searched)="search($event)" />
+  @if (accountArea() && auth.member()) {
+    <div class="container"><sy-subnav [label]="tabsLabel()" [items]="tabs()" /></div>
+  }
   <main id="main" [class]="shell() === 'marketing' ? 'marketing' : 'container page'" tabindex="-1">
     <router-outlet />
   </main>

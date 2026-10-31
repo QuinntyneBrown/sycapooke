@@ -1,0 +1,37 @@
+@switch (view()) {
+  @case ('loading') {
+    <div class="page-header" aria-busy="true"><span class="skeleton skeleton--text"></span></div>
+  }
+  @case ('error') {
+    <sy-empty-state icon="refresh" heading="Couldn’t load your account" tone="error">
+      Something went wrong on our side. <span class="ref">{{ errorRef() }}</span>
+      <button actions syButton="primary" type="button" (click)="load()"><sy-icon name="refresh" />Try again</button>
+    </sy-empty-state>
+  }
+  @default {
+    @if (account(); as account) {
+      <div class="page-header">
+        <div>
+          <h1>Hi, {{ account.displayName }}</h1>
+          <p class="subtitle">Customer since {{ since(account.memberSince) }}. Only you see your account.</p>
+        </div>
+      </div>
+      <ul class="settings-list page--form">
+        <li>
+          <div class="settings-list__body">
+            <span class="settings-list__title">Account details</span>
+            <span class="settings-list__meta">Your display name and email</span>
+          </div>
+          <a syButton routerLink="/account/profile">Edit</a>
+        </li>
+        <li>
+          <div class="settings-list__body">
+            <span class="settings-list__title">Settings</span>
+            <span class="settings-list__meta">Password and sessions</span>
+          </div>
+          <a syButton routerLink="/account/settings">Open</a>
+        </li>
+      </ul>
+    }
+  }
+}

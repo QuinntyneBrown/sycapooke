@@ -57,20 +57,22 @@ catalogue components but their journey is not implemented.
 Customer overview: "Hi, {name}", "Customer since {date}. Only you see your account." and two linked
 counts (On the way, To confirm). It has no selling, sales, listing or public-profile actions.
 
-- Library: not yet composed
-- Local: not yet composed
+App shell with the account subnav. `@sycapooke/accounts` `AccountPage` (`src/lib/account/`), guarded by `signedInGuard`.
+
+- Library: `sy-subnav` (shell), `sy-empty-state` (error), `syButton`, `sy-icon`; the kit's `settings-list` rows
+- Local: the greeting and two link rows. The On the way and To confirm counts join when the orders overview is composed
 
 ### Account details — `/account/profile` (`pages/edit-profile`: default, invalid, submitting, success, loading, error)
 
-Customer account details (not yet built). A private display name only: no photo, bio, location or
+Customer account details: `@sycapooke/accounts` `ProfilePage` (`src/lib/account/`), guarded by `signedInGuard`. A private display name only: no photo, bio, location or
 public page. The founder's public details are edited on Edit story.
 
 - Library: `sy-error-summary` (invalid), `sy-form-field` (Display name with help "3–30 letters,
   numbers, _ or -. Private: only you see it."; Email, read-only, help "Change your sign-in details
   under Settings."), `sy-alert` (success "Details saved", `live="polite"`), `syButton` (primary
   "Save details" with `busy`), `sy-empty-state` (error tone "Couldn’t load your details" with the
-  reference and "Try again")
-- Local: the page header, the `.page--form` wrapper and the loading skeleton (2 fields)
+  reference and "Try again"). The single field shows its error inline, so the error summary is not used
+- Local: the page header, the `.page--form` wrapper and the loading skeleton
 
 ### Shop — `/shop` (`pages/shop`: default, loading, empty, error)
 
@@ -104,8 +106,10 @@ portrait, display name, story (up to 500 characters) and city; there is no stree
 
 ### Forgot password — `/forgot-password` (`pages/forgot-password`: default, invalid, submitting, success, error)
 
-- Library: not yet composed
-- Local: not yet composed
+Auth shell. `@sycapooke/accounts` `ForgotPasswordPage` (`src/lib/forgot-password/`).
+
+- Library: `sy-form-field`, `sy-alert` (danger), `sy-icon` (mail), `syButton` (primary, link)
+- Local: none
 
 ### Email settings — `/account/emails` (`pages/notification-settings`: default, founder, submitting, success, loading, error)
 
@@ -175,13 +179,17 @@ join held server-side for 10 minutes; the page reads the Google email from
 
 ### Reset password — `/reset-password` (`pages/reset-password`: default, invalid, submitting, success, expired, error)
 
-- Library: not yet composed
-- Local: not yet composed
+Auth shell. `@sycapooke/accounts` `ResetPasswordPage` (`src/lib/reset-password/`), reading `token` from the query string.
+
+- Library: `sy-form-field`, `sy-alert` (danger), `syButton`
+- Local: none
 
 ### Session expired — `/sign-in?expired=1` (`pages/session-expired`: default)
 
-- Library: not yet composed
-- Local: not yet composed
+Auth shell. A state of `SignInPage` (`src/lib/sign-in/`): "Welcome back" until the member chooses Sign in.
+
+- Library: `syButton`
+- Local: none
 
 ### Settings — `/account/settings` (`pages/settings`: default, founder, loading, error)
 
@@ -189,8 +197,11 @@ A short `.settings-list`: Email, Password ("Change" opens Change password), Sess
 everywhere"), Cookies ("Cookie settings") and, for customers only, Close account (ghost danger
 button opening Close account). The founder state has no Close account row.
 
-- Library: not yet composed
-- Local: not yet composed
+App shell with the account subnav. `@sycapooke/accounts` `SettingsPage` (`src/lib/settings/`), guarded by `signedInGuard`.
+Built so far: Email, Password and Sessions. Cookies and Close account join in Phases 4 and 5.
+
+- Library: `sy-alert` (success "Password changed"), `syButton`, `DialogService` opening `ChangePasswordDialog` and `SignOutEverywhereDialog`; the kit's `settings-list`
+- Local: none
 
 ### Sign in — `/sign-in` (`pages/sign-in`: default, return, invalid, submitting, locked, error, google-busy, google-cancelled, google-existing, google-failed)
 
@@ -449,7 +460,7 @@ is not blocked by email verification.
 
 ### Forbidden — `/403` (`pages/forbidden`: default, management)
 
-Not yet built. The default says "It belongs to another customer’s account."; the `management` state
+Built as `@sycapooke/accounts` `ForbiddenPage` (`src/lib/errors/`), reached at `/403` or `/403?reason=management`; `founderGuard` redirects a customer there. The default says "It belongs to another customer’s account."; the `management` state
 is a signed-in customer opening a founder-only route (shop, inventory, sales, support, story):
 "Shop management is only for the shop’s founder." Both go back to the customer's account.
 
@@ -464,8 +475,10 @@ is a signed-in customer opening a founder-only route (shop, inventory, sales, su
 
 ### Not found — `/*` (`pages/not-found`: default)
 
-- Library: not yet composed
-- Local: not yet composed
+`@sycapooke/accounts` `NotFoundPage` (`src/lib/errors/`), the `**` route of the app.
+
+- Library: `sy-center-state` (code "404", "Page not found"), `syButton`
+- Local: none
 
 ### Offline — `(any)` (`pages/offline`: default)
 
@@ -554,9 +567,9 @@ Renamed from Marketplace rules; the footer link reads "Shop policies". Static, g
 
 | Dialog (mock folder: states) | Overlay surface | Library components | Local UI |
 |---|---|---|---|
-| Change password (`dialogs/change-password`: default, invalid, busy, failed) | `DialogService` | not yet composed | not yet composed |
+| Change password (`dialogs/change-password`: default, invalid, busy, failed) | `DialogService` | `sy-dialog`, `sy-form-field`, `sy-alert` (danger, top), `syButton` (`ChangePasswordDialog`) | none |
 | Close account (`dialogs/close-account`: default, invalid, busy, google, google-expired, blocked) | `DialogService` | `sy-dialog` (icon `trash`, danger; description "Your data is erased within 30 days. This can’t be undone."), `sy-form-field` (password "Enter your password to confirm", with the error), `sy-alert` (warning "Finish your open orders first" for blocked), `sy-button` (Cancel, disabled while busy; danger "Close account" with busy, never the default focus; google: danger "Continue with Google" with icon `external`; blocked: primary "Close"), `sy-status` (blocked list) | Not yet built. The google state (a Google-only account has no password) replaces the password field with a line asking for a fresh Google sign-in; the blocked state lists the open orders as links with their status; customers only, the founder account cannot be closed here |
-| Sign out everywhere (`dialogs/sign-out-everywhere`: default, busy, failed) | `DialogService` | not yet composed | not yet composed |
+| Sign out everywhere (`dialogs/sign-out-everywhere`: default, busy, failed) | `DialogService` | `sy-dialog`, `sy-alert` (danger, top), `syButton` (`SignOutEverywhereDialog`) | none |
 | Verify email prompt (`dialogs/verify-email-prompt`: default, busy, sent, limited) | `DialogService` | `sy-dialog` (mail icon, description "Open the link we sent to {email} to buy."), `sy-alert` (sent success, limited warning) in the top slot, `sy-button` (Not now, Resend link with busy, Done) | `VerifyEmailPromptComponent` in `@sycapooke/listings`, opened from Buy now for an unverified customer (listing detail); it moves to a shared place when checkout also opens it |
 | Filters (`dialogs/filters`: default, invalid, busy) | `SheetService` | `sy-sheet` (`side`, heading "Filters", close "Close filters"), `sy-error-summary` (heading "Check the price range"), `sy-choice`, `sy-input-group`, `sy-button` (Clear; primary "Show {n} items" with `aria-busy`, disabled when invalid) | `FiltersSheet` and `FilterForm` in `@sycapooke/catalog` |
 | Menu (`dialogs/nav-menu`: default, guest, founder) | `SheetService` | `sy-sheet` (heading "Menu", close "Close menu"), the four category links on `.menu-sheet__links`, then the small links for the customer, guest or founder (see Shell) | `sy-nav-menu` in `@sycapooke/components`, opened by `sy-top-bar`; the small links, Sign out and row chevrons are not composed yet |
