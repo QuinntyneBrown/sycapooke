@@ -214,6 +214,7 @@ public sealed class ResolveOrderProblemsTests : IDisposable
             Assert.Equal(RefundStatus.Pending, refund.Status);
         });
         Assert.Empty(_factory.Payments.Refunds);
+        Assert.Equal("Pending", (await _buyer.GetFromJsonAsync<PurchaseWithProblemView>($"/api/purchases/{orderId}"))!.Refund);
 
         _factory.Payments.RefundsUnavailable = false;
         using (var scope = _factory.Services.CreateScope())
@@ -225,6 +226,7 @@ public sealed class ResolveOrderProblemsTests : IDisposable
         var sent = Assert.Single(_factory.Payments.Refunds);
         Assert.Equal(refundId, sent.Key);
         _factory.InDatabase(db => Assert.Equal(RefundStatus.Issued, db.Refunds.Single().Status));
+        Assert.Equal("Issued", (await _buyer.GetFromJsonAsync<PurchaseWithProblemView>($"/api/purchases/{orderId}"))!.Refund);
         Assert.Contains(await _factory.DispatchEmailsAsync(), e => e.To == BuyerEmail && e.Subject.Contains("refund", StringComparison.Ordinal));
     }
 

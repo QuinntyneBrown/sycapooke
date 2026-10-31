@@ -72,7 +72,7 @@ public sealed record ProblemView(
     string? ResolutionReason,
     DateTime? ResolvedAt);
 
-public sealed record PurchaseWithProblemView(Guid Id, string Status, bool CanReportProblem, DateTime? ProblemDeadline, ProblemView? Problem);
+public sealed record PurchaseWithProblemView(Guid Id, string Status, bool CanReportProblem, DateTime? ProblemDeadline, ProblemView? Problem, string? Refund = null);
 
 public sealed record SaleWithProblemView(Guid Id, string Status, ProblemView? Problem);
 

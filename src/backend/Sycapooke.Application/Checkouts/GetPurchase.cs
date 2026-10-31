@@ -38,7 +38,8 @@ public sealed record PurchaseDto(
     CancellationRequestDto? CancellationRequest,
     bool CanReportProblem,
     DateTime? ProblemDeadline,
-    ProblemDto? Problem);
+    ProblemDto? Problem,
+    string? Refund);
 
 public sealed record GetPurchaseQuery(Guid BuyerId, Guid OrderId) : IRequest<Result<PurchaseDto>>;
 
@@ -87,6 +88,7 @@ public static class PurchaseViews
             OrderViews.CancellationRequest(order),
             problem is null && order.CanReportProblem(now),
             order.ProblemDeadline,
-            problem);
+            problem,
+            await OrderViews.RefundAsync(db, order, cancellationToken));
     }
 }

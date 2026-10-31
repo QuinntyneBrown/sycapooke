@@ -45,7 +45,8 @@ public sealed record SaleDto(
     CancellationDto? Cancellation,
     CancellationRequestDto? CancellationRequest,
     bool CanRelist,
-    ProblemDto? Problem);
+    ProblemDto? Problem,
+    string? Refund);
 
 public static class OrderViews
 {
@@ -79,6 +80,10 @@ public static class OrderViews
         return new CheckoutItemDto(listing.Reference, listing.Title ?? string.Empty, listing.Brand ?? string.Empty, listing.Size, listing.Condition?.ToLabel() ?? string.Empty, photo);
     }
 
+    /// <summary>Where the order's refund is: null without one, otherwise Pending or Issued.</summary>
+    public static async Task<string?> RefundAsync(ISycapookeDbContext db, Order order, CancellationToken cancellationToken) =>
+        (await db.Refunds.AsNoTracking().Where(r => r.PaymentId == order.PaymentId).Select(r => (RefundStatus?)r.Status).SingleOrDefaultAsync(cancellationToken))?.ToString();
+
     public static async Task<SaleDto> SaleAsync(ISycapookeDbContext db, Order order, PhotoOptions photos, CancellationToken cancellationToken)
     {
         var buyer = await db.Members.AsNoTracking().Where(m => m.Id == order.BuyerId).Select(m => m.DisplayName).SingleAsync(cancellationToken);
@@ -100,6 +105,7 @@ public static class OrderViews
             Cancellation(order),
             CancellationRequest(order),
             order.Status == OrderStatus.Cancelled && await db.Listings.AsNoTracking().AnyAsync(l => l.Id == order.ListingId && l.Status == ListingStatus.Removed && l.RemovalReason == ListingRemovalReason.OrderCancelled, cancellationToken),
-            await ProblemViews.ForOrderAsync(db, order.Id, cancellationToken));
+            await ProblemViews.ForOrderAsync(db, order.Id, cancellationToken),
+            await RefundAsync(db, order, cancellationToken));
     }
 }
