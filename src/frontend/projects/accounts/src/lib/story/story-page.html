@@ -1,0 +1,76 @@
+<div class="page-header">
+  <div><h1>Story</h1></div>
+</div>
+@switch (view()) {
+  @case ('loading') {
+    <div class="page--form" aria-busy="true" aria-label="Loading">
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--rect"></span>
+    </div>
+  }
+  @case ('error') {
+    <sy-empty-state icon="refresh" heading="Couldn’t load your story" tone="error">
+      Something went wrong on our side. <span class="ref">{{ failure() }}</span>
+      <button actions syButton="primary" type="button" (click)="load()"><sy-icon name="refresh" />Try again</button>
+    </sy-empty-state>
+  }
+  @default {
+    @if (summary().length) {
+      <sy-error-summary [errors]="summary()" />
+    }
+    @if (view() === 'saved') {
+      <sy-alert tone="success" heading="Story saved" live="polite">
+        <a actions [routerLink]="publicPath()">View public page</a>
+      </sy-alert>
+    }
+    <div class="page--form">
+      <form class="stack stack--lg" novalidate [formGroup]="form" (ngSubmit)="save()">
+        <div class="cluster">
+          <span class="avatar avatar--xl" aria-hidden="true">{{ initials() }}</span>
+        </div>
+        <sy-form-field
+          fieldId="display-name"
+          label="Display name"
+          help="Shown on your public page."
+          [error]="errors()['displayName'] ?? null"
+        >
+          <input
+            class="input"
+            id="display-name"
+            type="text"
+            autocomplete="username"
+            formControlName="displayName"
+            [attr.aria-invalid]="errors()['displayName'] ? 'true' : null"
+          />
+        </sy-form-field>
+        <sy-form-field fieldId="story" label="Story" [error]="errors()['story'] ?? null">
+          <textarea
+            class="textarea"
+            id="story"
+            rows="6"
+            formControlName="story"
+            [attr.aria-invalid]="errors()['story'] ? 'true' : null"
+            (input)="typed()"
+          ></textarea>
+          <span class="field__counter">{{ count() }} / {{ max }}</span>
+        </sy-form-field>
+        <fieldset class="stack">
+          <legend>Public location</legend>
+          <div class="form-row">
+            <sy-form-field fieldId="city" label="City (optional)" [error]="errors()['city'] ?? null">
+              <input class="input" id="city" type="text" formControlName="city" />
+            </sy-form-field>
+            <sy-form-field fieldId="region" label="State or region (optional)" [error]="errors()['region'] ?? null">
+              <input class="input" id="region" type="text" formControlName="region" />
+            </sy-form-field>
+          </div>
+          <span class="field__help">Only city and state or region are shown. There is no street address.</span>
+        </fieldset>
+        <div class="form-actions" style="justify-content: flex-start">
+          <button syButton="primary" type="submit" [busy]="view() === 'saving'">Save story</button>
+          <a syButton="ghost" [routerLink]="publicPath()">View public page</a>
+        </div>
+      </form>
+    </div>
+  }
+}

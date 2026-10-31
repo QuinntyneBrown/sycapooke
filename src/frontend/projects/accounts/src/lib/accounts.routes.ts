@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { signedInGuard } from '@sycapooke/api';
+import { founderGuard, signedInGuard } from '@sycapooke/api';
 
 /** The catch-all page for any unknown address. */
 export const notFoundRoutes: Routes = [
@@ -90,6 +90,13 @@ export const routes: Routes = [
     loadComponent: () => import('./settings/settings-page').then((m) => m.SettingsPage),
     title: 'Settings · Sycapooke',
     canActivate: [signedInGuard],
+    data: { area: 'account' },
+  },
+  {
+    path: 'shop/story',
+    loadComponent: () => import('./story/story-page').then((m) => m.StoryPage),
+    title: 'Story · Sycapooke',
+    canActivate: [founderGuard],
     data: { area: 'account' },
   },
 ];

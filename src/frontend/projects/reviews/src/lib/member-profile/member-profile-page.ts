@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { ListingCard } from '@sycapooke/api';
+import { AuthState, ListingCard } from '@sycapooke/api';
 import {
   AlertComponent,
   ButtonDirective,
@@ -70,6 +70,7 @@ export function memberSince(iso: string): string {
 })
 export class MemberProfilePage {
   readonly store = inject(MemberProfileStore);
+  readonly auth = inject(AuthState);
   private readonly title = inject(Title);
 
   /** From the route parameter. */

@@ -12,8 +12,7 @@
     <sy-listing-grid [cards]="[]" [loading]="true" />
   }
   @case ('unavailable') {
-    <sy-center-state code="404" heading="This member isn’t available">
-      <p class="text-muted">The account may have been closed.</p>
+    <sy-center-state code="404" heading="This page isn’t available">
       <a actions syButton="primary" routerLink="/">Back to shop</a>
     </sy-center-state>
   }
@@ -44,6 +43,9 @@
             >
           }
           <sy-rating-summary [rating]="profile.rating" />
+          @if (auth.isFounder() && auth.member()?.displayName === profile.displayName) {
+            <a syButton routerLink="/shop/story"><sy-icon name="edit" />Edit story</a>
+          }
           @if (profile.bio) {
             <p class="text-muted member-profile__bio">{{ profile.bio }}</p>
           }

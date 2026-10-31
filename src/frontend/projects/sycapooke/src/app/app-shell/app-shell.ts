@@ -23,6 +23,7 @@ const FOUNDER_TABS: readonly SubnavItem[] = [
   { label: 'Inventory', path: '/account/listings' },
   { label: 'Sales', path: '/shop/sales' },
   { label: 'Support', path: '/shop/support' },
+  { label: 'Story', path: '/shop/story' },
   { label: 'Emails', path: '/account/emails' },
   { label: 'Settings', path: '/account/settings' },
 ];

@@ -2,7 +2,7 @@
 // Traces to: L2-040, L2-041, L2-054
 // Description: Anyone opens /members/{displayName} and sees the avatar, display name, rating
 // summary ("No reviews yet"), completed sales, member-since month and the Active listings, 24 at
-// a time with Load more. A closed or unknown member shows "This member isn’t available"; any
+// a time with Load more. A closed or unknown member shows "This page isn’t available"; any
 // other failure shows the error with its reference and Try again.
 
 import {
@@ -81,8 +81,7 @@ test.describe('view member profile', () => {
     const profile = new MemberProfilePage(page);
     await profile.goto('gone_guy');
 
-    await expect(profile.heading).toHaveText('This member isn’t available');
-    await expect(page.getByText('The account may have been closed.')).toBeVisible();
+    await expect(profile.heading).toHaveText('This page isn’t available');
     await expect(page.locator('main').getByRole('link', { name: 'Back to shop' })).toHaveAttribute('href', '/');
   });
 

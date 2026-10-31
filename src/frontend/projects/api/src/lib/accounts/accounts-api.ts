@@ -32,6 +32,14 @@ export interface PrivateAccount {
   memberSince: string;
 }
 
+/** What the founder edits and her public page shows. */
+export interface FounderStory {
+  displayName: string;
+  story: string;
+  city: string;
+  region: string;
+}
+
 /** Typed client for registration, email verification and the Google join steps (L2-001, L2-002, L2-088). */
 @Injectable({ providedIn: 'root' })
 export class AccountsApi {
@@ -75,6 +83,16 @@ export class AccountsApi {
 
   privateAccount(): Promise<ApiResult<PrivateAccount>> {
     return toResult(this.http.get<PrivateAccount>(`${this.baseUrl}/account`));
+  }
+
+  /** The founder's story as she edits it; 403 FOUNDER_REQUIRED for anyone else. */
+  founderStory(): Promise<ApiResult<FounderStory>> {
+    return toResult(this.http.get<FounderStory>(`${this.baseUrl}/shop/story`));
+  }
+
+  /** 422 with `displayName`, `story`, `city` or `region` errors. */
+  saveFounderStory(story: FounderStory): Promise<ApiResult<FounderStory>> {
+    return toResult(this.http.put<FounderStory>(`${this.baseUrl}/shop/story`, story));
   }
 
   /** 422 with a `displayName` error for a bad or taken name. */

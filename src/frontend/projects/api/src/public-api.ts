@@ -1,5 +1,6 @@
 export {
   AccountsApi,
+  type FounderStory,
   type PendingGoogleJoin,
   type PrivateAccount,
   type Registration,

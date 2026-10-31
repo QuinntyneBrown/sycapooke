@@ -7,6 +7,7 @@
 import { expect, ida, marcus, signInAs, test } from '../fixtures';
 
 const founderPaths = [
+  '/shop/story',
   '/shop',
   '/sell',
   '/account/listings',
