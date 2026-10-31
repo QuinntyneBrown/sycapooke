@@ -11,21 +11,16 @@
 	}
 }
 
-# The registered domain shows the marketing site (ADR platform/0017). Namecheap points the apex A record at the
-# VM's static IP and www at the apex; Caddy issues both certificates. Any other path belongs to the application
-# on the Azure DNS name, where the marketing page's links already go.
-www.sycapooke.com {
-	redir https://sycapooke.com{uri} permanent
-}
-
-sycapooke.com {
+# The registered domain shows the marketing site at / on both hosts (ADR platform/0017). Namecheap points the apex
+# A record at the VM's static IP and www at the apex; Caddy issues both certificates. The marketing image serves the
+# same build with base href / on port 8080.
+sycapooke.com, www.sycapooke.com {
 	encode zstd gzip
-	redir / /welcome/
-	redir /welcome /welcome/ permanent
-	handle_path /welcome/* {
-		reverse_proxy marketing:80
+	# The page asks the API who is signed in; answer exactly as on the Azure host.
+	handle /api/* {
+		reverse_proxy app:80
 	}
 	handle {
-		redir https://{$SITE_ADDRESS:localhost}{uri}
+		reverse_proxy marketing:8080
 	}
 }

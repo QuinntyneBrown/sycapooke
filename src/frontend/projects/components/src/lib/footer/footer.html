@@ -1,22 +1,15 @@
 <footer class="footer">
-  '
   <div class="footer__inner">
-    '
     <div class="footer__brand">
-      ' <sy-logo variant="light" />'
+      <sy-logo variant="light" />
       <p>
-        ' The marketplace made only for vintage: every piece at least 20 years old, listed by a real person with a real'
-        story.'
+        The marketplace made only for vintage: every piece at least 20 years old, listed by a real person with a real
+        story.
       </p>
-      '
     </div>
-    '
     <nav class="footer__col" aria-labelledby="footer-shop">
-      '
       <h2 id="footer-shop">Shop</h2>
-      '
       <ul>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/jewelry')">Jewelry</a>
@@ -24,7 +17,6 @@
             <a [routerLink]="'/jewelry'">Jewelry</a>
           }
         </li>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/clothing')">Clothing</a>
@@ -32,7 +24,6 @@
             <a [routerLink]="'/clothing'">Clothing</a>
           }
         </li>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/housewares')">Housewares</a>
@@ -40,7 +31,6 @@
             <a [routerLink]="'/housewares'">Housewares</a>
           }
         </li>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/electronics')">Electronics</a>
@@ -48,17 +38,11 @@
             <a [routerLink]="'/electronics'">Electronics</a>
           }
         </li>
-        '
       </ul>
-      '
     </nav>
-    '
     <nav class="footer__col" aria-labelledby="footer-sell">
-      '
       <h2 id="footer-sell">Sell</h2>
-      '
       <ul>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/sell')">Start selling</a>
@@ -66,7 +50,6 @@
             <a [routerLink]="'/sell'">Start selling</a>
           }
         </li>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/rules')">Marketplace rules</a>
@@ -74,19 +57,12 @@
             <a [routerLink]="'/rules'">Marketplace rules</a>
           }
         </li>
-        '
       </ul>
-      '
     </nav>
-    '
     <nav class="footer__col" aria-labelledby="footer-about">
-      '
       <h2 id="footer-about">Sycapooke</h2>
-      '
       <ul>
-        '
         <li><a routerLink="/welcome">About Sycapooke</a></li>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/privacy')">Privacy</a>
@@ -94,7 +70,6 @@
             <a [routerLink]="'/privacy'">Privacy</a>
           }
         </li>
-        '
         <li>
           @if (origin) {
             <a [href]="href('/terms')">Terms</a>
@@ -102,18 +77,11 @@
             <a [routerLink]="'/terms'">Terms</a>
           }
         </li>
-        '
         <li><button class="footer__link" type="button" (click)="cookieSettings.emit()">Cookie settings</button></li>
-        '
       </ul>
-      '
     </nav>
-    '
   </div>
-  '
   <div class="footer__bottom">
-    ' <span>© {{ year }} Sycapooke. Made with love by a grandmother and her family.</span>'
+    <span>© {{ year }} Sycapooke. Made with love by a grandmother and her family.</span>
   </div>
-  '
 </footer>
-'

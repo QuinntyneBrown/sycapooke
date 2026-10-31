@@ -11,4 +11,8 @@ RUN npm run build:marketing -- --base-href /welcome/
 FROM caddy:2-alpine
 COPY deploy/marketing/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /src/dist/sycapooke/browser /srv/marketing
-EXPOSE 80
+# The same files at / for sycapooke.com and www.sycapooke.com (ADR platform/0017): only the base href differs.
+RUN cp -r /srv/marketing /srv/marketing-root \
+ && sed -i 's|<base href="/welcome/">|<base href="/">|' /srv/marketing-root/*.html \
+ && grep -q '<base href="/">' /srv/marketing-root/index.html
+EXPOSE 80 8080

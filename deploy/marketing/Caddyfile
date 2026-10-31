@@ -1,9 +1,20 @@
-# The marketing site: one single-page build served on port 80 behind the edge (deploy/edge/Caddyfile).
-:80 {
+# The marketing site: one single-page build served behind the edge (deploy/edge/Caddyfile).
+# Port 80 serves it with base href /welcome/ for the Azure host; port 8080 serves the same files with base href /
+# for sycapooke.com and www.sycapooke.com (ADR platform/0017).
+(site) {
 	# index.html and SPA routes must revalidate so a deploy shows up at once; hashed assets can be cached.
 	@entry not path *.js *.css *.png *.jpg *.svg *.ico *.webp *.mp4 *.webm *.vtt *.woff2
 	header @entry Cache-Control "no-cache"
-	root * /srv/marketing
 	try_files {path} /index.html
 	file_server
+}
+
+:80 {
+	root * /srv/marketing
+	import site
+}
+
+:8080 {
+	root * /srv/marketing-root
+	import site
 }

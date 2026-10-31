@@ -5,12 +5,12 @@ Every green push to `main` publishes both sites to the existing Azure VM automat
 - Main application: https://sycapooke.canadacentral.cloudapp.azure.com/
 - Marketing: https://sycapooke.canadacentral.cloudapp.azure.com/welcome/
 - API health: https://sycapooke.canadacentral.cloudapp.azure.com/api/health
-- Domain: https://sycapooke.com/ shows the marketing site (`www` redirects to the apex)
+- Marketing on the domain: https://www.sycapooke.com/ and https://sycapooke.com/
 
 The public IP has Azure DNS label `sycapooke`, maintained by Azure. See
 [ADR platform/0016](adr/platform/0016-publish-with-azure-dns.md). The registered domain
-`sycapooke.com` (Namecheap) also points at the VM and shows the marketing site; any other path
-on it redirects to the application on the Azure name. See
+`sycapooke.com` (Namecheap) also points at the VM: `www.sycapooke.com` and `sycapooke.com` serve
+the marketing application at `/` from the marketing image's second copy (base href `/`, port 8080). See
 [ADR platform/0017](adr/platform/0017-sycapooke-com-shows-the-marketing-site.md).
 
 ## Pipeline
@@ -42,8 +42,8 @@ One Ubuntu VM runs `deploy/docker-compose.yml` with Docker and a 2 GB swap file:
 
 | Service | Memory | Purpose |
 | --- | ---: | --- |
-| edge | 64 MB | Official Caddy image, public ports 80/443, managed HTTPS; strips `/welcome/` to marketing, other paths to app; `sycapooke.com` serves marketing |
-| marketing | 64 MB | Separate Angular marketing image; static files only |
+| edge | 64 MB | Official Caddy image, public ports 80/443, managed HTTPS; strips `/welcome/` to marketing, other paths to app; `sycapooke.com` and `www` → marketing:8080 |
+| marketing | 64 MB | Separate Angular marketing image; static files only; port 80 for `/welcome/`, port 8080 for the domain at `/` |
 | app | 64 MB | Full Angular image; proxies `/api` and `/photos` to API |
 | api | 512 MB | ASP.NET Core API; photos on Docker volume |
 | worker | 384 MB | Background jobs; shares photos volume |

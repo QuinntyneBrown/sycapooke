@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `https://sycapooke.com/` shows the marketing site and `www.sycapooke.com` redirects to it: Namecheap points the apex at the VM's static IP and `deploy/edge/Caddyfile` has site blocks for both hosts; other paths redirect to the application on the Azure DNS name ([ADR platform/0017](docs/adr/platform/0017-sycapooke-com-shows-the-marketing-site.md)).
+- `https://www.sycapooke.com/` and `https://sycapooke.com/` serve the marketing application at their root: Namecheap points the apex at the VM's static IP and `www` at the apex, the `sycapooke-marketing` image also serves its build with base href `/` on port 8080, and `deploy/edge/Caddyfile` sends both hosts there ([ADR platform/0017](docs/adr/platform/0017-sycapooke-com-shows-the-marketing-site.md)).
 
 ## [0.3.0] — 2026-10-30
 
