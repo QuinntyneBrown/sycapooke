@@ -9,6 +9,8 @@ export interface CurrentMember {
   displayName: string;
   email: string;
   emailVerified: boolean;
+  /** Server-derived (ADR platform/0018): true only for the shop's one founder. Drives navigation and guards, never authorisation. */
+  isFounder?: boolean;
 }
 
 /**
@@ -28,6 +30,8 @@ export class AuthState {
   /** True once the first GET /api/auth/me has answered. */
   readonly ready = this.loaded.asReadonly();
   readonly isVerified = computed(() => this.current()?.emailVerified === true);
+  /** True when Sycapooke API says this member is the founder (L2-003). */
+  readonly isFounder = computed(() => this.current()?.isFounder === true);
 
   /** Loads the member once; later calls reuse the first answer. */
   load(): Promise<void> {

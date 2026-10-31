@@ -8,6 +8,7 @@ export interface MemberFixture {
   displayName: string;
   email: string;
   emailVerified: boolean;
+  isFounder?: boolean;
 }
 
 export const marcus: MemberFixture = {
@@ -17,6 +18,14 @@ export const marcus: MemberFixture = {
 };
 
 export const unverifiedMarcus: MemberFixture = { ...marcus, emailVerified: false };
+
+/** The shop's founder: the only member who sees "Sell an item" in the top bar. */
+export const ida: MemberFixture = {
+  displayName: 'miss_ida',
+  email: 'ida.campbell@example.com',
+  emailVerified: true,
+  isFounder: true,
+};
 
 /** GET /api/categories: the L2-011 table. */
 export const categories = [

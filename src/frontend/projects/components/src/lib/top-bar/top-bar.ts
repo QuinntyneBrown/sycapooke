@@ -10,12 +10,15 @@ import { NavMenuComponent } from './nav-menu';
 /** The member the top bar shows; null for a visitor. */
 export interface TopBarMember {
   displayName: string;
+  /** Only the founder sees the "Sell an item" action. */
+  isFounder?: boolean;
 }
 
 /**
  * App-shell top bar in its guest and member states (design system: Top bar): the logo, pill
- * category links, the search well, then "Sign in" as a plain link and the primary "Start selling"
- * pill (a member sees a primary "Sell" pill and their avatar). The application passes the member from
+ * category links, the search well, then "Sign in" as a plain link for a guest. Only the founder
+ * sees a primary "Sell an item" pill beside the avatar; a customer sees the avatar alone and a
+ * guest has no selling action. The application passes the member from
  * AuthState and the current keyword, and navigates on (searched). Under 1280px the inline
  * category links give way to the menu button, which opens the navigation menu sheet listing every
  * category. Under 992px the search button reveals the search well. The admin variant (admin

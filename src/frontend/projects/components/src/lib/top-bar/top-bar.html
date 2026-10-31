@@ -71,18 +71,20 @@
         </svg>
       </button>
       @if (member(); as member) {
-        @if (origin) {
-          <a syButton="primary" class="topbar__sell" [href]="href('/sell')">Sell</a>
-        } @else {
-          <a
-            syButton="primary"
-            class="topbar__sell"
-            [routerLink]="'/sell'"
-            routerLinkActive
-            #sell="routerLinkActive"
-            [attr.aria-current]="sell.isActive ? 'page' : null"
-            >Sell</a
-          >
+        @if (member.isFounder) {
+          @if (origin) {
+            <a syButton="primary" class="topbar__sell" [href]="href('/sell')">Sell an item</a>
+          } @else {
+            <a
+              syButton="primary"
+              class="topbar__sell"
+              [routerLink]="'/sell'"
+              routerLinkActive
+              #sell="routerLinkActive"
+              [attr.aria-current]="sell.isActive ? 'page' : null"
+              >Sell an item</a
+            >
+          }
         }
         @if (origin) {
           <a
@@ -104,11 +106,6 @@
           <a class="topbar__link" [href]="href('/sign-in')">Sign in</a>
         } @else {
           <a class="topbar__link" [routerLink]="'/sign-in'">Sign in</a>
-        }
-        @if (origin) {
-          <a syButton="primary" class="topbar__sell" [href]="href('/sell')">Start selling</a>
-        } @else {
-          <a syButton="primary" class="topbar__sell" [routerLink]="'/sell'">Start selling</a>
         }
       }
     </div>
