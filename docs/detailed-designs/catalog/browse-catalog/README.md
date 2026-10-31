@@ -86,7 +86,7 @@ Feature library `@sycapooke/catalog` (`src/frontend/projects/catalog/src/lib/`),
 
 ### Implementation evidence
 
-No complete target behavior is counted. Existing paging and browser tests demonstrate reusable catalog mechanics, but the configured-founder predicate and revised empty-state acceptance coverage remain absent.
+Implemented and covered: the catalog, counts and brands list only the configured founder's listings (`BrowseCatalogTests`, `FounderInventoryTests`, `browse-catalog.spec.ts`). Remaining: the founder page link wording (Phase 4).
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

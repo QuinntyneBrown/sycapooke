@@ -99,7 +99,7 @@ Screens and copy come from `docs/mocks/pages/listing-detail/` (states `default`,
 
 ### Implementation evidence
 
-Completed behavior evidence: `sequence-guest-buy-now` in `src/frontend/projects/catalog/src/lib/listing-detail/listing-detail-page.ts` and `src/frontend/e2e/tests/view-listing-detail.spec.ts`. 1 of 3 target behaviors are counted. Remaining target behavior and acceptance checks are not counted merely because older marketplace tests pass.
+Implemented and covered: only the founder's listings open, with `sy-founder-summary` replacing the seller summary (`ListingDetailTests`, `view-listing-detail.spec.ts`). Remaining: the rebuilt founder page it links to (Phase 4).
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
