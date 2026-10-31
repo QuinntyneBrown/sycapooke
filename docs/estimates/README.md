@@ -1,7 +1,7 @@
 # Estimates
 
 - Overall effort: 145 days
-- Complete: 46%
+- Complete: 49%
 
 | Subsystem | Effort | Complete |
 | --- | --- | --- |
@@ -11,8 +11,8 @@
 | [orders](orders.md) | 25 days | 39% |
 | [notifications](notifications.md) | 8 days | 68% |
 | [reviews](reviews.md) | 5 days | 70% |
-| [privacy](privacy.md) | 7 days | 43% |
-| [platform](platform.md) | 44 days | 16% |
+| [privacy](privacy.md) | 7 days | 71% |
+| [platform](platform.md) | 44 days | 24% |
 
 Estimates describe the full founder-shop designs, not remaining days or documentation progress. Each design records its implementation/test evidence. Changed founder-specific behaviors count only when both implementation and acceptance coverage exist; reusable marketplace code alone does not establish completion. Existing adapter and operational gaps remain uncounted. Totals are sums and completion is effort-weighted.
 

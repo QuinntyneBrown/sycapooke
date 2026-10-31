@@ -25,5 +25,12 @@ jobs:
           cache: npm
           cache-dependency-path: src/frontend/package-lock.json
       - run: npm ci
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Check for vulnerable .NET packages
+        working-directory: src/backend
+        run: |
+          dotnet list Sycapooke.sln package --vulnerable --include-transitive | tee vulnerable.txt
+          ! grep -E 'High|Critical' vulnerable.txt
       - run: npx playwright install --with-deps chromium
       - run: npm run verify

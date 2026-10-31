@@ -187,7 +187,7 @@ Public projection resolves only the configured founder. Customer display names, 
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and tested: the founder-only public projections (`MemberProfileTests`), the privacy page (`static-pages.spec.ts`) and field encryption of shipping addresses with a rotating key ring (`FieldCipherTests`, `ShippingAddressEncryptionTests`). Not yet built: the `IPublicDto` guard filter and sealing the saved-address backfill.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

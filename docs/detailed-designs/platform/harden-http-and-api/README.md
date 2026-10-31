@@ -205,7 +205,7 @@ Founder authorization precedes listing validation and upload processing. Only th
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and tested in `HttpHardeningTests`: security headers on every API response, the exception handler with problem details, per-address rate limits (sign-in, registration and password reset with `Retry-After`) behind `IRateLimitStore`, and the 1 MB body limit. Not yet built: anti-forgery tokens, the CORS policy, `ValidationBehavior`, the Redis store and forwarded-header trust.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

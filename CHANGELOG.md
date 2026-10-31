@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- HTTP hardening: security headers on every API response, an exception handler that returns problem details, and per-address rate limits with `Retry-After` for sign-in, registration and password reset.
+- Shipping addresses are sealed at rest with AES-256-GCM under a rotating key ring (`Privacy__FieldEncryptionKeys`).
+- The privacy page, terms, shop policies (`/rules`) and server error page; CI audits npm and NuGet dependencies.
 - Founder story: `GET`/`PUT /api/shop/story`, the `/shop/story` page, and a public page that resolves only the founder (everyone else is a uniform 404). The portrait upload is still to come.
 - Customer closure: `POST /api/account/closure`, the Close account dialog in Settings, immediate session revocation, and a worker job that erases personal data, leaving orders with "Former customer".
 - A purchase confirmation email to the customer when payment succeeds.
