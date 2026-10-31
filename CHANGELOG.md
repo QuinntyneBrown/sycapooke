@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Founder story: `GET`/`PUT /api/shop/story`, the `/shop/story` page, and a public page that resolves only the founder (everyone else is a uniform 404). The portrait upload is still to come.
+- Customer closure: `POST /api/account/closure`, the Close account dialog in Settings, immediate session revocation, and a worker job that erases personal data, leaving orders with "Former customer".
+- A purchase confirmation email to the customer when payment succeeds.
 - The founder's support queue at `/shop/support` (`GET /api/shop/support`) listing customers' problems and cancellation requests; problems resolve at `/shop/problems/{reference}` with `RefundBuyer` or `CloseWithoutRefund`, and a `Pending` refund is retried by the worker until the provider confirms it. Purchases and sales show the refund state.
 - Founder access ([ADR platform/0018](docs/adr/platform/0018-founder-access-and-shop-contracts.md)): the `ShopIdentity` singleton, `Shop:FounderMemberId`, `IFounderAccess`, `Sycapooke.Migrator --provision-founder`, and a server-derived `isFounder` on `/api/auth/me`; "Sell an item" shows only to the founder and the guest "Start selling" button is gone.
 - Private accounts and sessions: `GET`/`PATCH /api/account`, `POST /api/account/password`, `POST /api/auth/sign-out-everywhere`, password reset by emailed one-hour link, and a sign-in lockout of 15 minutes after 5 failures with an emailed notice.
@@ -18,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `sy-founder-summary` replaces the seller summary on the listing detail page.
 
 ### Removed
+
+- Review emails: the category, the preference and the Reviews row on the Emails page.
 
 - Payouts, fees and the administrator: the payout and webhook endpoints, the payout release job, the payouts page and banner, and `/api/admin/problems`. Sales, shipping and cancellation answers are founder-only (403 `FOUNDER_REQUIRED`) and the founder's pages moved to `/shop/sales/*`. Historical payout tables are kept.
 

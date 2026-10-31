@@ -28,7 +28,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and tested: the founder-only public page (`GET /api/members/{name}` resolves only the founder; others are a uniform 404), `GET`/`PUT /api/shop/story` and the `/shop/story` page (`MemberProfileTests`, `edit-founder-story.spec.ts`). Not yet built: portrait upload.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

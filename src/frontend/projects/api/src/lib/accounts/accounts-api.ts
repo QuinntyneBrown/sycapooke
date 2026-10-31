@@ -105,6 +105,15 @@ export class AccountsApi {
     return toResult(this.http.post(`${this.baseUrl}/account/password`, { currentPassword, newPassword }));
   }
 
+  /**
+   * A customer closes their account with their password. 422 `password`; 409 ACCOUNT_HAS_OPEN_ORDERS
+   * (errors keyed by order ID: code is the status, message the reference), 409 GOOGLE_PROOF_REQUIRED;
+   * 403 FOUNDER_CANNOT_CLOSE.
+   */
+  closeAccount(password: string): Promise<ApiResult<unknown>> {
+    return toResult(this.http.post(`${this.baseUrl}/account/closure`, { password }));
+  }
+
   /** Revokes every session of the member, this one included. */
   signOutEverywhere(): Promise<ApiResult<unknown>> {
     return toResult(this.http.post(`${this.baseUrl}/auth/sign-out-everywhere`, null));

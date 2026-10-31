@@ -27,4 +27,13 @@
     </div>
     <button syButton type="button" (click)="signOutEverywhere()">Sign out everywhere</button>
   </li>
+  @if (!auth.isFounder()) {
+    <li>
+      <div class="settings-list__body">
+        <span class="settings-list__title">Close account</span>
+        <span class="settings-list__meta">Your data is erased within 30 days</span>
+      </div>
+      <button syButton="danger" type="button" (click)="closeAccount()">Close account</button>
+    </li>
+  }
 </ul>

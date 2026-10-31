@@ -2,7 +2,7 @@
 
 | Design | Effort | Complete |
 | --- | --- | --- |
-| close-customer-account | 6 days | 0% |
+| close-customer-account | 6 days | 60% |
 | manage-founder-access | 4 days | 50% |
 | manage-private-account | 3 days | 80% |
 | sign-in-with-google | 6 days | 30% |

@@ -28,7 +28,7 @@ Application code and HTML mocks still require alignment with the revised require
 
 ### Implementation evidence
 
-No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+Implemented and tested for password accounts: `POST /api/account/closure` (`CloseCustomerAccountHandler`), the 409 `ACCOUNT_HAS_OPEN_ORDERS` list, founder refusal, immediate session revocation, `EraseClosedCustomersJob` and the "Former customer" label (`CloseCustomerAccountTests`, `close-customer-account.spec.ts`). Not yet built: the fresh Google proof for Google-only accounts (they get 409 `GOOGLE_PROOF_REQUIRED`) and the 30-day delay, because erasure runs on its next pass.
 
 Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 

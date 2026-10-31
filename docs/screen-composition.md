@@ -91,7 +91,7 @@ the verified founder reaches it; anyone else gets the Forbidden page (state `man
 
 ### Edit story — `/shop/story` (`pages/edit-story`: default, invalid, submitting, success, loading, error)
 
-Founder only (new, not yet built); App shell, Story tab. Edits what the public founder page shows:
+Founder only; App shell, Story tab (built in accounts: `story/`). Edits what the public founder page shows:
 portrait, display name, story (up to 500 characters) and city; there is no street address.
 
 - Library: `sy-error-summary` (invalid), `sy-form-field` (Display name; Story textarea with counter

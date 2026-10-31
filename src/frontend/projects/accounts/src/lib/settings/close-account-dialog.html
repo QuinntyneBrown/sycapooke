@@ -1,0 +1,52 @@
+<sy-dialog heading="Close account?" icon="trash" tone="danger">
+  <span description>Your data is erased within 30 days. This can’t be undone.</span>
+  @switch (state()) {
+    @case ('blocked') {
+      <sy-alert tone="warning" heading="Finish your open orders first">
+        <ul class="stack">
+          @for (order of blocking(); track order.id) {
+            <li>
+              <a [routerLink]="['/orders', order.id]" (click)="ref.close()">{{ order.reference }}</a> ·
+              {{ order.status }}
+            </li>
+          }
+        </ul>
+      </sy-alert>
+    }
+    @case ('google') {
+      <p>Your account signs in with Google. Sign in with Google again to confirm closing it.</p>
+    }
+    @default {
+      @if (state() === 'failed') {
+        <sy-alert top tone="danger" heading="Couldn’t close your account"
+          >Try again. <span class="ref">{{ failure() }}</span></sy-alert
+        >
+      }
+      <sy-form-field fieldId="close-password" label="Enter your password to confirm" [error]="passwordError()">
+        <input
+          class="input"
+          id="close-password"
+          type="password"
+          autocomplete="current-password"
+          data-autofocus
+          [value]="password()"
+          [attr.aria-invalid]="passwordError() ? 'true' : null"
+          (input)="password.set($any($event.target).value)"
+        />
+      </sy-form-field>
+    }
+  }
+  <ng-container ngProjectAs="[footer]">
+    @if (state() === 'blocked') {
+      <button syButton="primary" type="button" (click)="ref.close()">Close</button>
+    } @else if (state() === 'google') {
+      <button syButton type="button" (click)="ref.close()">Cancel</button>
+      <a syButton="danger" href="/api/auth/google/start">Continue with Google</a>
+    } @else {
+      <button syButton type="button" [disabled]="state() === 'busy'" (click)="ref.close()">Cancel</button>
+      <button syButton="danger" type="button" [busy]="state() === 'busy'" (click)="submit()">
+        {{ state() === 'failed' ? 'Try again' : 'Close account' }}
+      </button>
+    }
+  </ng-container>
+</sy-dialog>
