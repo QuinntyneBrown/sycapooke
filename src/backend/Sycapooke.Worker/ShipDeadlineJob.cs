@@ -15,6 +15,9 @@ public sealed class OrderJobOptions
 
     /// <summary>How often Pending refunds are issued again.</summary>
     public TimeSpan RefundRetryInterval { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>How often closed customer accounts are erased (L2-005).</summary>
+    public TimeSpan EraseInterval { get; set; } = TimeSpan.FromHours(1);
 }
 
 /// <summary>

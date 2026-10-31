@@ -154,4 +154,30 @@ public sealed class Member
     {
         ClosedAt ??= now;
     }
+
+    /// <summary>When the personal data was erased after closure; null until then (L2-005).</summary>
+    public DateTime? ErasedAt { get; private set; }
+
+    /// <summary>The label orders show for an erased buyer.</summary>
+    public const string FormerCustomer = "Former customer";
+
+    /// <summary>Replaces the identity with unique placeholders and drops the password; the account is already closed.</summary>
+    public void Erase(DateTime now)
+    {
+        if (ClosedAt is null || ErasedAt is not null)
+        {
+            return;
+        }
+
+        var token = Id.ToString("N");
+        DisplayName = "closed-" + token[..12];
+        NormalizedDisplayName = Normalize(DisplayName);
+        Email = token + "@erased.invalid";
+        NormalizedEmail = Normalize(Email);
+        PasswordHash = null;
+        StoryBio = null;
+        StoryCity = null;
+        StoryRegion = null;
+        ErasedAt = now;
+    }
 }

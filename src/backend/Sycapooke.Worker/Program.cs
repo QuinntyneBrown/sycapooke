@@ -14,6 +14,7 @@ builder.Services.AddHostedService<ReservationExpiryJob>();
 builder.Services.AddHostedService<ShipDeadlineJob>();
 builder.Services.AddHostedService<OrderCompletionJob>();
 builder.Services.AddHostedService<RefundRetryJob>();
+builder.Services.AddHostedService<EraseClosedCustomersJob>();
 builder.Services.AddHostedService<EmailDispatchJob>();
 builder.Services.AddHostedService<ShipReminderJob>();
 builder.Services.AddHostedService<DraftCleanupJob>();

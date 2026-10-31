@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Checkouts;
 using Sycapooke.Application.Listings;
+using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Orders;
 
 namespace Sycapooke.Application.Orders;
@@ -42,7 +43,7 @@ public sealed class ListOrdersQueryHandler(ISycapookeDbContext db, IOptions<Phot
             from order in orders
             join member in db.Members.AsNoTracking() on (buyer ? order.SellerId : order.BuyerId) equals member.Id
             orderby order.PaidAt descending, order.Id descending
-            select new { order.Id, order.Reference, order.Status, order.ListingId, order.Total, order.PaidAt, order.ShipBy, member.DisplayName })
+            select new { order.Id, order.Reference, order.Status, order.ListingId, order.Total, order.PaidAt, order.ShipBy, DisplayName = member.ErasedAt != null ? Member.FormerCustomer : member.DisplayName })
             .ToListAsync(cancellationToken);
 
         var items = new List<OrderRowDto>(rows.Count);

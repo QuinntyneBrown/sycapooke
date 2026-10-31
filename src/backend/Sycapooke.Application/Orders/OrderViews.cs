@@ -4,6 +4,7 @@ using Sycapooke.Application.Catalog;
 using Sycapooke.Application.Checkouts;
 using Sycapooke.Application.Listings;
 using Sycapooke.Domain.Listings;
+using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Orders;
 
 namespace Sycapooke.Application.Orders;
@@ -86,7 +87,7 @@ public static class OrderViews
 
     public static async Task<SaleDto> SaleAsync(ISycapookeDbContext db, Order order, PhotoOptions photos, CancellationToken cancellationToken)
     {
-        var buyer = await db.Members.AsNoTracking().Where(m => m.Id == order.BuyerId).Select(m => m.DisplayName).SingleAsync(cancellationToken);
+        var buyer = await db.Members.AsNoTracking().Where(m => m.Id == order.BuyerId).Select(m => m.ErasedAt != null ? Member.FormerCustomer : m.DisplayName).SingleAsync(cancellationToken);
         return new SaleDto(
             order.Id,
             order.Reference,

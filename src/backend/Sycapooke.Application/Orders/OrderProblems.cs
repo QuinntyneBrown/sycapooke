@@ -8,6 +8,7 @@ using Sycapooke.Application.Common;
 using Sycapooke.Application.Listings;
 using Sycapooke.Application.Notifications;
 using Sycapooke.Domain.Listings;
+using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Notifications;
 using Sycapooke.Domain.Orders;
 
@@ -286,7 +287,7 @@ internal static class ProblemDetails
         var order = await db.Orders.AsNoTracking().SingleAsync(o => o.Id == problem.OrderId, cancellationToken);
         var names = await db.Members.AsNoTracking()
             .Where(m => m.Id == order.BuyerId || m.Id == order.SellerId)
-            .ToDictionaryAsync(m => m.Id, m => m.DisplayName, cancellationToken);
+            .ToDictionaryAsync(m => m.Id, m => m.ErasedAt != null ? Member.FormerCustomer : m.DisplayName, cancellationToken);
         return new ProblemDetailDto(
             ProblemDto.From(problem),
             names[order.BuyerId],

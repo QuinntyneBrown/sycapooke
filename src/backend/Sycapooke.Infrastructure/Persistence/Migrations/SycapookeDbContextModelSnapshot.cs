@@ -305,6 +305,9 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("EmailVerifiedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("ErasedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("FailedSignIns")
                         .HasColumnType("int");
 

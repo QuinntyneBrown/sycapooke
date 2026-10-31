@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Sycapooke.Application.Abstractions;
 using Sycapooke.Application.Checkouts;
 using Sycapooke.Application.Listings;
+using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Orders;
 
 namespace Sycapooke.Application.Orders;
@@ -40,7 +41,7 @@ public sealed class GetSupportQueueQueryHandler(ISycapookeDbContext db, IOptions
             from problem in db.OrderProblems.AsNoTracking()
             join order in db.Orders.AsNoTracking() on problem.OrderId equals order.Id
             join buyer in db.Members.AsNoTracking() on order.BuyerId equals buyer.Id
-            select new { problem, order.ListingId, order.Total, Buyer = buyer.DisplayName })
+            select new { problem, order.ListingId, order.Total, Buyer = buyer.ErasedAt != null ? Member.FormerCustomer : buyer.DisplayName })
             .ToListAsync(cancellationToken);
         foreach (var row in problems)
         {
@@ -62,7 +63,7 @@ public sealed class GetSupportQueueQueryHandler(ISycapookeDbContext db, IOptions
             from order in db.Orders.AsNoTracking()
             join buyer in db.Members.AsNoTracking() on order.BuyerId equals buyer.Id
             where order.CancellationRequestStatus == CancellationRequestStatus.Pending
-            select new { order.Id, order.Reference, order.ListingId, order.Total, order.CancellationRequestedAt, Buyer = buyer.DisplayName })
+            select new { order.Id, order.Reference, order.ListingId, order.Total, order.CancellationRequestedAt, Buyer = buyer.ErasedAt != null ? Member.FormerCustomer : buyer.DisplayName })
             .ToListAsync(cancellationToken);
         foreach (var row in requests)
         {

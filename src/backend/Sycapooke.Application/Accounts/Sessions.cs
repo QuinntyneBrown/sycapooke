@@ -176,7 +176,7 @@ public sealed class GetCurrentMemberQueryHandler(ISycapookeDbContext db, IFounde
     public async Task<Result<CurrentMemberDto>> Handle(GetCurrentMemberQuery query, CancellationToken cancellationToken)
     {
         var member = await db.Members.AsNoTracking()
-            .Where(m => m.Id == query.MemberId)
+            .Where(m => m.Id == query.MemberId && m.ClosedAt == null)
             .Select(m => new CurrentMemberDto(m.DisplayName, m.Email, m.EmailVerifiedAt != null))
             .SingleOrDefaultAsync(cancellationToken);
         return member is null
