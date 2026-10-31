@@ -18,6 +18,11 @@ builder.WebHost.ConfigureKestrel(kestrel => kestrel.Limits.MaxRequestBodySize = 
 
 var app = builder.Build();
 
+if (app.Services.GetRequiredService<Sycapooke.Application.Shop.ShopOptions>().FounderMemberId is null)
+{
+    app.Logger.LogWarning("Shop:FounderMemberId is not set, so nobody can manage the shop. See docs/deployment.md, Provision the founder.");
+}
+
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = ExceptionHandling.WriteAsync });
 app.UseMiddleware<CookieAllowListMiddleware>();

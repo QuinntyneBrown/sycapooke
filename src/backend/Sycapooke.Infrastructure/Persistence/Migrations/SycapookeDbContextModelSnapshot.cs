@@ -1318,8 +1318,8 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasMaxLength(60)
-                                .HasColumnType("nvarchar(60)")
+                                .HasMaxLength(400)
+                                .HasColumnType("nvarchar(400)")
                                 .HasColumnName("ShippingCity");
 
                             b1.Property<string>("Country")
@@ -1330,31 +1330,31 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("FullName")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("ShippingFullName");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("ShippingLine1");
 
                             b1.Property<string>("Line2")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("ShippingLine2");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasMaxLength(2)
-                                .HasColumnType("nvarchar(2)")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("ShippingState");
 
                             b1.Property<string>("Zip")
                                 .IsRequired()
-                                .HasMaxLength(10)
-                                .HasColumnType("nvarchar(10)")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("ShippingZip");
 
                             b1.HasKey("CheckoutId");
@@ -1407,8 +1407,8 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasMaxLength(60)
-                                .HasColumnType("nvarchar(60)")
+                                .HasMaxLength(400)
+                                .HasColumnType("nvarchar(400)")
                                 .HasColumnName("ShippingCity");
 
                             b1.Property<string>("Country")
@@ -1419,31 +1419,31 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("FullName")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("ShippingFullName");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("ShippingLine1");
 
                             b1.Property<string>("Line2")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("ShippingLine2");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasMaxLength(2)
-                                .HasColumnType("nvarchar(2)")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("ShippingState");
 
                             b1.Property<string>("Zip")
                                 .IsRequired()
-                                .HasMaxLength(10)
-                                .HasColumnType("nvarchar(10)")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("ShippingZip");
 
                             b1.HasKey("OrderId");
@@ -1523,8 +1523,8 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasMaxLength(60)
-                                .HasColumnType("nvarchar(60)")
+                                .HasMaxLength(400)
+                                .HasColumnType("nvarchar(400)")
                                 .HasColumnName("City");
 
                             b1.Property<string>("Country")
@@ -1535,31 +1535,31 @@ namespace Sycapooke.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("FullName")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("FullName");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("Line1");
 
                             b1.Property<string>("Line2")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
+                                .HasMaxLength(700)
+                                .HasColumnType("nvarchar(700)")
                                 .HasColumnName("Line2");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasMaxLength(2)
-                                .HasColumnType("nvarchar(2)")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("State");
 
                             b1.Property<string>("Zip")
                                 .IsRequired()
-                                .HasMaxLength(10)
-                                .HasColumnType("nvarchar(10)")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("Zip");
 
                             b1.HasKey("SavedAddressMemberId");

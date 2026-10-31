@@ -102,6 +102,25 @@ docker compose exec -T edge caddy reload --config /etc/caddy/Caddyfile --adapter
 5. Set the three GitHub production environment secrets listed above.
 6. Push to main: CI and both deploy workflows publish without manual steps.
 
+## Provision the founder
+
+The shop has one founder ([ADR platform/0018](adr/platform/0018-founder-access-and-shop-contracts.md)). Until she is
+bound, nobody can sell, fulfil orders or resolve problems, and the public catalog is empty.
+
+1. She joins and verifies her email like any customer.
+2. Look up her member ID in the database (`SELECT Id FROM Members WHERE Email = ...`).
+3. Set `Shop__FounderMemberId=<that GUID>` in `/opt/sycapooke/.env` and restart the API and worker.
+4. Run `Sycapooke.Migrator --provision-founder` once with the same `Shop__FounderMemberId` in its environment. Repeating it with the same ID changes
+   nothing; a different ID is refused. The API logs a warning at startup while the setting is empty.
+
+## Field encryption keys
+
+Shipping addresses are sealed with AES-256-GCM before they reach the database. Set
+`Privacy__FieldEncryptionKeys=k1:<base64 of 32 random bytes>` in `.env` (`openssl rand -base64 32`). To
+rotate, put a new `k2:...` first and keep `k1:...` after it: new writes use `k2`, old rows still read. A row
+written before a key was set is read as plain text and sealed the next time it is saved. Losing every key
+that sealed a row makes that row unreadable, so back the keys up apart from the database.
+
 ## Sign in with Google
 
 "Continue with Google" on `https://sycapooke.canadacentral.cloudapp.azure.com/sign-in` and `/join` ([ADR accounts/0001](adr/accounts/0001-sign-in-with-google.md),

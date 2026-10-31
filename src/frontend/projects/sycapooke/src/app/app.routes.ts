@@ -7,6 +7,7 @@ export const routes: Routes = [
   { path: '', loadChildren: () => import('@sycapooke/orders').then((m) => m.routes) },
   { path: 'members', loadChildren: () => import('@sycapooke/reviews').then((m) => m.routes) },
   { path: 'privacy', loadChildren: () => import('@sycapooke/privacy').then((m) => m.routes) },
+  { path: '', loadChildren: () => import('@sycapooke/privacy').then((m) => m.staticRoutes) },
   { path: '', loadChildren: () => import('@sycapooke/accounts').then((m) => m.routes) },
   { path: '**', loadChildren: () => import('@sycapooke/accounts').then((m) => m.notFoundRoutes) },
 ];

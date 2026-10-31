@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sycapooke.Domain.Listings;
 using Sycapooke.Domain.Members;
 using Sycapooke.Domain.Orders;
+using Sycapooke.Infrastructure.Privacy;
 
 namespace Sycapooke.Infrastructure.Persistence.Configurations;
 
@@ -166,12 +167,12 @@ internal static class AddressColumns
     public static void Map<TOwner>(OwnedNavigationBuilder<TOwner, ShippingAddress> address, string prefix)
         where TOwner : class
     {
-        address.Property(a => a.FullName).HasColumnName($"{prefix}FullName").HasMaxLength(ShippingAddress.MaxName).IsRequired();
-        address.Property(a => a.Line1).HasColumnName($"{prefix}Line1").HasMaxLength(ShippingAddress.MaxLine).IsRequired();
-        address.Property(a => a.Line2).HasColumnName($"{prefix}Line2").HasMaxLength(ShippingAddress.MaxLine);
-        address.Property(a => a.City).HasColumnName($"{prefix}City").HasMaxLength(ShippingAddress.MaxCity).IsRequired();
-        address.Property(a => a.State).HasColumnName($"{prefix}State").HasMaxLength(2).IsRequired();
-        address.Property(a => a.Zip).HasColumnName($"{prefix}Zip").HasMaxLength(10).IsRequired();
+        address.Property(a => a.FullName).HasColumnName($"{prefix}FullName").HasMaxLength(700).HasConversion<EncryptedStringConverter>().IsRequired();
+        address.Property(a => a.Line1).HasColumnName($"{prefix}Line1").HasMaxLength(700).HasConversion<EncryptedStringConverter>().IsRequired();
+        address.Property(a => a.Line2).HasColumnName($"{prefix}Line2").HasMaxLength(700).HasConversion<EncryptedStringConverter>();
+        address.Property(a => a.City).HasColumnName($"{prefix}City").HasMaxLength(400).HasConversion<EncryptedStringConverter>().IsRequired();
+        address.Property(a => a.State).HasColumnName($"{prefix}State").HasMaxLength(100).HasConversion<EncryptedStringConverter>().IsRequired();
+        address.Property(a => a.Zip).HasColumnName($"{prefix}Zip").HasMaxLength(100).HasConversion<EncryptedStringConverter>().IsRequired();
         address.Property(a => a.Country).HasColumnName($"{prefix}Country").HasMaxLength(2).IsRequired();
     }
 }

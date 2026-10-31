@@ -60,6 +60,7 @@ public sealed class SycapookeApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.UseSetting("Privacy:FieldEncryptionKeys", "test1:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=");
         builder.UseSetting("Auth:SigningKey", "test-signing-key-that-is-at-least-32-bytes-long");
         builder.UseSetting("App:BaseUrl", "https://sycapooke.test");
         builder.UseSetting("Notifications:UnsubscribeSigningKey", "test-unsubscribe-key");

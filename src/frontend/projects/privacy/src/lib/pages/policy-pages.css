@@ -1,0 +1,8 @@
+.policy__row {
+  padding-block: var(--space-5);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.policy__foot {
+  margin-top: var(--space-8);
+}

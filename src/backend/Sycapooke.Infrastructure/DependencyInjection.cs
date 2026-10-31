@@ -12,6 +12,7 @@ using Sycapooke.Infrastructure.Email;
 using Sycapooke.Infrastructure.Payments;
 using Sycapooke.Infrastructure.Persistence;
 using Sycapooke.Infrastructure.Photos;
+using Sycapooke.Infrastructure.Privacy;
 
 namespace Sycapooke.Infrastructure;
 
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddSingleton<IBreachedPasswords, BundledBreachedPasswords>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton(ShopConfiguration.Read(configuration));
+        FieldCipher.Use(FieldCipher.FromConfiguration(configuration["Privacy:FieldEncryptionKeys"]));
         services.Configure<AppOptions>(configuration.GetSection("App"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<SellingOptions>(configuration.GetSection("Selling"));
