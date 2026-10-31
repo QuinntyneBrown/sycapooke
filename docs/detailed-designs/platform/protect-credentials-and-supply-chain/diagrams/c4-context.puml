@@ -3,7 +3,7 @@
 LAYOUT_WITH_LEGEND()
 title System Context — Protect credentials and the supply chain
 
-Person(member, "Member", "Signs in with an email and password")
+Person(member, "Customer", "Signs in with an email and password")
 Person(dev, "Developer", "Changes Sycapooke through pull requests")
 System(sycapooke, "Sycapooke", "Marketplace; stores only password hashes")
 System_Ext(vault, "Secret store", "Hosting platform vault <TO SUPPLY>")

@@ -1,15 +1,16 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Create a listing
-
-Person(seller, "Seller", "Lists an item for sale")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "SellPage in @sycapooke/listings; SellingApi, ListingsApi and AuthState in @sycapooke/api")
-  Container(api, "Sycapooke API", "ASP.NET Core", "Categories, selling options, listing create, update and publish")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "Members, sessions, listings; the day's publishes are counted here")
+title Containers - Create a founder listing
+Person(user, "Founder")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-Rel(seller, web, "Uses", "HTTPS")
-Rel(web, api, "Calls with session cookies", "JSON/HTTPS")
-Rel(api, db, "Reads and writes", "EF Core")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
 @enduml

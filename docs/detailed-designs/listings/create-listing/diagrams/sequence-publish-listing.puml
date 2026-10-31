@@ -1,67 +1,46 @@
 @startuml
-title UML sequence behaviour — Publish a listing
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
-skinparam rectangle {
-  BorderColor #344054
-  FontColor #101828
-}
-skinparam package {
-  BorderColor #667085
-  FontColor #101828
-  BackgroundColor #F9FAFB
-}
-actor "Seller" as actor
-box "Frontend — @sycapooke/listings and @sycapooke/api" #E0F2FE
-  participant "SellPage" as page
-  participant "ListingsApi" as client
+title Behaviour - Publish a photographed treasure
+autonumber
+actor "Founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "SellPage" as page
+ participant "ListingsApi" as client
 end box
-box "Backend — Sycapooke API application" #D1FADF
-  participant "ListingsController" as controller
+box "Backend - Sycapooke API" #D1FADF
+ participant "ListingsController" as entry
 end box
-box "Backend — Sycapooke Application and Domain" #ECFDF3
-  participant "ListingCommandHandlers" as handler
-  participant "Listing" as entity
-  participant "ISellerPayoutAccountReader" as payout
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "ListingCommandHandlers" as handler
+ participant "Listing" as model
 end box
-box "Backend — Sycapooke Infrastructure" #FFF4E5
-  database "Sycapooke database" as db
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
 end box
-actor -> page : Choose "Publish"
-page -> page : checkListing(publish); on failure show the error summary and focus it
-page -> client : Save the draft (POST or PUT), then publish(reference)
-client -> controller : POST /api/listings/{reference}/publish
-controller -> handler : Send PublishListingCommand
-handler -> db : Load the caller's listing
-alt not found or not owned by caller
-  handler --> controller : LISTING_NOT_FOUND
-  controller --> client : 404 (L2-010)
-else not a draft
-  controller --> client : 409 LISTING_NOT_DRAFT
-else draft found
-  handler -> db : Count the seller's listings published since 00:00 UTC (L2-051)
-  alt 20 or more today
-    handler --> controller : RATE_LIMITED
-    controller --> client : 429 with Retry-After until 00:00 UTC
-    client --> page : Limited state "That's 20 listings today"
-  else within limit
-    handler -> entity : Publish(now, photoCount) applies L2-015 to L2-018
-    alt any publish rule fails
-      entity --> handler : Violations for every failing field
-      controller --> client : 422 with errors per field
-      client --> page : Invalid state: summary at top, each error inline
-    else all rules pass
-      entity --> handler : Status Active and PublishedAt set
-      handler -> db : Save
-      handler -> payout : IsOnboardedAsync(sellerId) (L2-031)
-      payout --> handler : false
-      handler --> controller : PublishListingResult(PayoutOnboardingRequired = true)
-      controller --> client : 200
-      client --> page : Success state "It's live" with "Set up payouts"
-    end
-  end
+actor -> page : Publish a photographed treasure
+page -> client : Existing listing publish endpoint
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Validate category, Vintage and listing fields [L2-011, L2-013, L2-015]
+handler -> model : Require 1 to 8 photos and enforce daily limit [L2-017, L2-051]
+handler -> handler : Publish Active without onboarding or fee calculation
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
 end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Active listing visible within five seconds or 422 field errors
+note over entry, handler
+Active listing visible within five seconds or 422 field errors
+end note
 @enduml

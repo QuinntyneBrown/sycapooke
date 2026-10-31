@@ -52,7 +52,7 @@ def hero() -> str:
               f'{ic("search")}<input class="input" id="hero-q" name="q" type="search" placeholder="Try “pearl necklace” or “tea set”">'
               f'{btn("Search", "primary", attrs="type=\"submit\"")}</form>')
     return ('<section class="hero" aria-labelledby="hero-title"><h1 class="display" id="hero-title">Treasures with a <em>story.</em></h1>'
-            '<p class="lead">Jewelry, clothing, housewares and electronics, every piece at least 20 years old and listed by a real person.</p>'
+            '<p class="lead">Jewelry, clothing, housewares and electronics, every piece at least 20 years old, from the founder’s own collection.</p>'
             f'{search}</section>')
 
 
@@ -75,7 +75,7 @@ def load_more(shown: int = len(CATALOG), total: str = "1,284") -> str:
 s = screen("catalog", "page", "Catalog", route="/", reqs=["L2-022", "L2-023", "L2-024", "L2-059", "L2-061", "L2-062"])
 
 
-@s.state("default", "Home catalog for a signed-in member: newest listings, filters beside the grid on large screens.")
+@s.state("default", "Home catalog for a signed-in customer: newest listings, filters beside the grid on large screens.")
 def _():
     pg = catalog_page(listing_grid(CATALOG), after_grid=load_more())
     pg.notes = note("Pages of 24, newest first. Images below the first screen are lazy loaded with fixed width and height (no layout shift).", "top: 30rem; right: 1rem;")
@@ -118,9 +118,9 @@ def _():
     return pg
 
 
-@s.state("empty", "No active listings at all (launch day): one action, sell the first item.")
+@s.state("empty", "No active listings at all: the founder has nothing on sale right now, so the page says to check back soon.")
 def _():
-    grid = empty("tag", "Nothing listed yet", "Be the first to list a brooch, a teacup or anything with a story to tell.", btn("Sell an item", "primary", P("sell")))
+    grid = empty("tag", "Nothing on the shelf right now", "The founder is choosing her next treasures. Please check back soon.")
     return catalog_page(grid, count="0 items")
 
 
@@ -150,10 +150,14 @@ def _():
 # Listing detail
 # ---------------------------------------------------------------------------
 DESC = {
-    "garnet-brooch": "My grandmother’s Sunday brooch, c.1950s. Gold-tone filigree with six garnet-red stones, all present and bright. The C-clasp closes firmly.",
+    "garnet-brooch": "Gold-tone filigree brooch, c.1950s, with six garnet-red stones, all present and bright. The C-clasp closes firmly.",
     "tea-set": "Twenty-one pieces, c.1940s: six cups, saucers and side plates, the teapot, milk jug and sugar bowl. Gilt rims still bright, no crazing. Packed in double boxes.",
-    "camel-overcoat": "Dad’s good coat, c.1970s. Heavy camel wool, fully lined, deep pockets. Chest 42 in, length 44 in, measured flat.",
-    "film-camera": "Serviced last spring: shutter speeds checked, light seals replaced. Comes with the original leather case and strap. A roll of film went through it in June.",
+    "camel-overcoat": "Heavy camel wool coat, c.1970s, fully lined, with deep pockets. Chest 42 in, length 44 in, measured flat.",
+    "film-camera": "Serviced last spring: shutter speeds checked, light seals replaced. Comes with the original leather case and strap.",
+}
+# L2-015: the optional story (up to 500 characters). Placeholder copy awaiting the founder's own words.
+STORY = {
+    "garnet-brooch": "Placeholder story: a piece I have kept for years and am ready to pass on. It still catches the light.",
 }
 
 
@@ -168,20 +172,23 @@ def gallery(key: str, current: int = 1) -> str:
             f'<div class="gallery__dots" aria-hidden="true">{dots}</div><ul class="gallery__thumbs" role="list">{thumbs}</ul></section>')
 
 
-def seller_block(handle: str) -> str:
-    p = PEOPLE[handle]
-    rep = rating(handle) if p["reviews"] else '<span class="badge">New seller</span>'
-    sales = f'{p["sales"]} sales · ' if p["sales"] else ""
-    return (f'<div class="seller">{avatar(handle)}<div class="stack stack--sm" style="flex: 1; gap: var(--space-1);">'
-            f'<a class="seller__name" href="{P("profile")}">{handle}</a><span class="seller__meta">{sales}{p["city"]}</span>{rep}</div></div>')
+def founder_block(sales: int | None = None) -> str:
+    """L2-025: the founder's avatar and name, 'No reviews yet', completed sales (0 shows as '0 completed sales'), link to her story page."""
+    p = PEOPLE[FOUNDER]
+    n = p["sales"] if sales is None else sales
+    word = "completed sale" if n == 1 else "completed sales"
+    return (f'<div class="seller">{avatar(FOUNDER)}<div class="stack stack--sm" style="flex: 1; gap: var(--space-1);">'
+            f'<a class="seller__name" href="{P("profile")}">{esc(p["name"])}</a><span class="seller__meta">Founder of Sycapooke · {n} {word}</span>'
+            f'{rating(FOUNDER)}<a class="text-sm" href="{P("profile")}">Read her story and see her collection</a></div></div>')
 
 
-def detail(key: str, *, actions: str, stamp: str | None = None, user: str = "member", extra_info: str = "", report: bool = True, below: str = "") -> Page:
+def detail(key: str, *, actions: str, stamp: str | None = None, user: str = "member", extra_info: str = "", report: bool = True, below: str = "", sales: int | None = None) -> Page:
     it = ITEMS[key]
     total = it["price"] + it["ship"]
     flaws = f'<div class="flaws"><strong>Flaws:</strong> {esc(it["flaws"])}</div>' if it.get("flaws") else ""
     status_line = f'<span class="photo__stamp{" photo__stamp--sold" if stamp == "Sold" else ""}" style="position: static; align-self: flex-start;">{stamp}</span>' if stamp else ""
     rep = ""
+    story = f'<p class="text-muted">{esc(STORY[key])}</p>' if key in STORY else ""
     info = (f'<div class="detail__info">'
             f'<div class="stack stack--sm">{status_line}<span class="eyebrow">{esc(it["brand"])}</span><h1 class="detail__title">{esc(it["title"])}</h1>'
             f'<div class="cluster" style="gap: var(--space-3);">{size_tag(it, "size-tag--lg")}<span class="text-muted">{esc(it["cond"])}</span></div></div>'
@@ -189,10 +196,10 @@ def detail(key: str, *, actions: str, stamp: str | None = None, user: str = "mem
             f'<span class="text-muted text-sm">{ship_text(it["ship"])} · <span class="num">{money(total)}</span> total before tax</span></div>'
             f'{extra_info}'
             f'{buy_bar(total, actions)}'
-            f'{flaws}<p>{esc(DESC.get(key, "From a smoke-free home. Packed with care, with a note about where it came from."))}</p>'
+            f'{flaws}<p>{esc(DESC.get(key, "Packed with care, with a note about where it came from."))}</p>{story}'
             f'<dl class="facts"><dt>Era</dt><dd>{esc(it["circa"])}</dd><dt>Size</dt><dd>{size_long(it)}</dd><dt>Category</dt><dd>{it["cat"]} · {it["sub"]}</dd>'
             f'<dt>Condition</dt><dd>{esc(it["cond"])}</dd><dt>Listed</dt><dd><time datetime="2026-10-25">{it["listed"]}</time></dd></dl>'
-            f'{seller_block(it["seller"])}{rep}</div>')
+            f'{founder_block(sales)}{rep}</div>')
     crumbs = (f'<nav aria-label="Breadcrumb" style="margin-top: var(--space-6);"><ol class="breadcrumb"><li><a href="{P("catalog")}">Shop</a></li>'
               f'<li><a href="{P("catalog", "category")}">{it["cat"]}</a></li><li aria-current="page">{it["sub"]}</li></ol></nav>')
     return Page(main=f'{crumbs}<div class="detail">{gallery(key)}{info}</div>{below}', user=user, nav=cat_key(it["cat"]))
@@ -213,7 +220,7 @@ d = screen("listing-detail", "page", "Listing detail", route="/items/{id}", reqs
            na={"empty": "A listing always has its required fields; a missing listing is the 'unavailable' state."})
 
 
-@d.state("default", "An active listing seen by another member: gallery, price with shipping, seller reputation, Buy now.")
+@d.state("default", "An active listing seen by a signed-in customer: gallery, price with shipping, the founder block (name, No reviews yet, completed sales, link to her story), Buy now.")
 def _():
     pg = detail("garnet-brooch", actions=btn("Buy now", "primary lg", P("checkout")))
     pg.notes = note("Under 992px: one column, swipeable gallery, Buy now bar fixed to the bottom while scrolling.", "top: 8rem; right: 1rem;")
@@ -225,9 +232,9 @@ def _():
     return detail("garnet-brooch", actions=btn("Buy now", "primary lg", P("sign-in", "return")), user="guest", report=False)
 
 
-@d.state("new-seller", "A listing from a seller with no completed sales shows “New seller” instead of a rating.")
+@d.state("zero-sales", "Before the founder’s first completed sale: the founder block shows “No reviews yet” and “0 completed sales”, with no New seller label (L2-025 AC5).")
 def _():
-    return detail("film-camera", actions=btn("Buy now", "primary lg", P("checkout")))
+    return detail("film-camera", actions=btn("Buy now", "primary lg", P("checkout")), sales=0)
 
 
 @d.state("reserved", "Another buyer is in checkout: Reserved label, no Buy now, a hint to check back.")
@@ -241,10 +248,10 @@ def _():
     return detail("day-dress", stamp="Sold", actions="", report=False, below=similar(["wool-cardigan", "silk-blouse", "deadstock-jeans", "felt-cloche"]))
 
 
-@d.state("own", "The seller viewing their own Used - Fair listing: flaws shown, Edit and Withdraw instead of Buy now.")
+@d.state("own", "The founder viewing her own Used - Fair listing: flaws shown, Edit and Withdraw instead of Buy now (founder navigation).")
 def _():
     acts = btn("Edit listing", "primary lg", P("edit-listing"), icon="edit") + btn("Withdraw", "lg", D("withdraw-listing"))
-    return detail("camel-overcoat", actions=acts, report=False)
+    return detail("camel-overcoat", actions=acts, report=False, user="founder")
 
 
 @d.state("loading", "Detail skeleton matching the gallery and info columns.")
@@ -264,7 +271,7 @@ def _():
     return Page(main=main)
 
 
-@d.state("unavailable", "Removed or draft listing opened by someone else: “This item isn’t available” (HTTP 404).")
+@d.state("unavailable", "Removed or draft listing opened by a customer or visitor: “This item isn’t available” (HTTP 404).")
 def _():
     main = ('<div class="center-state"><span class="code" aria-hidden="true">4<em>0</em>4</span><h1>This item isn’t available</h1>'
             '<p class="text-muted">It may have been sold or taken down.</p>'
@@ -279,13 +286,16 @@ m = screen("nav-menu", "dialog", "Menu", opens_from="catalog", reqs=["L2-062", "
            na={"busy": "Opening the menu makes no request.", "invalid": "The menu has no inputs."})
 
 
-def menu_sheet(guest: bool) -> str:
+def menu_sheet(guest: bool, founder: bool = False) -> str:
     cats = "".join(f'<li><a href="{nav_href(k)}">{t}{ic("chevron-right")}</a></li>' for k, t in NAV)
-    if guest:
-        small = f'<li><a href="{P("sell")}">Sell an item</a></li><li><a href="{P("rules")}">Marketplace rules</a></li>'
-        foot = btn("Sign in", href=P("sign-in")) + btn("Join Sycapooke", "primary", P("register"))
+    if founder:
+        small = "".join(f'<li><a href="{P(pid)}">{t}</a></li>' for t, pid in [("Inventory", "my-listings"), ("Sell an item", "sell"), ("Sales", "sales"), ("Support", "support"), ("Story", "edit-story"), ("Shop", "shop")])
+        foot = btn("Sign out", icon="log-out")
+    elif guest:
+        small = f'<li><a href="{P("welcome")}">About Sycapooke</a></li><li><a href="{P("rules")}">Shop policies</a></li>'
+        foot = btn("Sign in", "primary", P("sign-in"))
     else:
-        small = "".join(f'<li><a href="{P(pid)}">{t}</a></li>' for t, pid in [("Sell an item", "sell"), ("Your listings", "my-listings"), ("Purchases", "purchases"), ("Sales", "sales"), ("Settings", "settings")])
+        small = "".join(f'<li><a href="{P(pid)}">{t}</a></li>' for t, pid in [("Your account", "account"), ("Purchases", "purchases"), ("Shop policies", "rules"), ("Settings", "settings")])
         foot = btn("Sign out", icon="log-out")
     return (f'<div class="menu-sheet" id="menu" role="dialog" aria-modal="true" aria-labelledby="dlg-title" data-dismiss-on-escape>'
             f'<div class="menu-sheet__head"><span class="logo">{LOGO_IMG}</span>'
@@ -294,12 +304,12 @@ def menu_sheet(guest: bool) -> str:
             f'<ul class="menu-sheet__links menu-sheet__links--small" role="list">{small}</ul></nav><div class="menu-sheet__foot">{foot}</div></div>')
 
 
-@m.state("default", "Full-screen menu for a member on a phone: categories large, account links small.")
+@m.state("default", "Full-screen menu for a signed-in customer on a phone: categories large, account links small.")
 def _():
     return Dialog(bg=("catalog", "default"), html=menu_sheet(False))
 
 
-@m.state("guest", "Menu for an anonymous visitor with Sign in and Join.")
+@m.state("guest", "Menu for an anonymous visitor with Sign in only.")
 def _():
     return Dialog(bg=("catalog", "guest"), html=menu_sheet(True))
 
@@ -332,3 +342,8 @@ def _():
 @f.state("busy", "Counting results after a change: Apply is busy, the panel stays usable.")
 def _():
     return Dialog(bg=("catalog", "default"), html=filter_sheet(filters_form("m", cat="Jewelry", conds=["Used - Excellent", "Used - Good"]), btn("Show items", "primary", attrs='aria-busy="true"')))
+
+
+@m.state("founder", "Menu for the founder on a phone: categories large, shop-management links small (Inventory, Sell an item, Sales, Support, Story, Shop).")
+def _():
+    return Dialog(bg=("catalog", "default"), html=menu_sheet(False, founder=True))

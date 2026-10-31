@@ -1,7 +1,7 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Browse the catalog
+title Components â€” Browse the catalog
 
 Person(visitor, "Visitor or member", "Browses listings")
 Container_Boundary(web, "Sycapooke Web") {

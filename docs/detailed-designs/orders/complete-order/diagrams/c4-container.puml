@@ -1,17 +1,18 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Complete an order
-
-Person(buyer, "Buyer", "Member")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "Order detail page, Confirm receipt dialog")
-  Container(api, "Sycapooke API", "ASP.NET Core", "Receipt endpoint")
-  Container(worker, "Sycapooke Worker", ".NET worker service", "OrderCompletionJob")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "Orders, OrderStatusChanges")
+title Containers - Complete an order
+Person(user, "Customer or completion worker")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-Rel(buyer, web, "Uses", "HTTPS")
-Rel(web, api, "Calls", "JSON/HTTPS")
-Rel(api, db, "Reads and writes", "EF Core")
-Rel(worker, db, "Completes due orders", "EF Core")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
+System_Ext(provider, "Payment provider")
+Rel(api, provider, "Calls port; validates responses", "HTTPS")
 @enduml

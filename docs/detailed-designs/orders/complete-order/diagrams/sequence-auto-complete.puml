@@ -1,45 +1,39 @@
 @startuml
-title UML sequence behaviour — Automatic completion 3 days after delivery
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
-skinparam rectangle {
-  BorderColor #344054
-  FontColor #101828
-}
-skinparam package {
-  BorderColor #667085
-  FontColor #101828
-  BackgroundColor #F9FAFB
-}
-skinparam sequenceMessageAlign left
-skinparam maxMessageSize 260
-box "Backend — Sycapooke Worker application (Sycapooke.Worker)" #D1FADF
-  participant "OrderCompletionJob" as job
+title Behaviour - Process delivered order at three days
+autonumber
+actor "Job scheduler" as actor
+box "Backend - Sycapooke Worker" #D1FADF
+ participant "OrderCompletionJob" as entry
 end box
-box "Backend — Sycapooke.Application and Sycapooke.Domain" #ECFDF3
-  participant "CompleteDeliveredOrdersHandler" as h
-  participant "Order" as order
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "CompleteDeliveredOrdersHandler" as handler
+ participant "Order" as model
 end box
-box "Backend — Sycapooke.Infrastructure" #FFF4E5
-  database "Sycapooke database" as db
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
 end box
-job -> h : Every Orders:CompletionJobInterval send CompleteDeliveredOrdersCommand
-h -> db : Select Delivered orders with DeliveredAt <= now - 3 days (IX_Orders_Status_DeliveredAt)
-db --> h : Due order IDs
-loop each due order
-  h -> db : Load order with its status history
-  h -> order : Complete(System, now) (L2-034 criterion 2)
-  h -> db : Save where Status = 'Delivered'
-  alt status changed meanwhile (buyer confirmed)
-    db --> h : Concurrency conflict
-    h -> h : Skip the order
-  else committed
-    db --> h : Committed
-    h -> h : Publish OrderCompleted
-  end
+participant "Payment provider" as provider
+actor -> entry : Process delivered order at three days
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Read Delivered timestamp and current open-problem state [L2-034]
+handler -> model : Apply completion once when window has elapsed
+handler -> handler : Persist event without provider payout or transfer
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
 end
-h --> job : Number completed
+handler --> entry : Result or domain refusal
+entry --> actor : Completed once; open problem leaves Delivered unchanged
+note over entry, handler
+Completed once; open problem leaves Delivered unchanged
+end note
 @enduml

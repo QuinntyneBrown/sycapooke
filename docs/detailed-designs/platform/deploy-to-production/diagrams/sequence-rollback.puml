@@ -7,7 +7,7 @@ skinparam defaultFontName Arial
 skinparam ArrowColor #344054
 actor "Owner" as owner
 participant "Deploy marketing / Deploy app" as deploy
-box "Azure VM /opt/sycapooke" #D1FADF
+box "Backend - Azure VM /opt/sycapooke" #D1FADF
   participant ".env" as env
   participant "docker compose" as compose
 end box

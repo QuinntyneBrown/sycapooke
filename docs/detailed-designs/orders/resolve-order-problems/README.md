@@ -1,168 +1,99 @@
-# Resolve order problems
+# Resolve customer order problems
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. Buyers pay for a
-decades-old piece they have only seen in photos, so an item that arrives damaged, differs from its
-description, never arrives or is counterfeit needs a clear remedy. This feature lets a
-buyer report a problem on a `Shipped` or `Delivered` order, lets the seller reply, and
-lets an administrator decide the outcome: a full refund or release of the payment to the
-seller. Decisions are recorded in [ADR orders/0007](../../../adr/orders/0007-order-problems-administrator-flag-private-photos-and-two-outcomes.md).
+Customers report problems with their own orders. The founder responds and decides the shop outcome, including a full refund when appropriate.
 
-The whole problem lives here, including the administrator's problem detail page at
-`/admin/problems/:id` and the resolve dialog. An administrator reaches a problem from
-the email sent to every administrator when it is opened. A moderation queue, the
-audit log and administrator second factor are deferred
-([ADR 0001](../../../adr/general/0001-defer-moderation-reviews-and-data-export.md)).
-
-Terms used in this design:
-
-- **order problem** — buyer's claim on a Shipped or Delivered order, identified by a reference such as `P-0912`
-- **problem window** — period in which a buyer may report: any time while the order is `Shipped`, and until 3 days after `DeliveredAt` while it is `Delivered`
-- **problem reason** — one of not received, not as described, wrong size or counterfeit
-- **seller response** — the seller's single written reply, visible to the buyer and administrators
-- **resolution** — administrator decision with an outcome (full refund or release) and a reason both members see
-- **held payout** — payout blocked while a problem is open (see [seller-payouts](../seller-payouts/README.md))
-
-An open problem has three effects on the rest of the subsystem. It holds the payout. It
-stops auto-completion in [complete-order](../complete-order/README.md). It is the only
-route to the `Refunded` status in the state machine of
-[ship-order](../ship-order/README.md).
+Sycapooke is the shop of one older Caribbean woman, its sole seller. Her jewelry, clothing, housewares and electronics are at least 20 years old. This design refines [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing names identify reusable code; Description identifies target additions.
 
 ## Description
 
-### Frontend — member side (`src/frontend/projects/orders/src/lib/`, HTTP through `@sycapooke/api`)
+### Reporting and private evidence
 
-- **`ReportProblemDialog`** (`report-problem/`, mock `docs/mocks/dialogs/report-problem/`) — opened from ghost "Report a problem" beside "I received it" on `OrderDetailPage` (states `default` and `delivered`); the action renders only while `canReportProblem` is true. It contains:
-  - title "Report a problem" and description "Open until {deadline}. We hold the seller's payout while our team looks into it." (a Shipped order has no deadline, so the first sentence is left out);
-  - `sy-segmented` "What's wrong?" with "Not received", "Not as described", "Wrong size", "Counterfeit";
-  - textarea "Describe it" and `sy-photo-uploader` with `[cover]="false"` under "Photos (up to 4)" with "Add photo"; photos are previewed locally and sent with the report;
-  - primary "Send to Sycapooke".
+`ReportProblemDialog`, `OrderDetailPage`, `SaleDetailPage`, `ProblemDetailPage`, `ResolveProblemDialog`, `OrderProblemsController`, `OrderProblem` and the existing report/response/resolution handlers remain the starting points. Customers report only their own Shipped order or Delivered order within three days. Existing `POST /api/orders/{id}/problem` accepts reason, description and up to four photos; the response route remains `/problem/response` for the founder.
 
-  States: `default`; `invalid` (`sy-error-summary` plus "Choose what's wrong" and "Tell us what happened", without calling the API); `busy` (Cancel disabled); `failed` ("Your photos and description are saved here. Try again."). A photo refused by the API shows its message under the uploader.
-- **`OrderDetailPage`** state `problem` (buyer, mock `order-detail/problem`) — heading "We're on it", warning alert (icon `flag`) "Problem open · {reason}" / "We're holding the seller's payout until our team decides. Usually within 2 business days.", and `sy-thread` with the claim ("You · {day}", photos) and the seller's reply. "I received it" and "Report a problem" are hidden. State `refunded` shows the success alert "Refunded in full" / "Our team reviewed the problem. {total} is on its way back to {card}.", "Resolved {day} by Sycapooke support." and "Back to purchases".
-- **`SaleDetailPage`** state `problem` (seller, mock `sale-detail/problem`) — heading "Problem reported", warning alert "Problem reported · {reason}" / "Your payout is on hold while our team reviews this.", the thread, textarea "Your reply" with help "Visible to the buyer and to Sycapooke.", and "Send reply" ("Write your reply" when blank). After a reply the form is replaced by the reply in the thread. A sale refunded on a problem shows "Refunded · Buyer refunded in full" with the administrator's reason.
-- **`problemThread()`** (`problem-thread.ts`) — maps an `OrderProblem` to `sy-thread` entries for the three pages.
-- **`ProblemsApi`** (`@sycapooke/api`, `orders/problems-api.ts`) — `reportProblem(orderId, reason, description, photos)` as `multipart/form-data`, `respondToProblem(orderId, message)`. `Purchase` gains `canReportProblem`, `problemDeadline` and `problem`; `Sale` gains `problem`.
+All support photos now follow the L2-017 size, content, minimum-dimension and metadata rules and stay in private storage. The existing protected photo endpoint returns `Cache-Control: private, no-store` only to that order's customer or the founder. Another customer's request returns 404. The public listing CDN never serves evidence.
 
-### Frontend — administrator side (`src/frontend/projects/orders/src/lib/problem-detail/`, admin shell)
+### Founder support contract
 
-- **Admin shell** — routes with `data.shell = 'admin'` render in `AppShellComponent` with `sy-top-bar variant="admin"` (logo, "Admin", the member's initials) and no footer.
-- **`ProblemDetailPage`** (route `/admin/problems/:reference`, mock `docs/mocks/pages/problem-detail/`) — heading is the reason ("Not as described"), subtitle "Order problem {reference} · opened {day}". The body holds `sy-thread` with the buyer's claim and photos ("{buyer} · buyer · {day}") and the seller's reply ("{seller} · seller · {day}"). A sunken side panel shows "Order {number}", the item (`sy-item-row`), `sy-facts` with Status (`sy-status`), Total, Delivered, Payout ("Held", "Not paid" or "Released") and primary "Resolve". The `resolved` state shows the success alert "Refunded in full" / "{total} back to the buyer. No payout. {day}." (or "Released to the seller") with the reason and no action. Other states are `loading` (skeleton) and `error` ("Couldn't load this problem", reference). The page does not check the role: a 403 shows the error state.
-- **`ResolveProblemDialog`** (`resolve-problem/`, mock `docs/mocks/dialogs/resolve-problem/`) — title "Resolve problem {reference}". The "Decision" radios are "Refund buyer in full" ("{total} to {buyer} · no payout") and "Release payout to seller" ("Order completes · {seller} is paid"), followed by the reason field ("Sent to both members."). Buttons are "Cancel" and a primary that reads "Refund buyer" or "Release payout"; it shows busy "Refunding" or "Releasing". States: `default`; `invalid` ("Add a reason. Both members see it."); `busy`; a failure shows a danger alert and "Try again".
-- **`AdminProblemsApi`** (`@sycapooke/api`) — `getProblem(reference)`, `resolve(reference, outcome, reason)`.
+Proposed `ShopProblemsController` and `ShopProblemsApi` replace the administrator-facing controller/client. Target routes are `GET /api/shop/problems/{reference}` and `POST /api/shop/problems/{reference}/resolution` with `{ outcome, reason }`. The old `/api/admin/problems` endpoints are removed with no authorization-preserving alias. The frontend target route is `/shop/problems/:reference`, guarded by founder capability, with no separate administrator shell.
 
-### API (`Sycapooke.Api`)
+`ResolveProblemCommandHandler` requires `IFounderAccess`. The target outcome values are `RefundBuyer` and `CloseWithoutRefund`; both require an explanation. Historical `ReleaseToSeller` outcomes project as `CloseWithoutRefund` on reads; new resolution requests accept only the target values. `Member.IsAdministrator` and forged role input confer no access. The founder's response and outcome appear to the customer as shop support, not independent arbitration.
 
-- **`OrderProblemsController`** (policy `VerifiedMember`; a non-party receives `404`, `L2-010`).
-  - `POST /api/orders/{id}/problem` — buyer; `multipart/form-data` with `reason`, `description`, `photos` (0–4). `201` `ProblemDto`. Errors: `422` `PROBLEM_INVALID` (field errors `reason`, `description`, `photos`); `409` `PROBLEM_WINDOW_CLOSED` (`L2-036` criterion 2); `409` `PROBLEM_ALREADY_REPORTED`; `413` `PHOTO_TOO_LARGE`, `415` `PHOTO_TYPE_UNSUPPORTED`, `422` `PHOTO_TOO_MANY_PIXELS` per photo.
-  - `POST /api/orders/{id}/problem/response` — seller; body `{ message }`. `200` `SaleDto`; `422` `PROBLEM_RESPONSE_INVALID`; `404`; `409` `PROBLEM_RESPONSE_NOT_ALLOWED` (resolved or already answered).
-  - `GET /api/orders/{id}/problem/photos/{photoId}` — buyer, seller or administrator; streams the private photo with `Cache-Control: private, no-store`; otherwise `404`.
-- **`AdminProblemsController`** (policy `Administrator`, the Administrator role check of `L2-010`; `403` `ADMINISTRATOR_REQUIRED`)
-  - `GET /api/admin/problems/{reference}` — `200` `ProblemDetailDto`; `404` `PROBLEM_NOT_FOUND`.
-  - `POST /api/admin/problems/{reference}/resolution` — body `{ outcome: "FullRefund" | "ReleaseToSeller", reason }`. `200` `ProblemDetailDto`; `422` `PROBLEM_RESOLUTION_INVALID` (`outcome`, `reason`); `409` `PROBLEM_ALREADY_RESOLVED`; `409` `ORDER_INVALID_TRANSITION`.
-- `GET /api/purchases/{id}` adds `canReportProblem`, `problemDeadline` and `problem`; `GET /api/sales/{id}` adds `problem`. `POST /api/orders/{id}/receipt` answers `409` `ORDER_PROBLEM_OPEN` while a problem is open.
+### Completion and money
 
-### Application and domain
+Reporting a problem pauses automatic and customer-confirmed completion without touching provider settlement. A full-refund decision commits a pending resolution and original-payment refund before calling the provider. The problem remains Open with `PendingRefundId`, requested outcome/reason and request time until issuance is confirmed. `ProblemDto` adds nullable `refundStatus` (`Pending` or `Issued`). Repeating the same pending request returns its current result; a conflicting decision returns 409. Closure without refund is refused while a refund is pending. A conditional update or concurrency token serializes competing resolutions. Provider confirmation applies Refunded and closes the problem once; temporary failure retains the completion hold and retry state. Closure without refund completes Shipped or Delivered directly through the explicit support transition and records the explanation. A completion worker checks the same current problem state.
 
-- **`OrderProblem`** (aggregate, `Sycapooke.Domain/Orders/`) — `Id`, `Number`, `Reference` (`P-1001` and up: highest number plus one, guarded by a unique index), `OrderId`, `Reason` (`ProblemReason`), `Description`, `Photos` (0–4 `ProblemPhoto`), `Status` (`Open`, `Resolved`), `OpenedAt`, `SellerResponse`, `SellerRespondedAt`, `Outcome`, `RefundAmount`, `ResolutionReason`, `ResolvedBy`, `ResolvedAt`. `RecordSellerResponse` accepts one reply while `Open`. `Resolve` accepts one decision. Texts are trimmed and at most 1000 characters.
-- **`Order.CanReportProblem(now)`** — true when `Status = Shipped`, or when `Status = Delivered` and `now < DeliveredAt + 3 days` (`Order.ProblemWindow`). `Order.ProblemDeadline` carries the end of the window. `Order.RefundForProblem(now)` moves Shipped or Delivered to Refunded as the administrator.
-- **`Member.IsAdministrator`** — the Administrator role, granted in the database by operations.
-- **`ReportProblemCommandHandler`** — loads the order by `BuyerId = caller`, validates, and checks the window. It checks each photo's size (10 MB), sniffed type and pixel count with `IImageInspector` as `L2-017` does, without the 800-pixel minimum. It re-encodes each as one JPEG of at most 1600 pixels (stripping metadata) and stores it privately with `IPhotoStorage.SaveOriginalAsync` under `problems/{problemId}/{photoId}.jpg`. Problem photos are never published. In one save it inserts the problem, calls `Payout.HoldForProblem()` and enqueues `NotificationType.ProblemReported` to the seller and to every administrator, linking to `/admin/problems/{reference}` (`L2-036` criterion 1).
-- **`RespondToProblemCommandHandler`** — records the seller's reply (`L2-036` criterion 5).
-- **`ResolveProblemCommandHandler`** — in one save, by outcome:
-  - `FullRefund` — `Order.RefundForProblem(now)` (`Shipped` or `Delivered` → `Refunded`), a `Refund` for `Total` (`ProblemResolved`), `Payout.Cancel()` (`L2-036` criterion 3). After the save the refund is issued through `IPaymentProvider` with the refund ID as key, as cancellations are, and the buyer is emailed `OrderRefunded`.
-  - `ReleaseToSeller` — `Order.Complete(Administrator, now)` (`Delivered` → `Completed`), then `OrderCompleted` is published so the payout becomes releasable (`L2-036` criterion 4). A `Shipped` order answers `ORDER_INVALID_TRANSITION`.
-  - A partial refund is deferred ([ADR orders/0007](../../../adr/orders/0007-order-problems-administrator-flag-private-photos-and-two-outcomes.md)).
+Tests cover reporting-window edges, private photo access, founder-only responses and resolution, inherited administrator denial, pending refund failure/retry and duplicate outcomes. Partial refunds stay outside the existing scope.
 
-  Each outcome calls `OrderProblem.Resolve`, enqueues `NotificationType.ProblemResolved` with the decision and reason to buyer and seller, and logs the administrator ID, outcome and problem and order references (`L2-069`).
-- **`CompleteDeliveredOrdersHandler`** skips orders with an open problem, and `ConfirmReceiptCommandHandler` refuses them (`L2-034` criterion 3). The payout release job's catch-up also repairs a payout held for a problem whose order completed but lost its event.
-- **`GetProblemDetailQuery`** / handler — projects the claim, photos (as API URLs), seller reply, both display names, the order facts, the payout status and, when resolved, the decision.
+### Implementation and verification boundary
 
-### Data
+Application code and HTML mocks still require alignment with the revised requirements. UI implementation first aligns mocks, design-system components and screen composition. Backend verification uses fake ports and in-memory substitutes. Browser verification uses the built Angular app and intercepted API responses. No external system runs in tests.
 
-| Table | Key columns and constraints |
-|-------|-----------------------------|
-| `OrderProblems` | `Id` PK; unique `UX_OrderProblems_Reference`, `UX_OrderProblems_Number`, `UX_OrderProblems_OrderId` (one problem per order); `Reason`, `Description`, `Status` (concurrency token), `OpenedAt`, `SellerResponse`, `SellerRespondedAt`, `Outcome`, `RefundAmount decimal(10,2)`, `ResolutionReason`, `ResolvedBy` (FK `Members`), `ResolvedAt`; filtered index `IX_OrderProblems_Open_OpenedAt` where `Status = 'Open'` |
-| `ProblemPhotos` | `Id` PK; `ProblemId` FK (cascade); `Position`; `StorageKey`; `ContentType` |
-| `Members` | adds `IsAdministrator bit` (default 0) |
+### Implementation evidence
 
-`Payouts.Status` gains `Cancelled` and `Payouts.HoldReason` gains `OpenProblem`; `Refunds.Reason`
-gains `ProblemResolved`. The problem window is the constant `Order.ProblemWindow` (3 days).
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
 
-### Error codes
-
-| Code | HTTP | Meaning |
-|------|------|---------|
-| `PROBLEM_INVALID` | 422 | Reason, description or photo count invalid |
-| `PROBLEM_WINDOW_CLOSED` | 409 | Order not Shipped or Delivered, or 3 days or more after delivery |
-| `PROBLEM_ALREADY_REPORTED` | 409 | The order already has a problem |
-| `PROBLEM_RESPONSE_INVALID` | 422 | Reply blank or too long |
-| `PROBLEM_RESPONSE_NOT_ALLOWED` | 409 | Problem resolved or already answered |
-| `PROBLEM_RESOLUTION_INVALID` | 422 | Resolution without a reason or with an unknown outcome |
-| `PROBLEM_ALREADY_RESOLVED` | 409 | A decision already exists |
-| `PROBLEM_NOT_FOUND` | 404 | No problem with that reference |
-| `ORDER_PROBLEM_OPEN` | 409 | The buyer confirmed receipt while a problem is open |
-| `ADMINISTRATOR_REQUIRED` | 403 | The caller does not hold the Administrator role |
-
-### Tests
-
-- `tests/Sycapooke.Api.Tests/ResolveOrderProblemsTests.cs` — the endpoints end to end on SQLite in-memory, with fake photo storage, payment provider and email sender.
-- `tests/Sycapooke.Domain.Tests/OrderProblemTests.cs` — the window, the aggregate and the payout hold.
-- `src/frontend/e2e/tests/resolve-order-problems.spec.ts` — the buyer, seller and administrator screens with `page.route` fixtures.
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-036` | `L1-008` | The buyer shall be able to report a problem on a Shipped or Delivered order until 3 days after delivery. Reasons shall be: not received, not as described, wrong size, or counterfeit. An open problem shall hold the seller payout. An administrator shall resolve it with a full refund or release of payment to the seller. A partial refund is deferred. |
+| --- | --- | --- |
+| `L2-010` | `L1-002` | Every API endpoint shall enforce the caller's permissions on the server. Customers shall change only their own private account and access only their own purchases, addresses and support submissions. Only the configured founder (L2-003) shall manage inventory, view shop sales, fulfil orders and resolve customer problems. There is no separate administrator decision-maker. Anonymous browsing and the public registration, verification, authentication, password-recovery and signed provider-callback flows remain available under their own validation rules. |
+| `L2-017` | `L1-004` | A listing shall have 1 to 8 photos. Each photo shall be JPEG, PNG or WebP, at most 10 MB, and at least 800 pixels on its shortest side. The file type shall be checked from the file's content, not its name. The server shall strip all metadata (including GPS location), re-encode the image and produce thumbnail (400px), medium (800px) and large (1600px) versions. The first photo is the cover and the founder can reorder photos. |
+| `L2-030` | `L1-007` | Payment shall be taken through a PCI DSS compliant third-party payment provider using the provider's hosted fields or hosted page. Card numbers and security codes shall never pass through or be stored on Sycapooke servers. Sycapooke shall store only the provider's payment reference, card brand and last four digits. Payments shall be processed for the founder's shop merchant account, with provider-managed settlement independent of order completion. Sycapooke shall not charge a marketplace commission, create connected seller accounts, onboard sellers or schedule per-order payout releases. Provider processing fees and settlement timing shall follow the shop's provider agreement. Payment results shall be confirmed from the provider's signed webhook, not from the browser. |
+| `L2-032` | `L1-008` | An order shall move through the statuses Paid, Shipped, Delivered and Completed, or end as Cancelled or Refunded. Only the transitions in this requirement shall be allowed, and every transition shall be recorded with its time and the actor.<br><br>\| From \| To \| Triggered by \|<br>\| --- \| --- \| --- \|<br>\| Paid \| Shipped \| Founder adds tracking \|<br>\| Paid \| Cancelled \| Founder cancels, or ship deadline passes \|<br>\| Shipped \| Delivered \| Carrier reports delivery, or buyer confirms receipt \|<br>\| Delivered \| Completed \| Buyer confirms receipt, or 3 days pass with no open problem \|<br>\| Shipped, Delivered \| Completed \| Founder closes an open customer problem without a refund and supplies an explanation \|<br>\| Shipped, Delivered \| Refunded \| Provider confirms a full refund authorized by the founder for a customer problem \| |
+| `L2-034` | `L1-008` | The buyer shall be able to confirm receipt of a Shipped or Delivered order. An order shall complete automatically 3 days after it becomes Delivered unless the buyer has reported a problem. |
+| `L2-036` | `L1-008` | A customer shall be able to report a problem on their own Shipped or Delivered order until 3 days after delivery, using the reasons not received, not as described, wrong size or counterfeit, a description and up to 4 private photos. An open problem shall pause automatic order completion, not provider settlement. The founder shall respond and resolve it through protected shop management with either a full refund of the original payment or closure without a refund, completing the order. The customer shall see the outcome and explanation. This is shop customer support, not independent arbitration; partial refunds remain outside the existing scope. Support photos shall be visible only to that customer and the founder and follow L2-017 upload validation and metadata-stripping rules. |
+| `L2-054` | `L1-014` | Email addresses, shipping addresses and phone numbers shall never appear in public pages or public API responses. Shipping addresses shall be encrypted at rest at the field level, and all databases, backups and photo storage shall be encrypted at rest. |
 
 ## Diagrams
 
 ### System context
 
-Buyer, seller and administrator all act through Sycapooke. Sycapooke refunds or pays out through
-the payment provider and emails both members.
+The context identifies the customer or founder and the systems used by this feature.
 
-![C4 system context for resolving order problems](diagrams/c4-context.png)
+![System context for resolve customer order problems](diagrams/c4-context.png)
 
 ### Containers
 
-`Sycapooke API` stores problem photos privately in `Photo storage` and records the decision.
-`Sycapooke Worker` carries out refunds, payouts and email.
+The container view separates the delivery surface, application boundary and feature storage. External integrations remain behind their ports.
 
-![C4 container view for resolving order problems](diagrams/c4-container.png)
+![Containers for resolve customer order problems](diagrams/c4-container.png)
 
 ### Components
 
-Member endpoints and administrator endpoints sit in separate controllers.
+The component view connects `ShopProblemsController` with `ResolveProblemCommandHandler` and the relevant feature state.
 
-![C4 component view for resolving order problems](diagrams/c4-component.png)
+![Components for resolve customer order problems](diagrams/c4-component.png)
 
 ### Class structure
 
-An `Order` has at most one `OrderProblem` with up to 4 photos.
-`ResolveProblemCommandHandler` changes the problem, the order and the payout together.
+The class view identifies the relevant fields, operation responsibilities and dependencies. It is a target responsibility model, not a claim that each addition already exists.
 
-![Class diagram for resolving order problems](diagrams/class-structure.png)
+![Class structure for resolve customer order problems](diagrams/class-structure.png)
 
-### Behaviour — report a problem
+### Behaviour - Report a purchase problem
 
-The window check returns HTTP 409 after 3 days from delivery. A valid report stores
-photos privately, opens the problem and holds the payout in one transaction.
+201 problem; 404 other buyer; 409 closed reporting window. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for reporting a problem](diagrams/sequence-report-problem.png)
+![Report a purchase problem](diagrams/sequence-report-problem.png)
 
-### Behaviour — seller reply
+### Behaviour - Founder responds to the customer
 
-The seller replies once while the problem is open. The reply appears to the buyer and
-to administrators.
+Private response; customer resolution or reply attempt receives 403. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for the seller's reply](diagrams/sequence-seller-response.png)
+![Founder responds to the customer](diagrams/sequence-respond-as-founder.png)
 
-### Behaviour — administrator resolution
+### Behaviour - Authorize full refund with explanation
 
-A full refund moves the order to Refunded and cancels the payout. Release completes the
-order and frees the payout.
+Refunded once; temporary failure keeps problem and completion hold. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for resolving a problem](diagrams/sequence-resolve-problem.png)
+![Authorize full refund with explanation](diagrams/sequence-resolve-with-full-refund.png)
+
+### Behaviour - Close support without refund
+
+Completed with visible explanation; no independent arbitration. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
+
+![Close support without refund](diagrams/sequence-close-without-refund.png)

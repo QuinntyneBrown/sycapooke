@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Pay displayed checkout total
+autonumber
+actor "Verified customer" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "CheckoutPage" as page
+ participant "CheckoutApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "CheckoutsController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "CheckoutCommandHandlers" as handler
+ participant "Checkout" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> page : Pay the displayed total
+page -> client : pay(checkoutId, token, expectedTotal, key)
+client -> entry : POST /api/checkouts/{id}/payments
+entry -> handler : Verified customer session
+handler -> db : Load buyer checkout, reservation and address
+db --> handler : Current total and version
+alt Not buyer, expired, address missing or total changed
+ handler --> entry : Refusal; no provider call [L2-027, L2-028]
+else Valid checkout
+ handler -> db : Commit payment attempt and idempotency key before external call
+ db --> handler : Durable attempt
+ handler -> provider : Charge configured shop merchant with token and same key [L2-030]
+ provider --> handler : Accepted, declined or temporarily unavailable
+ handler -> db : Record attempt outcome without marking order Paid
+ db --> handler : Saved attempt
+ handler --> entry : Pending payment or typed refusal
+end
+entry --> client : 202 pending result or ProblemDetails
+client --> page : Display pending, decline or changed-total state
+note over handler, provider
+A signed callback alone creates Paid and Sold.
+A retry uses the original persisted payment key.
+end note
+@enduml

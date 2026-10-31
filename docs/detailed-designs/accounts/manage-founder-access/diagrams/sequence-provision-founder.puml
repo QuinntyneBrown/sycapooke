@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Bind one verified immutable account ID
+autonumber
+actor "Trusted operator" as actor
+box "Frontend - Local operator terminal" #E0F2FE
+ participant "Operator terminal" as page
+ participant "Migrator arguments" as client
+end box
+box "Backend - Local CLI application" #D1FADF
+ participant "Sycapooke.Migrator --provision-founder" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "FounderProvisioner" as handler
+ participant "ShopIdentity" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Shop configuration and singleton identity" as db
+end box
+actor -> page : Bind one verified immutable account ID
+page -> client : Operator configuration
+client -> entry : Local guarded operation
+entry -> handler : Run guarded operation
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Validate configured verified open member; compare singleton binding [L2-003]
+handler -> model : Insert singleton once; reject conflicting identity; same binding is a no-op
+handler -> handler : Expose no public privilege mutation
+handler -> db : Commit valid state atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : One configured founder; invalid binding grants no access
+note over entry, handler
+One configured founder; invalid binding grants no access
+end note
+@enduml

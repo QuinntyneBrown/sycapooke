@@ -2,7 +2,7 @@
 
 ## Basis
 
-The estimate assumes the `Order` aggregate and state machine from ship-order, the payout handler from seller-payouts, and the reviews subsystem's handling of `OrderCompleted`. Hours cover implementation, unit and integration tests, acceptance tests and review fixes for an intermediate Angular/TypeScript and ASP.NET Core/C# developer; they exclude requirements, design and mock work. [Detailed design](../../detailed-designs/orders/complete-order/README.md)
+The estimate assumes the `Order` aggregate and state machine from ship-order, the reviews subsystem's handling of `OrderCompleted`. Hours cover implementation, unit and integration tests, acceptance tests and review fixes for an intermediate Angular/TypeScript and ASP.NET Core/C# developer; they exclude requirements, design and mock work. [Detailed design](../../detailed-designs/orders/complete-order/README.md)
 
 ## Full design
 

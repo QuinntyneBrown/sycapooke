@@ -1,7 +1,7 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Browse the catalog
+title Containers â€” Browse the catalog
 
 Person(visitor, "Visitor or member", "Browses listings, signed in or not")
 System_Boundary(sycapooke, "Sycapooke") {

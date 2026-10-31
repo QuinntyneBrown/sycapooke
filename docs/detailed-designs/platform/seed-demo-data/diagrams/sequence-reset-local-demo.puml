@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Reset permitted local target
+autonumber
+actor "Developer" as actor
+box "Frontend - Local operator terminal" #E0F2FE
+ participant "Local development terminal" as page
+ participant "CliApp" as client
+end box
+box "Backend - Local CLI application" #D1FADF
+ participant "CLI environment guard" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "DemoReset" as handler
+ participant "MigratedSchema" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> page : Reset permitted local target
+page -> client : CLI reset
+client -> entry : Local guarded operation
+entry -> handler : Run guarded operation
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Inspect environment, sanitized target and --force guard [L2-073]
+handler -> model : Reset migrated schema and photo store [L2-072]
+handler -> handler : Return documented exit code without credentials
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Empty migrated local install or guard refusal
+note over entry, handler
+Empty migrated local install or guard refusal
+end note
+@enduml

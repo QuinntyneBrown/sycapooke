@@ -8,14 +8,14 @@ Container_Boundary(web, "Sycapooke Web") {
   Component(page, "ListingDetailPage", "@sycapooke/catalog route component", "items/:reference, view states, breadcrumb, info column")
   Component(store, "ListingDetailStore", "Angular signal store", "listing, view, primaryAction, similar")
   Component(gallery, "sy-gallery", "@sycapooke/components", "Thumbnails, swipe below 992 px")
-  Component(seller, "sy-seller-summary", "@sycapooke/components", "Rating or New seller, profile link")
+  Component(seller, "sy-seller-summary", "@sycapooke/components", "No reviews yet and founder story link")
   Component(buybar, "sy-buy-bar", "@sycapooke/components", "Buy now, sign in to buy, Edit listing")
   Component(client, "CatalogApi", "@sycapooke/api", "listing(reference), listings(page, category)")
 }
 Container_Boundary(api, "Sycapooke API") {
   Component(ctrl, "CatalogController", "ASP.NET Core controller", "GET /api/catalog/listings/{reference}")
   Component(handler, "GetListingDetailQueryHandler", "MediatR handler", "Visibility, viewer relation, total")
-  Component(vis, "ListingDetailVisibility", "Domain rule", "Draft and Removed only for the seller")
+  Component(vis, "ListingDetailVisibility", "Domain rule", "Draft and Removed only for the founder")
   Component(dbctx, "ISycapookeDbContext", "Application port, EF Core", "Listings, ListingPhotos, Members")
 }
 ContainerDb(db, "Sycapooke database", "SQL Server", "Listings, ListingPhotos, Members")

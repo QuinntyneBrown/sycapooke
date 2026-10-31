@@ -1,8 +1,8 @@
 # Notifications subsystem
 
-The notifications subsystem tells members by email about events that affect their account, listings and orders (`L1-011`). Every other subsystem enqueues email through one outbox port. `Sycapooke Worker` renders, guards and sends each email with retry and back-off. Members choose which optional categories they receive, and anyone can leave marketing email in one click without signing in.
+Account, customer order and founder shop messages with optional marketing. The [architecture baseline](../README.md) defines shared boundaries. Features appear in journey-value order, with supporting controls after direct customer capabilities.
 
-| Feature | Design | L2 requirements |
-|---------|--------|-----------------|
-| Send email notifications | [send-email-notifications](send-email-notifications/README.md) | `L2-042` |
-| Manage notification preferences | [manage-notification-preferences](manage-notification-preferences/README.md) | `L2-043` |
+| Feature | Design | Requirements | Estimate |
+| --- | --- | --- | --- |
+| Send account and shop order emails | [send-email-notifications](send-email-notifications/README.md) | `L2-002`, `L2-007`, `L2-009`, `L2-019`, `L2-030`, `L2-033`, `L2-035`, `L2-036`, `L2-042`, `L2-043` | [estimate](../../estimates/notifications.md) |
+| Manage notification preferences | [manage-notification-preferences](manage-notification-preferences/README.md) | `L2-043` | [estimate](../../estimates/notifications.md) |

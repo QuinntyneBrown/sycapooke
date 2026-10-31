@@ -2,7 +2,7 @@
 
 ## Basis
 
-The estimate assumes an intermediate Angular/TypeScript and ASP.NET Core/C# developer who is productive in both stacks but new to this codebase. It assumes the baseline is already in place: the `core` interceptors, `AuthState`, shared design-system components (`ErrorSummaryComponent`, toasts, segmented control), problem-details middleware, MediatR and FluentValidation pipeline, `SycapookeDbContext`, Redis rate limiting and `ISellerPayoutAccountReader` (provided by the seller-payouts feature). `PhotoUploaderComponent` and `ListingPhotoAttacher` are estimated in upload-listing-photos. The `<TO SUPPLY>` items (fee percentage, suggested brands, flaws maximum length, rounding rule, reading of the `L2-051` limit) do not change the hours. Hours cover implementation, unit and acceptance tests, and review fixes. [Detailed design](../../detailed-designs/listings/create-listing/README.md)
+The estimate assumes an intermediate Angular/TypeScript and ASP.NET Core/C# developer who is productive in both stacks but new to this codebase. It assumes the baseline is already in place: the `core` interceptors, `AuthState`, shared design-system components (`ErrorSummaryComponent`, toasts, segmented control), problem-details middleware, MediatR and FluentValidation pipeline, `SycapookeDbContext`, Redis rate limiting. `PhotoUploaderComponent` and `ListingPhotoAttacher` are estimated in upload-listing-photos. The `<TO SUPPLY>` items (suggested brands, flaws maximum length, rounding rule, reading of the `L2-051` limit) do not change the hours. Hours cover implementation, unit and acceptance tests, and review fixes. [Detailed design](../../detailed-designs/listings/create-listing/README.md)
 
 ## Full design
 
@@ -34,7 +34,7 @@ The minimal version keeps the size rule and the publish path intact. It includes
 | Descope | What is lost | Hours saved |
 |---------|--------------|------------:|
 | `EarningsEstimateComponent` | Fee and estimated earnings are not shown before publishing (`L2-031`) | 2 |
-| Payout onboarding check after publish | No "Set up payouts" prompt on the success state | 2 |
+| Founder-only publish guard (customer selling refused) | 2 |
 | `listing-publish` rate-limit policy | No per-member listing limit beyond the general request limits (`L2-051`) | 3 |
 | Dedicated unverified, suspended and limited page states; show a generic error instead | Members see a generic message instead of a tailored one | 3 |
 | `GET /api/selling/options`; hard-code conditions and brands in the client | Fee and brand list change only with a frontend release | 1 |

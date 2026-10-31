@@ -20,6 +20,8 @@ The categories, subcategories and conditions offered come from the server-held c
 
 ## Description
 
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
+
 The slice extends the catalog page and `GET /api/catalog/listings` from browse-catalog, and adds two small read endpoints. Screens and copy come from `docs/mocks/pages/catalog/` (states `search`, `category`, `filtered`, `no-results`) and `docs/mocks/dialogs/filters/` (states `default`, `busy`, `invalid`). Catalog reads go through `ISycapookeDbContext` ([ADR catalog/0001](../../../adr/catalog/0001-catalog-reads-through-the-db-context-port.md)); keyword search is a case-insensitive word match, not a full-text index ([ADR catalog/0003](../../../adr/catalog/0003-keyword-search-by-case-insensitive-match.md)).
 
 ### URL contract
@@ -104,17 +106,23 @@ No change. The handlers query `ISycapookeDbContext`; there is no full-text index
 - Saved searches.
 - The subcategory chips under a category header ("All jewelry", "Brooches and pins"…); the subcategory group of the filter form covers the same filter.
 
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
+### Founder-only catalog scope
+
+Search, counts, brand facets and filtering start from the founder-owned public inventory predicate. Query parameters cannot select another seller. Existing keyword ranking and filter conjunction apply inside that scope.
+
 ## Requirements
 
-The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.
-
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-023` | `L1-005` | Visitors shall be able to search by keyword. Search shall match title, brand and description, ignore case, and rank title and brand matches above description matches. |
 | `L2-024` | `L1-005` | Visitors shall be able to filter by category, subcategory, brand (multiple), condition (multiple) and price range, and sort by newest, price low to high, or price high to low. Filters combine with each other and with the keyword using AND. Filters and sort shall be held in the page URL so a result set can be bookmarked and shared. |
 | `L2-062` | `L1-016` | On XS and SM viewports, the main navigation shall collapse into a menu button and the catalog filters shall open in a full-screen panel. On MD, filters shall open in a side panel. On LG and XL, the navigation shall be shown in full and filters shall be a permanent sidebar. |
-
-The navigation half of `L2-062` (menu button, `docs/mocks/dialogs/nav-menu/`) belongs to the platform shell; this feature realizes the filter half.
 
 ## Diagrams
 

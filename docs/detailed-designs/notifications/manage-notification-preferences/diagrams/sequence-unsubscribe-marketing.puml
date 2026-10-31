@@ -1,0 +1,47 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Use email or mail-client unsubscribe
+autonumber
+actor "Customer or founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "NotificationSettingsPage" as page
+ participant "NotificationPreferencesApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "NotificationPreferencesController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "UpdateNotificationPreferencesCommandHandler" as handler
+ participant "NotificationPreferences" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Email provider" as provider
+actor -> page : Use email or mail-client unsubscribe
+page -> client : Existing signed unsubscribe endpoint
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Validate signed unsubscribe token [L2-043]
+handler -> model : Set MarketingEmails false idempotently
+handler -> handler : Dispatch skips queued optional marketing for opted-out account
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Unsubscribed without sign-in; altered token changes nothing
+note over entry, handler
+Unsubscribed without sign-in; altered token changes nothing
+end note
+@enduml

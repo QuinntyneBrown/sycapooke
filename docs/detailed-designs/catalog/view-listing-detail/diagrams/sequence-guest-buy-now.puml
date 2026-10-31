@@ -41,4 +41,8 @@ else credentials refused
   auth --> signin : 401 problem details
   signin --> actor : Sign-in error, returnUrl kept
 end
+note over handler
+Public queries restrict inventory to the configured founder.
+No public customer profile or numeric rating is projected.
+end note
 @enduml

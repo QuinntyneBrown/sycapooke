@@ -1,54 +1,42 @@
 @startuml
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
-skinparam roundcorner 8
+skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
+title Class structure - Complete an order
 skinparam class {
-  BorderColor #344054
-  FontColor #101828
-  BackgroundColor #F9FAFB
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
 }
-hide empty members
-title Class structure — Complete an order
-
-class Order <<see ship-order>> {
-  +OrderStatus Status
-  +DateTime? DeliveredAt
-  +DateTime? CompletedAt
-  +DateTime? AutoCompletesAt
-  +{static} TimeSpan AutoCompleteAfter = 3 days
-  +ConfirmReceipt(now): void
-  +Complete(actor, now): void
-  +IsDueForAutoCompletion(now): bool
+class "OrdersController" as Entry {
 }
-class ConfirmReceiptCommand {
-  +Guid BuyerId
-  +Guid OrderId
+class "ConfirmReceiptCommandHandler" as Handler {
+ +Handle(request: ConfirmReceiptCommand, cancellationToken: CancellationToken): Task<Result<PurchaseDto>>
 }
-class ConfirmReceiptCommandHandler {
-  +Handle(cmd): Task<Result<PurchaseDto>>
+class "Order" as Model {
+ +OrderStatus Status
+ +DateTime? DeliveredAt
+ +DateTime? EndedAt
 }
-class CompleteDeliveredOrdersCommand
-class CompleteDeliveredOrdersHandler {
-  +Handle(cmd): Task<int>
+class "ConfirmReceiptCommand" as Request {
+ +Guid BuyerId
+ +Guid OrderId
 }
-class OrderCompletionJob {
-  +RunOnceAsync(ct): Task<int>
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
 }
-class OrderCompleted <<MediatR notification>> {
-  +Guid OrderId
-  +Guid BuyerId
-  +Guid SellerId
-  +DateTime CompletedAt
+Handler ..> ISycapookeDbContext : persistence boundary
+interface IFounderAccess {
+ +IsFounderAsync(memberId: Guid): Task<bool>
 }
-class "Payout handler" as PayoutHandler <<seller-payouts>>
-ConfirmReceiptCommandHandler ..> ConfirmReceiptCommand : handles
-ConfirmReceiptCommandHandler --> Order : loads / mutates
-CompleteDeliveredOrdersHandler ..> CompleteDeliveredOrdersCommand : handles
-CompleteDeliveredOrdersHandler --> Order : loads / mutates
-OrderCompletionJob ..> CompleteDeliveredOrdersCommand : sends
-ConfirmReceiptCommandHandler ..> OrderCompleted : publishes
-CompleteDeliveredOrdersHandler ..> OrderCompleted : publishes
-PayoutHandler ..> OrderCompleted : handles
+Handler ..> IFounderAccess : protected shop actions
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
 @enduml

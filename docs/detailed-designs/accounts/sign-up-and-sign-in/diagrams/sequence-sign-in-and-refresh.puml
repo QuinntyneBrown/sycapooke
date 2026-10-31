@@ -1,65 +1,46 @@
 @startuml
-title UML sequence behaviour — Sign in and renew the session
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
-skinparam rectangle {
-  BorderColor #344054
-  FontColor #101828
-}
-skinparam package {
-  BorderColor #667085
-  FontColor #101828
-  BackgroundColor #F9FAFB
-}
-actor "Member" as actor
-box "Frontend — @sycapooke/accounts and @sycapooke/api" #E0F2FE
-  participant "SignInPage" as page
-  participant "AuthState" as auth
-  participant "sessionInterceptor" as icpt
+title Behaviour - Sign in and rotate cookie session
+autonumber
+actor "Customer or founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "SignInPage" as page
+ participant "AuthState" as client
 end box
-box "Backend — Sycapooke API application" #D1FADF
-  participant "AuthController" as ctrl
-  participant "SessionCookies" as cookies
+box "Backend - Sycapooke API" #D1FADF
+ participant "AuthController" as entry
 end box
-box "Backend — Sycapooke Application and Domain" #ECFDF3
-  participant "SignInCommandHandler" as signin
-  participant "RefreshSessionCommandHandler" as refresh
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "SignInCommandHandler" as handler
+ participant "Session" as model
 end box
-box "Backend — Sycapooke Infrastructure" #FFF4E5
-  database "Sycapooke database" as db
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
 end box
-actor -> page : Email and password, choose "Sign in"
-page -> auth : signIn(email, password)
-auth -> ctrl : POST /api/auth/sign-in
-ctrl -> signin : SignInCommand
-signin -> db : Find member by normalised email
-alt unknown email or wrong password (L2-006)
-  ctrl --> auth : 401 "Email or password is incorrect"
-  page --> actor : Same message for both; email kept
-else correct
-  signin -> db : Insert session (refresh token hash, new family, 14 days)
-  ctrl -> cookies : Write sy_access (JWT, 15 minutes) and sy_refresh (HttpOnly, Secure, SameSite=Strict)
-  ctrl --> auth : 200 member
-  page --> actor : Back to returnUrl; top bar shows the member
+actor -> page : Sign in and rotate cookie session
+page -> client : POST /api/auth/sign-in; POST /api/auth/refresh
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Apply password and IP limits [L2-007]
+handler -> model : Create or rotate hashed refresh family [L2-008]
+handler -> handler : Return server-derived founder capability and safe return URL
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
 end
-== 15 minutes later ==
-actor -> icpt : Any call to Sycapooke API
-icpt -> ctrl : Request with the expired sy_access
-ctrl --> icpt : 401
-icpt -> ctrl : POST /api/auth/refresh (sy_refresh)
-ctrl -> refresh : RefreshSessionCommand
-refresh -> db : Find the token by hash
-alt already rotated (reuse, L2-008)
-  refresh -> db : Revoke every session in the family
-  ctrl --> icpt : 401, cookies cleared
-  icpt -> auth : clear()
-else active
-  refresh -> db : Mark rotated, insert successor in the same family
-  ctrl -> cookies : Write new cookies
-  ctrl --> icpt : 200
-  icpt -> ctrl : Retry the original call once
-end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : 200 session; generic credential error; reused family revoked
+note over entry, handler
+200 session; generic credential error; reused family revoked
+end note
 @enduml

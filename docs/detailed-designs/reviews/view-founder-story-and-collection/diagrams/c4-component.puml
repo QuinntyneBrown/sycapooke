@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - View the founder story and collection
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "MembersController", "Controller", "Feature entry point")
+  Component(handler, "GetPublicProfileQueryHandler", "Application handler", "Executes feature rules")
+  Component(entity, "PublicProfileDto", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
+}
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
+Component(access, "IFounderAccess", "Application port", "Configured immutable founder identity")
+Rel(entry, access, "Checks protected management actions")
+Rel(handler, access, "Enforces non-HTTP boundary")
+@enduml

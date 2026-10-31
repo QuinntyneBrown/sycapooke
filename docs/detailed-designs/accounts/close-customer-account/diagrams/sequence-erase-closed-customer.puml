@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Process a closed account at the erasure deadline
+autonumber
+actor "Job scheduler" as actor
+box "Backend - Sycapooke Worker" #D1FADF
+ participant "EraseClosedCustomersJob" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "EraseClosedCustomersHandler" as handler
+ participant "Member" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> entry : Process a closed account at the erasure deadline
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Select eligible closed customer [L2-005]
+handler -> model : Erase private identity, saved addresses and Google link
+handler -> handler : Anonymise retained orders without touching founder inventory
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> actor : Erasure within 30 days; repeated execution is harmless
+note over entry, handler
+Erasure within 30 days; repeated execution is harmless
+end note
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Open shop sale detail
+autonumber
+actor "Customer or founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "OrderHistoryPage" as page
+ participant "OrdersApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "OrdersController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "ListOrdersQueryHandler" as handler
+ participant "OrderRowDto" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> page : Open shop sale detail
+page -> client : GET /api/sales/{id}
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Require founder regardless of role query parameter [L2-010]
+handler -> model : Read order for configured founder shop
+handler -> handler : Apply 30-day address-visibility window [L2-037]
+handler -> db : Project authorized response without mutation
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Authorized sale detail; customer 403; expired address omitted
+note over entry, handler
+Authorized sale detail; customer 403; expired address omitted
+end note
+@enduml

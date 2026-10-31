@@ -1,28 +1,17 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Order history
-
-Container(web, "Sycapooke Web", "Angular", "PurchasesPage, SalesPage, OrderDetailPage, SaleDetailPage, OrdersApiService")
-Container_Boundary(api, "Sycapooke API") {
-  Component(pc, "PurchasesController", "ASP.NET Core controller", "GET /api/purchases, /api/purchases/{id}")
-  Component(sc, "SalesController", "ASP.NET Core controller", "GET /api/sales, /api/sales/{id}")
-  Component(lq, "ListOrdersQueryHandler", "MediatR handler", "Newest-first keyset pages by role")
-  Component(bq, "GetPurchaseDetailQueryHandler", "MediatR handler", "Buyer projection")
-  Component(sq, "GetSaleDetailQueryHandler", "MediatR handler", "Seller projection with address rule")
-  Component(vis, "ShippingAddressVisibility", "Domain policy", "Seller only, until EndedAt + 30 days")
-  Component(enc, "AesGcmFieldEncryptor", "EF Core value converter (privacy)", "Decrypts ShippingAddressCipher")
+title Components - Track purchases and founder sales
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "OrdersController", "Controller", "Feature entry point")
+  Component(handler, "ListOrdersQueryHandler", "Application handler", "Executes feature rules")
+  Component(entity, "OrderRowDto", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
 }
-ContainerDb(db, "Sycapooke database", "SQL Server", "Orders")
-Rel(web, pc, "Calls", "JSON/HTTPS")
-Rel(web, sc, "Calls", "JSON/HTTPS")
-Rel(pc, lq, "Sends ListOrdersQuery(Buyer)")
-Rel(sc, lq, "Sends ListOrdersQuery(Seller)")
-Rel(pc, bq, "Sends GetPurchaseDetailQuery")
-Rel(sc, sq, "Sends GetSaleDetailQuery")
-Rel(sq, vis, "Asks IsVisible")
-Rel(sq, enc, "Reads address through")
-Rel(lq, db, "Reads", "SQL")
-Rel(bq, db, "Reads", "SQL")
-Rel(sq, db, "Reads", "SQL")
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
+Component(access, "IFounderAccess", "Application port", "Configured immutable founder identity")
+Rel(entry, access, "Checks protected management actions")
+Rel(handler, access, "Enforces non-HTTP boundary")
 @enduml

@@ -1,34 +1,17 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Ship an order
-
-Container(web, "Sycapooke Web", "Angular", "@sycapooke/orders: SaleDetailPage, AddTrackingDialog, OrderDetailPage; @sycapooke/api: OrdersApi, CheckoutApi")
-Container_Boundary(api, "Sycapooke API") {
-  Component(ctrl, "OrdersController", "ASP.NET Core controller", "GET /api/sales/{id}, POST /api/orders/{id}/shipment")
-  Component(pur, "CheckoutsController", "ASP.NET Core controller", "GET /api/purchases/{id}")
-  Component(cwh, "CarrierWebhookController", "ASP.NET Core controller", "POST /api/carriers/webhook")
-  Component(h, "AddTrackingCommandHandler", "MediatR handler", "Checks the tracking format, applies Paid to Shipped")
-  Component(hd, "CarrierWebhookHandler", "MediatR handler", "Applies Shipped to Delivered")
-  Component(order, "Order", "Domain aggregate", "TransitionTo with OrderStateMachine and OrderStatusChanges")
-  Component(port, "ICarrierTracking", "Application port", "Verifies and reads carrier webhooks")
-  Component(repo, "SycapookeDbContext", "EF Core", "Orders (Status as concurrency token), OrderStatusChanges, Refunds")
+title Components - Ship founder orders
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "OrdersController", "Controller", "Feature entry point")
+  Component(handler, "AddTrackingCommandHandler", "Application handler", "Executes feature rules")
+  Component(entity, "Order", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
 }
-Container_Boundary(worker, "Sycapooke Worker") {
-  Component(dl, "ShipDeadlineJob", "Hosted service", "Sends CancelUnshippedOrdersCommand every 5 minutes")
-}
-ContainerDb(db, "Sycapooke database", "SQL Server", "Order state and history")
-System_Ext(pay, "Payment provider", "IPaymentProvider")
-
-Rel(web, ctrl, "Calls", "JSON/HTTPS")
-Rel(web, pur, "Calls", "JSON/HTTPS")
-Rel(ctrl, h, "Sends AddTrackingCommand")
-Rel(cwh, hd, "Sends HandleCarrierWebhookCommand")
-Rel(hd, port, "Reads event with")
-Rel(h, order, "Calls MarkShipped")
-Rel(hd, order, "Calls MarkDelivered(Carrier)")
-Rel(dl, order, "Calls Cancel(System)")
-Rel(dl, pay, "Refunds in full", "RefundAsync")
-Rel(h, repo, "Saves order and status change")
-Rel(repo, db, "Persists", "SQL")
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
+Component(access, "IFounderAccess", "Application port", "Configured immutable founder identity")
+Rel(entry, access, "Checks protected management actions")
+Rel(handler, access, "Enforces non-HTTP boundary")
 @enduml

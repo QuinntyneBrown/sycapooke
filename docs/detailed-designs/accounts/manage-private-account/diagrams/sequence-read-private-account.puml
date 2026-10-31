@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Open private account settings
+autonumber
+actor "Customer" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "PrivateAccountPage" as page
+ participant "AccountsApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "PrivateAccountController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "UpdatePrivateAccountHandler" as handler
+ participant "Member" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> page : Open private account settings
+page -> client : GET /api/account
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Derive customer ID from session [L2-010]
+handler -> model : Read private account fields only
+handler -> handler : Exclude public-profile editor and promotion fields
+handler -> db : Project authorized response without mutation
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : 200 own account; 401 without session; 404 another private account
+note over entry, handler
+200 own account; 401 without session; 404 another private account
+end note
+@enduml

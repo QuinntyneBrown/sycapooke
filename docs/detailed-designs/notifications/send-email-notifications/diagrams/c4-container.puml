@@ -1,21 +1,18 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Send email notifications
-
-Person(member, "Member", "Receives email")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "Pages that deep links open")
-  Container(api, "Sycapooke API", "ASP.NET Core", "Handlers enqueue EmailNotificationRequested with each state change")
-  Container(worker, "Sycapooke Worker", ".NET worker service", "OutboxEmailDispatcher: render, guard, send, retry")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "OutboxMessages, Members, NotificationPreferences")
+title Containers - Send account and shop order emails
+Person(user, "Customer or founder")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-System_Ext(email, "Email provider", "Delivers email")
-
-Rel(member, web, "Opens deep links in", "HTTPS")
-Rel(web, api, "Calls", "JSON/HTTPS")
-Rel(api, db, "Writes state change and outbox message in one transaction", "EF Core")
-Rel(worker, db, "Claims due messages, reads recipients and preferences", "EF Core")
-Rel(worker, email, "Sends with idempotency key", "HTTPS API")
-Rel(email, member, "Delivers email to", "SMTP")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
+System_Ext(provider, "Email provider")
+Rel(api, provider, "Calls port; validates responses", "HTTPS")
 @enduml

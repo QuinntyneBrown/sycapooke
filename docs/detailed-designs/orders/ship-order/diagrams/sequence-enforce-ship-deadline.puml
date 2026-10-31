@@ -1,0 +1,39 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Check unshipped Paid order
+autonumber
+actor "Job scheduler" as actor
+box "Backend - Sycapooke Worker" #D1FADF
+ participant "ShipDeadlineJob" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "CancelUnshippedOrdersHandler" as handler
+ participant "Order" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> entry : Check unshipped Paid order
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Queue founder reminder after three business days [L2-033]
+handler -> model : After five business days cancel and remove sold listing
+handler -> handler : Persist original-payment refund request and notify parties
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> actor : Cancelled once; pending refund retried by shared payment workflow
+note over entry, handler
+Cancelled once; pending refund retried by shared payment workflow
+end note
+@enduml

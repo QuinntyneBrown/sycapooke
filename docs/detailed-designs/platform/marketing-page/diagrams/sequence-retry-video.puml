@@ -1,0 +1,35 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Recover failed video load
+autonumber
+actor "Visitor or customer" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "WelcomePage" as page
+ participant "Static marketing navigation" as client
+end box
+box "Backend - Static marketing host" #D1FADF
+ participant "Static marketing host" as entry
+end box
+box "Frontend - Marketing components" #E0F2FE
+ participant "PitchVideoDialog" as handler
+ participant "MarketingContent" as model
+end box
+actor -> page : Recover failed video load
+page -> client : Video error and Try again
+client -> entry : Static request / browser action
+entry -> handler : Dispatch UI action
+handler -> handler : Announce loading status then error if sources fail [L2-091]
+handler -> model : Retry source load on action
+handler -> handler : Keep page navigation available when dialog closes
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Accessible retry; shopping remains usable
+note over entry, handler
+Accessible retry; shopping remains usable
+end note
+@enduml

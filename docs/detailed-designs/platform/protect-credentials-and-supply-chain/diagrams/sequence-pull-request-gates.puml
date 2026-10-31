@@ -16,7 +16,7 @@ skinparam package {
 }
 actor "Developer" as dev
 participant "GitHub pull request" as pr
-box "Build — GitHub Actions CI" #FFF4E5
+box "Backend - GitHub Actions CI" #FFF4E5
   participant "secret-scan (gitleaks)" as gl
   participant "dependency-scan (Trivy)" as tv
   participant "static-analysis (CodeQL, analyzers, ESLint)" as sa

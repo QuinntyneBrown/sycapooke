@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Deploy to production
+Person(operator, "Developer or operator", "Builds and operates the founder shop")
+System(shop, "Sycapooke", "Founder-only shop")
+System_Ext(ci, "GitHub Actions", "Runs the single verify command")
+Rel(operator, shop, "Works on and operates")
+Rel(operator, ci, "Pushes verified changes")
+Rel(ci, shop, "Builds and validates")
+@enduml

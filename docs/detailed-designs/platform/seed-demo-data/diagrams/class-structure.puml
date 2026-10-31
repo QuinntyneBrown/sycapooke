@@ -1,0 +1,26 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+title Local founder demo structure
+class CliApp {
+ +RunAsync(args: string[]): Task<int>
+}
+class DemoSeeder {
+ +SeedAsync(): Task<int>
+}
+class DemoCatalogue {
+ +int CustomerCount = 8
+ +int ListingCount = 48
+}
+class ShopOptions <<proposed>> {
+ +Guid? FounderMemberId
+}
+class ShopIdentity <<proposed singleton>> {
+ +int Id = 1
+ +Guid FounderMemberId
+}
+CliApp ..> DemoSeeder : guarded Development execution
+DemoSeeder --> DemoCatalogue : deterministic inputs
+DemoSeeder --> ShopOptions : process-local binding
+DemoSeeder --> ShopIdentity : local trusted provisioning
+@enduml

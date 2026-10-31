@@ -1,13 +1,15 @@
 # Agent instructions for Sycapooke
 
-Sycapooke is a peer-to-peer marketplace made only for vintage: jewelry, clothing, housewares and
-electronics, every piece at least 20 years old and listed by a real person with a real story
-([ADR general/0006](docs/adr/general/0006-vintage-only.md)). Anyone can join, set up a profile
-and sell the treasures they are downsizing; Sycapooke's owner sells on it as an ordinary member
-too. Sycapooke began as a clone of TuTuMuch, which began as a clone of 12L
-([ADR general/0009](docs/adr/general/0009-cloned-from-tutumuch.md)), so every journey, screen,
-layout, component (including the `sy` selector prefix) and rule mirrors them; only the domain
-words, the vintage rule and the look differ. The look is the **Heirloom design system**,
+Sycapooke is a web shop for its founder, one older Caribbean woman, to sell her own antiques
+and vintage treasures: jewelry, clothing, housewares and electronics, every piece at least
+20 years old ([ADR general/0006](docs/adr/general/0006-vintage-only.md)). She is the sole seller;
+customers can create private buyer accounts but cannot sell or have public profiles. Only the
+founder manages inventory, fulfilment and customer support. Payments go directly to her shop
+account, without platform commissions or completion-based payouts
+([ADR general/0010](docs/adr/general/0010-founder-only-shop.md)). Sycapooke began as a clone of
+TuTuMuch, which began as a clone of 12L ([ADR general/0009](docs/adr/general/0009-cloned-from-tutumuch.md));
+that lineage does not require marketplace journey or rule parity. The `sy` selector prefix
+and existing workspace conventions remain. The look is the **Heirloom design system**,
 extracted from the Sycapooke landing page: `docs/design-system/tokens/tokens.css` is Heirloom's
 token file (Paper, Cream, Ink, Terracotta, Forest, Mustard; Fraunces and Source Sans 3) plus a
 short block of Sycapooke layout tokens that alias 12L-only names onto Heirloom tokens. Change
@@ -50,11 +52,12 @@ not re-add references to them in other documents. The decision is recorded in
   `L2-091`): the hero photo of `/welcome` is its poster and nothing plays until pressed.
 
 The removed requirement numbers `L2-038`, `L2-039`, `L2-044` to `L2-047`, `L2-055`,
-`L2-057`, `L2-058`, `L2-014` and `L2-080` to `L2-082` are retired; never reuse them.
+`L2-057`, `L2-058`, `L2-014`, `L2-031` and `L2-080` to `L2-082` are retired; never reuse them.
 `L1-012` no longer exists.
 
-Administrators still resolve order problems (`L2-036`) through the admin shell, guarded
-by the `Administrator` role check of `L2-010`. That is the only administrator feature.
+The founder resolves order problems (`L2-036`) through her protected management area,
+guarded by the founder access checks of `L2-003` and `L2-010`. There is no separate
+marketplace administrator or independent arbitration role for order problems.
 
 ## Testing rules (CRITICAL)
 
@@ -126,8 +129,8 @@ sycapooke/
 │           ├── accounts/        library: feature area
 │           ├── catalog/         library: feature area
 │           ├── listings/        library: feature area
-│           ├── orders/          library: feature area (checkout, payouts, admin problems)
-│           ├── reviews/         library: feature area (public profile only)
+│           ├── orders/          library: feature area (checkout, founder fulfilment and customer support)
+│           ├── reviews/         library: feature area (founder public story and collection only)
 │           ├── marketing/       library: feature area (the /welcome page)
 │           └── privacy/         library: feature area
 └── tests/

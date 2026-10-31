@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. Before any
+Sycapooke is the founder's shop for antiques and vintage treasures jewelry, clothing, housewares and electronics. Before any
 feature can be built, a developer needs a repository that builds, lints and tests on the
 first day. This feature, part of the `platform` subsystem, creates that starting point:
 the backend solution, the frontend workspace, the empty application shell, the test
@@ -25,6 +25,8 @@ Core, the outbox, Redis, Docker, dependency scanning (`L2-052`, `L2-053`), visua
 snapshots and axe runs over every route are deferred to their own features.
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 ### Backend solution (`src/backend/Sycapooke.sln`)
 
@@ -83,7 +85,7 @@ maps `@sycapooke/<library>` to each `projects/<library>/src/public-api.ts`.
   **`AppComponent`** (renders `sy-skip-link`, the shell for the active route and
   `sy-toast-region`), **`AppShellComponent`** (`sy-top-bar`, `<main id="main"
   tabindex="-1"><router-outlet>`, `sy-footer`) and **`HomePlaceholderPage`** (an `h1`
-  "Everything in your size." and one paragraph). Auth, admin and bare shells are
+  "Treasures with a story." and one paragraph). Auth, founder-management and bare shells are
   `<TO SUPPLY>` by the features that first use them.
 - **`projects/components/`** (`@sycapooke/components`, prefix `tl`) — `src/styles/tokens.css`
   and `src/styles/components.css` copied from `docs/design-system/tokens/tokens.css` and
@@ -143,15 +145,26 @@ chromium` in `src/frontend`, then `npm run verify`. A failing step fails the wor
 | API base URL | `environment.apiBaseUrl`: `/api` in production, `http://localhost:5045/api` in development (the API's launch profile) | `projects/sycapooke/src/environments` |
 | Playwright browser | Chromium | `AGENTS.md` |
 
+### Implementation evidence
+
+Completed behavior evidence: `sequence-verify` in `src/frontend/package.json` and `tests/Sycapooke.Api.Tests/StatelessApiTests.cs`. 1 of 1 target behaviors are counted. Remaining target behavior and acceptance checks are not counted merely because older marketplace tests pass.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
+### Existing workspace and target alignment
+
+The current workspace already contains application shells and shared overlay services. This feature records the verification and dependency baseline rather than claiming those projects are still empty. The founder-only navigation and account contracts require later implementation against the revised mocks and composition. Security and accessibility verification remains owned by the corresponding platform designs.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-071` | `L1-019` | One command, run from a fresh clone, shall restore, build, lint and test the backend solution (`src/backend`) and the frontend workspace (`src/frontend`), and shall fail when any step fails. The API shall answer `GET /api/health` with HTTP 200 without a database or any other external dependency. The frontend command shall build every library and the application. The same command shall pass on Windows and on Linux CI. |
-
-Related requirements applied without restating them: `L2-060` (the architecture test),
-`L2-061` (breakpoint tokens), `L2-064` and `L2-065` (the shell's skip link, landmarks and
-focus order). `L2-053` is deferred.
+| --- | --- | --- |
+| `L2-053` | `L1-013` | CI shall scan .NET and npm dependencies and run static analysis on every pull request. A high or critical vulnerability with a fix available shall fail the build. |
+| `L2-060` | `L1-015` | The API shall be stateless so service processes can be replaced without losing account, order or reservation state. Sessions, rate limits and reservations shall work across instances. |
+| `L2-061` | `L1-016` | Every page and dialog shall render without horizontal scrolling from 320px wide upwards. The layout shall adapt at these breakpoints: extra small (<576px), small (>=576px), medium (>=768px), large (>=992px) and extra large (>=1200px). |
+| `L2-064` | `L1-017` | Every page and dialog shall conform to WCAG 2.2 level AA. Automated accessibility checks shall run in CI on every page and fail the build on any violation. |
+| `L2-065` | `L1-017` | Every function shall be usable with a keyboard alone, with a visible focus indicator and a logical focus order. Dialogs shall trap focus and return it on close. Every photo shall have alt text, every form field a visible label, and errors shall be announced to screen readers. |
+| `L2-071` | `L1-019` | One command, run from a fresh clone, shall restore, build, lint and test the backend solution (`src/backend`) and the frontend workspace (`src/frontend`), and shall fail when any step fails. The API shall answer `GET /api/health` with HTTP 200 without a database or any other external dependency. The frontend command shall build every library and the application. The same command shall pass on Windows and on Linux CI. Statelessness is checked by the architecture test of L2-060; breakpoints follow L2-061; the shell's accessibility follows L2-064 and L2-065; dependency scanning (L2-053) is not part of this command. |
 
 ## Diagrams
 
@@ -177,11 +190,14 @@ same command on Linux.
 
 ![Sequence diagram for the verify command](diagrams/sequence-verify.png)
 
-## Open questions
+### System context
 
-- Auth, admin and bare shell components are `<TO SUPPLY>` by the first feature that
-  routes to them.
-- `ToastService`, `SheetService` and `DialogService` are `<TO SUPPLY>` by
-  responsive-accessible-shell; the toast region ships empty.
-- Dependency scanning (`L2-053`), axe runs over every route and visual snapshots are
-  deferred to protect-credentials-and-supply-chain and responsive-accessible-shell.
+The system context view makes the feature boundary and its dependencies explicit. The structure represents the target responsibilities described in this feature.
+
+![System context for set up the workspace](diagrams/c4-context.png)
+
+### Class structure
+
+The class structure view makes the feature boundary and its dependencies explicit. The structure represents the target responsibilities described in this feature.
+
+![Class structure for set up the workspace](diagrams/class-structure.png)

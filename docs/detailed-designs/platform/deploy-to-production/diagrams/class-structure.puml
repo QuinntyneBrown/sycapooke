@@ -1,0 +1,24 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+title Deployment configuration structure
+class DeploymentUnit <<configuration model>> {
+ +string Tag
+ +Deploy(commitSha: string): void
+ +Rollback(commitSha: string): void
+}
+class ShopOptions <<proposed>> {
+ +Guid? FounderMemberId
+}
+class ApplicationServices <<deployment group>> {
+ +string ApiImage
+ +string WorkerImage
+ +Restart(): void
+}
+DeploymentUnit "1" --> "1" ApplicationServices : application unit
+ApplicationServices --> ShopOptions : shared binding
+note bottom
+These classes model workflow and configuration responsibilities.
+They do not introduce executable deployment classes.
+end note
+@enduml

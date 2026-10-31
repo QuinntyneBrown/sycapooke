@@ -9,7 +9,7 @@ skinparam class {
   FontColor #101828
   BackgroundColor #F9FAFB
 }
-title Class structure — Browse the catalog
+title Class structure â€” Browse the catalog
 
 enum ListingStatus {
   Draft

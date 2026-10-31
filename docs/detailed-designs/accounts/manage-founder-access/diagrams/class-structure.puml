@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure - Manage founder access
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+class "AuthController" as Entry {
+}
+class "GetCurrentMemberQueryHandler" as Handler {
+ +Handle(request: GetCurrentMemberQuery, cancellationToken: CancellationToken): Task<Result<CurrentMemberDto>>
+}
+class "FounderAccess" as Model {
+ +Guid? FounderMemberId
+}
+class "GetCurrentMemberQuery" as Request {
+ +Guid MemberId
+}
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
+}
+Handler ..> ISycapookeDbContext : persistence boundary
+interface IFounderAccess {
+ +IsFounderAsync(memberId: Guid): Task<bool>
+}
+Handler ..> IFounderAccess : protected shop actions
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
+class ShopIdentity <<proposed persistent singleton>> {
+ +int Id = 1
+ +Guid FounderMemberId
+}
+class FounderProvisioner <<proposed operator operation>> {
+ +Bind(memberId: Guid): Result
+}
+FounderProvisioner --> ShopIdentity : first binding or identical no-op
+Model --> ShopIdentity : compares configured and stored IDs
+@enduml

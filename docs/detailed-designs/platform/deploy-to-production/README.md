@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics, used by only a few members. This
+Sycapooke is the founder's shop for antiques and vintage treasures jewelry, clothing, housewares and electronics, used by only a few members. This
 feature, part of the `platform` subsystem, takes every push to `main` that passes CI live
 with no manual step, on one low-cost Azure Linux VM running Docker Compose, Caddy and an
 Azure SQL Basic database: the marketing site at `https://sycapooke.canadacentral.cloudapp.azure.com/welcome/` and the full
@@ -32,6 +32,8 @@ zero-downtime deploys, autoscaling, a second VM, Terraform or Bicep, and any loa
 performance gate ([ADR general/0002](../../../adr/general/0002-no-load-or-scale-tests.md)).
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 ### Trigger and gate (`L2-084`)
 
@@ -151,33 +153,17 @@ commands and output folders; the `no-cache` rule in both web Caddyfiles; and the
 path routing, trailing-slash redirect and the absence of `reverse_proxy` in the marketing Caddyfile
 (`L2-084` to `L2-087`). `HealthEndpointTests` keeps covering `/api/health` without a database.
 
-## Requirements
+### Founder-only target boundary
 
-| L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-084` | `L1-018`, `L1-019` | Deploy every green push to `main` through both workflows; migrate before the application restart; health and page checks fail the run; small-VM limits for all six services; `no-cache` entry page. |
-| `L2-085` | `L1-013`, `L1-018` | Secrets only in the `production` environment and the VM `.env`; least permissions in each workflow. |
-| `L2-086` | `L1-018` | Roll back either unit by redeploying an older SHA or setting `MARKETING_TAG` or `APP_TAG`. |
-| `L2-087` | `L1-018`, `L1-019` | Separate marketing and application images, workflows and tags; the edge routes by path; `SITE_ADDRESS` is the Azure DNS name; the marketing build links to the application origin. |
+Deployment supplies one `Shop:FounderMemberId` (`Shop__FounderMemberId` in the environment) to API and worker. Configuration changes require a controlled restart. Public requests cannot change the binding. Invalid or missing binding grants no management access. Payment credentials identify the shop merchant account. The demo CLI never provisions production or runs in deployment.
 
-Related requirements applied without restating them: `L2-052` (secrets), `L2-060`
-(stateless API), `L2-070` (health checks), `L2-071` (verify command).
+### Implementation evidence
 
-## Diagrams
+Completed behavior evidence: `sequence-rollback` in `.github/workflows/deploy-app.yml` and `tests/Sycapooke.Api.Tests/DeploymentPipelineTests.cs`. 1 of 2 target behaviors are counted. Remaining target behavior and acceptance checks are not counted merely because older marketplace tests pass.
 
-### Containers
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
-![C4 container view for the production deployment](diagrams/c4-container.png)
-
-### Behaviour — deploy on push
-
-![Sequence diagram for a deploy](diagrams/sequence-deploy.png)
-
-### Behaviour — rollback
-
-![Sequence diagram for a rollback](diagrams/sequence-rollback.png)
-
-## Open questions
+### Remaining implementation considerations
 
 - The host key is trusted on first contact by `ssh-keyscan`, as in 12L. Pinning it in a
   `DEPLOY_HOST_KEY` secret would be stricter; deferred while the VM keeps its static IP.
@@ -187,3 +173,54 @@ Related requirements applied without restating them: `L2-052` (secrets), `L2-060
   Configuration copies for the same commit have identical content.
 - `actionlint` was not available where this was built; the workflows are checked by the
   static test, a YAML parse and by GitHub on push.
+
+## Requirements
+
+| L2 ID | Refines (L1) | Requirement |
+| --- | --- | --- |
+| `L2-052` | `L1-013` | Passwords shall be stored only as salted hashes using Argon2id or PBKDF2-HMAC-SHA512 with at least 210,000 iterations. Secrets (connection strings, API keys, signing keys) shall not be stored in source control and shall be loaded from a secret store at runtime. |
+| `L2-060` | `L1-015` | The API shall be stateless so service processes can be replaced without losing account, order or reservation state. Sessions, rate limits and reservations shall work across instances. |
+| `L2-070` | `L1-018` | The API shall expose a liveness endpoint (`/health/live`) and a readiness endpoint (`/health/ready`). Readiness shall report unhealthy when the database or photo storage cannot be reached. Health endpoints shall not reveal version numbers or internal hostnames. |
+| `L2-071` | `L1-019` | One command, run from a fresh clone, shall restore, build, lint and test the backend solution (`src/backend`) and the frontend workspace (`src/frontend`), and shall fail when any step fails. The API shall answer `GET /api/health` with HTTP 200 without a database or any other external dependency. The frontend command shall build every library and the application. The same command shall pass on Windows and on Linux CI. Statelessness is checked by the architecture test of L2-060; breakpoints follow L2-061; the shell's accessibility follows L2-064 and L2-065; dependency scanning (L2-053) is not part of this command. |
+| `L2-084` | `L1-018` | Every push to `main` shall be deployed to production with no manual step, and only after the `CI` workflow's `verify` job for that commit has passed (`L2-071`). Two workflows shall deploy it independently (`L2-087`): `deploy-marketing.yml` shall build and push the `sycapooke-marketing` image and `deploy-app.yml` shall build and push the `sycapooke-api`, `sycapooke-worker`, `sycapooke-migrator` and `sycapooke-app` images, each tagged with the commit SHA. The application deploy shall apply database migrations before its services restart and then poll `https://<SITE_HOST>/api/health` (`L2-070`) and `https://<SITE_HOST>/`; the marketing deploy shall poll `https://<SITE_HOST>/welcome/`. Runs of the same workflow shall never overlap. The stack shall fit one small Linux VM (1 to 2 GB RAM with a 2 GB swap file): one instance of each service (`edge`, `marketing`, `app`, `api`, `worker` and the one-off `migrator`), a memory limit and rotated logs per service, and old images pruned. `index.html` and SPA routes of both web services shall be served with `Cache-Control: no-cache`. |
+| `L2-085` | `L1-013` | Deployment secrets (`DEPLOY_HOST`, `DEPLOY_SSH_KEY`, `SITE_HOST`) shall be stored only in the GitHub `production` environment and shared by both deploy workflows, and application secrets only in `/opt/sycapooke/.env` on the VM; neither shall be committed or printed to a log. Each workflow job shall hold the least `permissions` it needs; in each workflow only the image build job may write packages. The SSH private key shall be written with mode 600 under `umask 077`. |
+| `L2-086` | `L1-018` | An operator shall be able to return the marketing site or the application to any earlier commit that passed CI, independently of the other, by running that unit's deploy workflow by hand with the commit's SHA, or by setting `MARKETING_TAG` or `APP_TAG` in `/opt/sycapooke/.env` and running `docker compose up -d --no-deps` for that unit's services on the VM. Both paths shall be documented in `docs/deployment.md`. |
+| `L2-087` | `L1-018` | The marketing site at `https://<SITE_HOST>/welcome/` and the full application at `https://<SITE_HOST>/` shall be separate images and deploy workflows on the same Azure VM. `SITE_HOST` shall be the Azure public IP DNS name; publishing shall require no custom domain or registrar access (ADR platform/0016). The edge shall terminate HTTPS for that name, redirect `/welcome` to `/welcome/`, strip `/welcome/` before proxying marketing requests, and proxy all other requests to the application service. Only the application service shall proxy `/api/*` and `/photos/*` to the API. The marketing build shall use base href `/welcome/` and absolute application links to the Azure origin. Each workflow shall move only its own image tag and restart only its own services. Shared VM mutations shall be serialized and registry credentials isolated per run. |
+
+## Diagrams
+
+### Containers
+
+The view shows the feature boundary and the behavior described in this design.
+
+![C4 container view for the production deployment](diagrams/c4-container.png)
+
+### Behaviour — deploy on push
+
+The view shows the feature boundary and the behavior described in this design.
+
+![Sequence diagram for a deploy](diagrams/sequence-deploy.png)
+
+### Behaviour — rollback
+
+The view shows the feature boundary and the behavior described in this design.
+
+![Sequence diagram for a rollback](diagrams/sequence-rollback.png)
+
+### System context
+
+The system context view makes the feature boundary and its dependencies explicit. The structure represents the target responsibilities described in this feature.
+
+![System context for deploy to production](diagrams/c4-context.png)
+
+### Components
+
+The components view makes the feature boundary and its dependencies explicit. The structure represents the target responsibilities described in this feature.
+
+![Components for deploy to production](diagrams/c4-component.png)
+
+### Class structure
+
+The class structure view makes the feature boundary and its dependencies explicit. The structure represents the target responsibilities described in this feature.
+
+![Class structure for deploy to production](diagrams/class-structure.png)

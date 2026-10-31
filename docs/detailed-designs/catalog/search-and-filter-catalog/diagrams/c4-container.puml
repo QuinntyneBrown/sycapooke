@@ -1,7 +1,7 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Search and filter the catalog
+title Containers â€” Search and filter the catalog
 
 Person(visitor, "Visitor or member", "Narrows the catalog")
 System_Boundary(sycapooke, "Sycapooke") {

@@ -5,7 +5,7 @@ points; everything is vintage (at least 20 years old) and the copy never promise
 newer. The copy is identical to the app's WelcomePage (src/frontend/projects/marketing/src/lib/welcome/).
 
 Look (Heirloom, from the landing page): the hero sits on paper beside the hero photo; the
-For sellers band and the closing band are terracotta with cream text and ink buttons; Our
+From my collection band and the closing band are terracotta with cream text and ink buttons; Our
 story is a cream band under a line rule; everything else is paper. No shapes, no gradients.
 The hero photo is the pitch video's poster (ADR platform/0014): one "Play · 0:29" pill opens the
 video dialog; nothing plays before the visitor presses it.
@@ -19,20 +19,16 @@ STATIC_NA = {"loading": "Static content ships with the app; the page calls no Sy
              "error": "Static content cannot fail to load once the app is served; the video has its own error state."}
 
 SHOPPER_POINTS = [("Four focused categories", "Jewelry, clothing, housewares and electronics. Nothing to filter out."),
-                  ("Listed by a real person", "Every piece comes from a family with a story to tell about it."),
+                  ("From the founder’s own collection", "Every piece is hers, kept with care and sent on with its story."),
                   ("Honest condition", "Five grades, and flaws named up front.")]
-SELLER_POINTS = [("Big buttons, clear steps", "Photos, a price and the condition. That’s it."),
-                 ("A real person to call", "Stuck? Ring 1-800-555-0123 and a person picks up.")]
-STEPS = [("List it", "Add photos, a price and the condition."),
-         ("Sell it", "A buyer pays. You ship within 5 business days."),
-         ("Get paid", "The order completes and your payout is on its way.")]
-QUOTE = ("It’s the made-up word I whispered to my son when he was a baby. When it came time to clear out our family home, "
-         "I realized every teacup and brooch deserved that same word — and someone who’d see it too.")
-FOUNDER = "Founder, age 70, grandmother of five"
-
-
-def seller_href(member: bool) -> str:
-    return P("sell") if member else P("register")
+COLLECTION_POINTS = [("Chosen by hand", "Each treasure is picked from her own shelves."),
+                     ("Described with care", "Condition, flaws and a little of its story, up front.")]
+STEPS = [("Find a treasure", "Browse jewelry, clothing, housewares and electronics."),
+         ("Pay securely", "Check out with a card; the piece is yours once you pay."),
+         ("Receive its story", "It arrives packed with care, with a note about where it came from.")]
+# Placeholder: awaiting the founder's approval of her own words (L2-078). No age, family or biography is stated.
+QUOTE = "Placeholder quote: every piece in my collection has a story, and I would love to share it with you."
+FOUNDER_CREDIT = "Founder of Sycapooke"
 
 
 def hero_photo() -> str:
@@ -43,11 +39,11 @@ def hero_photo() -> str:
 
 
 def hero(member: bool) -> str:
-    actions = btn("Shop the catalog", "primary lg", P("catalog")) + btn("Start selling", "lg", seller_href(member))
+    actions = btn("Shop the collection", "primary lg", P("catalog")) + btn("Meet the founder", "lg", "#our-story")
     return (f'<section class="marketing-hero" aria-labelledby="welcome-title"><div class="marketing-hero__inner">'
             '<div><p class="marketing-hero__eyebrow">Jewelry · Clothing · Housewares · Electronics</p>'
             '<h1 class="marketing-hero__title" id="welcome-title">A home for the things that <em>mattered.</em></h1>'
-            '<p class="marketing-hero__lede">Sycapooke is the marketplace made only for vintage — for families downsizing a lifetime of treasures, and the people who’ll love them next.</p>'
+            '<p class="marketing-hero__lede">Antiques and vintage treasures from one Caribbean woman’s own collection. Every piece is at least 20 years old.</p>'
             f'<div class="marketing-hero__actions">{actions}</div></div>'
             f'<div class="marketing-hero__media">{hero_photo()}</div></div></section>')
 
@@ -74,24 +70,24 @@ def steps() -> str:
 
 def story() -> str:
     """Our story: the founder's quote (mustard rule) beside the founder photo (/media/sycapooke-founder.jpg in the app)."""
-    return (f'<div class="story"><blockquote class="quote"><p>“{QUOTE}”</p><cite>{FOUNDER}</cite></blockquote>'
-            f'<figure class="story__photo"><img src="{A}founder.svg" alt="The founder at her kitchen table, a teacup in hand" width="800" height="1000"></figure></div>')
+    return (f'<div class="story"><blockquote class="quote"><p>“{QUOTE}”</p><cite>{FOUNDER_CREDIT}</cite></blockquote>'
+            f'<figure class="story__photo"><img src="{A}founder.svg" alt="Portrait of the founder, an older Caribbean woman, smiling in her home" width="800" height="1000"></figure></div>')
 
 
 def closing(member: bool) -> str:
     """The closing call to action is the terracotta band with an ink button."""
-    return band("closing-title", "", "Treasures with a <em>story.</em>", "", btn("Shop the catalog", "inverse lg", P("catalog")),
-                "feature-band--sell feature-band--stacked feature-band--closing", lede="New treasures arrive daily, every one at least 20 years old.")
+    return band("closing-title", "", "Treasures with a <em>story.</em>", "", btn("Browse the collection", "inverse lg", P("catalog")),
+                "feature-band--sell feature-band--stacked feature-band--closing", lede="Explore her collection. Every piece is at least 20 years old.")
 
 
 def welcome(member: bool) -> Page:
     main = (hero(member)
             + band("shoppers-title", "For shoppers", "Every piece is at least 20 years old.", points(SHOPPER_POINTS),
-                   btn("Browse the catalog", "primary", P("catalog")))
-            + band("sellers-title", "For sellers", "Downsizing? Let your treasures find their next home.", points(SELLER_POINTS),
-                   btn("List your first item", "inverse", seller_href(member)), "feature-band--sell")
+                   btn("Browse the collection", "primary", P("catalog")))
+            + band("collection-title", "From my collection", "Treasures I have kept, ready for their next home.", points(COLLECTION_POINTS),
+                   btn("See what is on the shelf", "inverse", P("catalog")), "feature-band--sell")
             + band("how-title", "How it works", "Three steps. That’s it.", steps(), mod="feature-band--stacked")
-            + band("story-title", "Our story", "sy·ca·pooke", story(), mod="feature-band--story feature-band--stacked")
+            + band("story-title", "Our story", "sy·ca·pooke", story(), mod="feature-band--story feature-band--stacked").replace('<section class="feature-band', '<section id="our-story" class="feature-band', 1)
             + closing(member))
     return Page(main=main, user="member" if member else "guest", main_class="marketing")
 
@@ -99,15 +95,15 @@ def welcome(member: bool) -> Page:
 wl = screen("welcome", "page", "Treasures with a story", route="/welcome", reqs=["L2-078", "L2-079", "L2-083", "L2-089", "L2-090", "L2-091"], na=STATIC_NA)
 
 
-@wl.state("default", "Signed out: hero on paper with the hero photo as the video poster, shoppers, the terracotta sellers band, three steps, the cream Our story band and the terracotta closing CTA; Start selling goes to /join.")
+@wl.state("default", "Signed out: hero on paper with the hero photo as the video poster, shoppers, the terracotta From my collection band, three buying steps, the cream Our story band (#our-story) and the terracotta closing CTA; Meet the founder jumps to Our story.")
 def _():
     pg = welcome(False)
-    pg.notes = note("Flat bands: paper, terracotta (sellers, closing) and cream (story). Nothing decorative moves. The hero photo is the video poster: its Play pill opens the pitch video dialog and nothing autoplays. The hero and founder photos are /media/sycapooke-hero.jpg and /media/sycapooke-founder.jpg in the app.",
+    pg.notes = note("The founder quote is placeholder copy awaiting the founder’s approval; no age, family history or biography is stated. Flat bands: paper, terracotta (From my collection, closing) and cream (story). Nothing decorative moves. The hero photo is the video poster: its Play pill opens the pitch video dialog and nothing autoplays. The hero and founder photos are /media/sycapooke-hero.jpg and /media/sycapooke-founder.jpg in the app.",
                     "top: 6rem; right: 1rem;")
     return pg
 
 
-@wl.state("signed-in", "Signed in: the same page; Start selling and List your first item go to /sell.")
+@wl.state("signed-in", "Signed in as a customer: the same page; no selling or management links appear.")
 def _():
     return welcome(True)
 

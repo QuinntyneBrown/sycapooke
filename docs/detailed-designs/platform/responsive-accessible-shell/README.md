@@ -28,7 +28,9 @@ offline pages are in [report-errors-and-observe](../report-errors-and-observe/RE
 
 ## Description
 
-Source mocks: the shell in `docs/mocks/_build/mk.py` (`topbar`, `admin_topbar`,
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
+
+Source mocks: the shell in `docs/mocks/_build/mk.py` (`topbar`,
 `account_nav`, `footer`, `page_body`), `docs/mocks/dialogs/nav-menu/`,
 `docs/mocks/dialogs/filters/` (responsive behaviour only),
 `docs/mocks/notifications/toast/` and `docs/mocks/notifications/system-banner/`,
@@ -40,7 +42,7 @@ with tokens in `docs/mocks/assets/tokens.css` and components in
 Per `AGENTS.md`, the application project holds `AppComponent`, the four shell components and the routes; every reusable piece below (`sy-skip-link`, `sy-top-bar`, `sy-footer`, `sy-toast-region`, sheets, dialogs, form fields) lives in the `components` library (`@sycapooke/components`). Feature libraries never re-implement them.
 
 - **`AppComponent`** — root component. Renders `SkipLinkComponent`, the shell
-  chosen by the active route's `data.shell` (`'app' | 'auth' | 'admin' |
+  chosen by the active route's `data.shell` (`'app' | 'auth' | 'shop' |
   'bare'`, default `'app'`), and `ToastRegionComponent`.
 - **`SkipLinkComponent`** — first focusable element: "Skip to content", target
   `#main`; visible only on focus.
@@ -60,17 +62,12 @@ Per `AGENTS.md`, the application project holds `AppComponent`, the four shell co
   - Search form `role="search"` with visually hidden label "Search Sycapooke" and
     placeholder "Search brands and items"; full field from 992 px, an icon link
     "Search" below 992 px.
-  - Member: "Sell" link (from 768 px) and avatar link "Your account,
-    {display name}". Guest: "Sell" and "Sign in".
-- **`AdminTopbarComponent`** — logo, "Admin" tag and avatar "Signed in as
-  {administrator name}". No footer.
+  - Customer: private account and Purchases links. Founder: inventory, Sales and Support links from `AuthState.isFounder`. Guest: Sign in and shopping links. No public selling action is rendered.
 - **`AuthShellComponent`** — large logo above a centred card (`main#main`).
 - **`BareShellComponent`** — logo-only top bar, used for the maintenance and
   offline pages.
-- **`AccountSubnavComponent`** — `<nav aria-label="Account">` tabs: Overview,
-  Listings, Purchases, Sales, Payouts, Profile, Emails, Settings; horizontally
-  scrollable below 576 px without page-level horizontal scroll.
-- **`FooterComponent`** — links "Marketplace rules", "Privacy", "Terms",
+- **`AccountSubnavComponent`** shows private account, Purchases, Emails and Settings for customers. Founder navigation adds Inventory, Sales and Support. The component remains horizontally scrollable below 576 px without page-level overflow.
+- **`FooterComponent`** — links "Shop rules", "Privacy", "Terms",
   a "Cookie settings" button (emits `cookieSettings`; the shell opens the
   cookie-settings dialog of `@sycapooke/privacy`) and
   "© 2026 Sycapooke" (year from the clock).
@@ -78,11 +75,7 @@ Per `AGENTS.md`, the application project holds `AppComponent`, the four shell co
   menu button through `SheetService` as a full-screen sheet with `id="menu"`,
   `role="dialog"`, `aria-modal="true"`, visually hidden heading "Menu", and a
   "Close menu" button that receives initial focus. Body: category links (large),
-  then for a member "Sell an item", "Your listings", "Purchases", "Sales",
-  "Settings" and a "Sign out" button; for a guest "Sell an item",
-  "Marketplace rules" with "Sign in" and "Join Sycapooke" buttons. States: `default`
-  (member), `guest`. The sheet closes on navigation and on a resize to 768 px or
-  wider.
+  then role-appropriate account links from the same capability source as the topbar. Guests see shopping, Sign in and Join. The sheet closes after navigation and at its existing responsive breakpoint. No customer sees selling, sales-management or public-profile links.
 
 ### Frontend — shared behaviour (`src/frontend/projects/components/src/lib/`)
 
@@ -144,7 +137,7 @@ Per `AGENTS.md`, the application project holds `AppComponent`, the four shell co
   `role="alert"` for `danger`; optional "Dismiss". Content comes from
   report-errors-and-observe (offline) and keep-available-and-recoverable
   (maintenance).
-- **`ListingPhotoAltPipe`** — returns the seller's photo description or
+- **`ListingPhotoAltPipe`** — returns the founder's photo description or
   "Photo {n} of {title}" (`L2-065` AC4); used by catalog and listing components.
 - **Motion** — `ui.css` disables animations and transitions under
   `prefers-reduced-motion: reduce`; `MotionPreference` signal disables Angular
@@ -193,13 +186,23 @@ The harness is created by [set-up-the-workspace](../set-up-the-workspace/README.
 
 The feature adds no endpoint.
 
+### Founder-only target boundary
+
+`AuthState.isFounder` controls the existing topbar and menu. Visitors and customers see shopping, private account and purchase links; only the founder sees inventory, sales and support. The target `/shop/problems/:reference` route reuses protected management layout, not a separate administrator shell. Route guards improve navigation; the server checks founder identity independently. The marketing shell has no payout banner. Shared components, breakpoints and keyboard behavior remain.
+
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-061` | `L1-016` | Every page and dialog shall render without horizontal scrolling from 320px wide upwards. The layout shall adapt at these breakpoints: extra small (<576px), small (>=576px), medium (>=768px), large (>=992px) and extra large (>=1200px). |
 | `L2-062` | `L1-016` | On XS and SM viewports, the main navigation shall collapse into a menu button and the catalog filters shall open in a full-screen panel. On MD, filters shall open in a side panel. On LG and XL, the navigation shall be shown in full and filters shall be a permanent sidebar. |
-| `L2-063` | `L1-016` | On XS, SM and MD viewports, the listing detail page shall use one column with a swipeable photo gallery and a "Buy now" bar fixed to the bottom of the screen. On LG and XL, it shall use two columns with the gallery on the left. Forms shall use one column on XS and SM. Touch targets shall be at least 44 by 44 CSS pixels on XS, SM and MD. |
+| `L2-063` | `L1-016` | On XS, SM and MD viewports, the listing detail page shall use one column with a swipeable photo gallery and, for an available listing viewed by a customer or visitor, a "Buy now" bar fixed to the bottom of the screen. The founder shall see management actions under L2-026 instead. On LG and XL, it shall use two columns with the gallery on the left. Forms shall use one column on XS and SM. Touch targets shall be at least 44 by 44 CSS pixels on XS, SM and MD. |
 | `L2-064` | `L1-017` | Every page and dialog shall conform to WCAG 2.2 level AA. Automated accessibility checks shall run in CI on every page and fail the build on any violation. |
 | `L2-065` | `L1-017` | Every function shall be usable with a keyboard alone, with a visible focus indicator and a logical focus order. Dialogs shall trap focus and return it on close. Every photo shall have alt text, every form field a visible label, and errors shall be announced to screen readers. |
 

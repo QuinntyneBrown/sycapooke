@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure - View the founder story and collection
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+class "MembersController" as Entry {
+}
+class "GetPublicProfileQueryHandler" as Handler {
+ +Handle(request: GetPublicProfileQuery, cancellationToken: CancellationToken): Task<Result<PublicProfileDto>>
+}
+class "PublicProfileDto" as Model {
+ +string DisplayName
+ +string? Bio
+ +string? AvatarUrl
+ +int CompletedSales
+}
+class "GetPublicProfileQuery" as Request {
+ +string DisplayName
+}
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
+}
+Handler ..> ISycapookeDbContext : persistence boundary
+interface IFounderAccess {
+ +IsFounderAsync(memberId: Guid): Task<bool>
+}
+Handler ..> IFounderAccess : protected shop actions
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
+@enduml

@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 from data import *  # noqa: F401,F403  (cast and catalog for screen modules)
-from data import ITEMS, PEOPLE, ME, ADMIN
+from data import ITEMS, PEOPLE, ME, FOUNDER
 
 esc = _html.escape
 
@@ -234,16 +234,15 @@ def photo(key: str, cls: str = "", tag: bool = True, stamp: str | None = None, a
 
 def listing_card(key: str, href: str | None = None, stamp: str | None = None) -> str:
     """Listing card (design system: Listing card): cream image well with the category pill,
-    then a serif title that is the card's link, era · place, and the terracotta price beside the seller."""
+    then a serif title that is the card's link, era · category, and the terracotta price. No seller: the founder sells everything."""
     it = ITEMS[key]
     stamp = stamp if stamp is not None else (it.get("status") if it.get("status") in ("Reserved", "Sold") else None)
     href = href or P("listing-detail")
-    place = PEOPLE[it["seller"]]["city"]
     return (f'<li><article class="listing-card">{photo(key, tag=False, stamp=stamp, pill=it["cat"], save=True)}'
             f'<div class="listing-card__body"><h3 class="listing-card__title"><a href="{href}">{esc(it["title"])}</a></h3>'
-            f'<p class="listing-card__meta">{esc(it["circa"])} · {esc(place)}</p>'
+            f'<p class="listing-card__meta">{esc(it["circa"])} · {esc(it["cat"])}</p>'
             f'<div class="listing-card__foot"><span class="price">{price(it["price"])}</span>'
-            f'<span class="listing-card__seller">{esc(it["seller"])}</span></div></div></article></li>')
+            f'</div></div></article></li>')
 
 
 def listing_grid(keys, **kw) -> str:
@@ -398,9 +397,10 @@ def note(text: str, pos: str = "top: 6rem; right: 1rem;") -> str:
 class Page:
     main: str
     nav: str = ""            # shop | jewelry | clothing | housewares | electronics | sell
-    user: str = "member"     # member | guest | unverified | admin
-    shell: str = "app"       # app | auth | admin | bare
-    account: str = ""        # active account subnav tab: overview | listings | purchases | sales | payouts | profile | notifications | settings
+    user: str = "member"     # member (a private customer) | guest | unverified | founder
+    shell: str = "app"       # app | auth | bare
+    account: str = ""        # active account subnav tab. Customer: overview | purchases | notifications | settings.
+                             # Founder: shop | listings | sales | support | story | notifications | settings
     top: str = ""            # banners above the header
     after: str = ""          # toasts, sticky bars, overlays after main
     footer: bool = True
@@ -444,32 +444,33 @@ def topbar(pg: Page) -> str:
               f'{ic("search")}<input class="input" id="q" name="q" type="search" placeholder="Try “pearl necklace” or “tea set”"></form>')
     if pg.user == "guest":
         right = (f'<a class="btn btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
-                 f'<a class="topbar__link" href="{P("sign-in")}">Sign in</a>'
-                 f'<a class="btn btn--primary topbar__sell" href="{P("sell")}">Start selling</a>')
-    else:
-        who = PEOPLE[ME]
+                 f'<a class="btn btn--primary topbar__sell" href="{P("sign-in")}">Sign in</a>')
+    elif pg.user == "founder":
+        who = PEOPLE[FOUNDER]
         sell_cur = ' aria-current="page"' if pg.nav == "sell" else ""
         right = (f'<a class="btn btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
-                 f'<a class="btn btn--primary topbar__sell" href="{P("sell")}"{sell_cur}>Sell</a>'
+                 f'<a class="topbar__link" href="{P("my-listings")}">Inventory</a>'
+                 f'<a class="btn btn--primary topbar__sell" href="{P("sell")}"{sell_cur}>Sell an item</a>'
+                 f'<a class="avatar avatar--sm" href="{P("shop")}" aria-label="Shop management, {esc(who["name"])}" style="text-decoration: none;">{who["initials"]}</a>')
+    else:
+        who = PEOPLE[ME]
+        right = (f'<a class="btn btn--icon topbar__search-btn" href="{P("catalog", "search")}" aria-label="Search">{ic("search")}</a>'
                  f'<a class="avatar avatar--sm" href="{P("account")}" aria-label="Your account, {esc(who["name"])}" style="text-decoration: none;">{who["initials"]}</a>')
     return (f'<header class="topbar"><button class="btn btn--icon topbar__menu" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">{ic("menu")}</button>'
             f'{logo()}<nav class="topbar__nav" aria-label="Primary">{nav}</nav><span class="topbar__spacer"></span>{search}'
             f'<div class="topbar__actions">{right}</div></header>')
 
 
-def admin_topbar(pg: Page) -> str:
-    return (f'<header class="topbar">{logo(P("catalog"))}<span class="topbar__admin">Admin</span><span class="topbar__spacer"></span>'
-            f'<span class="avatar avatar--sm" aria-label="Signed in as {ADMIN["name"]}" role="img">{ADMIN["initials"]}</span></header>')
+CUSTOMER_TABS = [("overview", "Overview", "account"), ("purchases", "Purchases", "purchases"),
+                 ("notifications", "Emails", "notification-settings"), ("settings", "Settings", "settings")]
+FOUNDER_TABS = [("shop", "Shop", "shop"), ("listings", "Inventory", "my-listings"), ("sales", "Sales", "sales"), ("support", "Support", "support"),
+                ("story", "Story", "edit-story"), ("notifications", "Emails", "notification-settings"), ("settings", "Settings", "settings")]
 
 
-ACCOUNT_TABS = [("overview", "Overview", "account"), ("listings", "Listings", "my-listings"), ("purchases", "Purchases", "purchases"),
-                ("sales", "Sales", "sales"), ("payouts", "Payouts", "payouts"), ("profile", "Profile", "edit-profile"),
-                ("notifications", "Emails", "notification-settings"), ("settings", "Settings", "settings")]
-
-
-def account_nav(active: str) -> str:
-    links = "".join(f'<a class="tab" href="{P(pid)}"{" aria-current=\"page\"" if active == k else ""}>{t}</a>' for k, t, pid in ACCOUNT_TABS)
-    return f'<nav class="subnav" aria-label="Account">{links}</nav>'
+def account_nav(active: str, founder: bool = False) -> str:
+    tabs = FOUNDER_TABS if founder else CUSTOMER_TABS
+    links = "".join(f'<a class="tab" href="{P(pid, "founder") if founder and pid in ("settings", "notification-settings") else P(pid)}"{" aria-current=\"page\"" if active == k else ""}>{t}</a>' for k, t, pid in tabs)
+    return f'<nav class="subnav" aria-label="{"Shop management" if founder else "Account"}">{links}</nav>'
 
 
 def footer() -> str:
@@ -477,13 +478,11 @@ def footer() -> str:
     and a bottom bar over a faint cream rule."""
     cats = "".join(f'<li><a href="{nav_href(k)}">{label}</a></li>' for k, label in NAV)
     return (f'<footer class="footer"><div class="footer__inner"><div class="footer__brand">{logo(light=True)}'
-            '<p>The marketplace made only for vintage: every piece at least 20 years old, listed by a real person with a real story.</p></div>'
+            '<p>A shop for antiques and vintage treasures from one Caribbean woman’s own collection: every piece at least 20 years old.</p></div>'
             f'<nav class="footer__col" aria-labelledby="footer-shop"><h2 id="footer-shop">Shop</h2><ul>{cats}</ul></nav>'
-            f'<nav class="footer__col" aria-labelledby="footer-sell"><h2 id="footer-sell">Sell</h2><ul><li><a href="{P("sell")}">Start selling</a></li>'
-            f'<li><a href="{P("rules")}">Marketplace rules</a></li></ul></nav>'
             f'<nav class="footer__col" aria-labelledby="footer-about"><h2 id="footer-about">Sycapooke</h2><ul><li><a href="{P("welcome")}">About Sycapooke</a></li>'
-            f'<li><a href="{P("privacy")}">Privacy</a></li><li><a href="{P("terms")}">Terms</a></li><li><a href="{D("cookie-settings")}">Cookie settings</a></li></ul></nav></div>'
-            f'<div class="footer__bottom"><span>© 2026 Sycapooke. Made with love by a grandmother and her family.</span></div></footer>')
+            f'<li><a href="{P("rules")}">Shop policies</a></li><li><a href="{P("privacy")}">Privacy</a></li><li><a href="{P("terms")}">Terms</a></li><li><a href="{D("cookie-settings")}">Cookie settings</a></li></ul></nav></div>'
+            f'<div class="footer__bottom"><span>© 2026 Sycapooke.</span></div></footer>')
 
 
 def page_body(pg: Page) -> str:
@@ -491,10 +490,10 @@ def page_body(pg: Page) -> str:
         return (f'{pg.top}<div class="auth-layout">{logo(cls="logo--lg")}<main id="main" class="auth-card">{pg.main}</main></div>{pg.after}')
     if pg.shell == "bare":
         return f'{pg.top}<header class="topbar">{logo()}</header><main id="main" class="{pg.main_class}">{pg.main}</main>{pg.after}'
-    head = admin_topbar(pg) if pg.shell == "admin" else topbar(pg)
-    sub = account_nav(pg.account) if pg.account else ""
+    head = topbar(pg)
+    sub = account_nav(pg.account, founder=pg.user == "founder") if pg.account else ""
     main_inner = (f'<div class="container">{sub}</div>' if sub else "")
-    foot = footer() if pg.footer and pg.shell != "admin" else ""
+    foot = footer() if pg.footer else ""
     return (f'{pg.top}{head}{main_inner}<main id="main" class="{pg.main_class}">{pg.main}</main>{foot}{pg.after}')
 
 

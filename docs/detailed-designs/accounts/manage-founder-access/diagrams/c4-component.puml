@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Manage founder access
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "AuthController", "Controller", "Feature entry point")
+  Component(handler, "GetCurrentMemberQueryHandler", "Application handler", "Executes feature rules")
+  Component(entity, "FounderAccess", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
+}
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
+Component(access, "IFounderAccess", "Application port", "Configured immutable founder identity")
+Rel(entry, access, "Checks protected management actions")
+Rel(handler, access, "Enforces non-HTTP boundary")
+Component(provisioner, "FounderProvisioner", "Proposed operator service", "Binds one verified existing account")
+ComponentDb(binding, "ShopIdentity", "Singleton persistent row", "Id = 1; immutable founder member ID")
+Rel(provisioner, binding, "Inserts once; rejects conflicting identity")
+Rel(access, binding, "Checks agreement with configured identity")
+@enduml

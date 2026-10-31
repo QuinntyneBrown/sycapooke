@@ -2,7 +2,7 @@
 
 ## Basis
 
-The estimate assumes an intermediate Angular/TypeScript and ASP.NET Core/C# developer who is productive in both stacks but new to this codebase. It assumes the `Listings` and photo tables, the account shell, `ToastService`, the outbox dispatcher and the email adapter already exist. `PayoutBannerComponent` and the draft reminder email template are estimated in the seller-payouts and notifications features. The open pagination behaviour (`<TO SUPPLY>`) is assumed to be a "Load more" button. Hours cover implementation, unit and acceptance tests, and review fixes. [Detailed design](../../detailed-designs/listings/manage-my-listings/README.md)
+The estimate assumes an intermediate Angular/TypeScript and ASP.NET Core/C# developer who is productive in both stacks but new to this codebase. It assumes the `Listings` and photo tables, the account shell, `ToastService`, the outbox dispatcher and the email adapter already exist. The draft reminder email template is estimated in the notifications feature. The open pagination behaviour (`<TO SUPPLY>`) is assumed to be a "Load more" button. Hours cover implementation, unit and acceptance tests, and review fixes. [Detailed design](../../detailed-designs/listings/manage-my-listings/README.md)
 
 ## Full design
 

@@ -1,0 +1,56 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Authorize full refund with explanation
+autonumber
+actor "Founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "ProblemDetailPage" as page
+ participant "ProblemsApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "ShopProblemsController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "ResolveProblemCommandHandler" as handler
+ participant "OrderProblem" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> page : Authorize full refund with explanation
+page -> client : resolve(reference, RefundBuyer, reason)
+client -> entry : POST /api/shop/problems/{reference}/resolution
+entry -> handler : Require founder identity, not administrator role [L2-010]
+handler -> db : Load current open problem and any pending resolution
+db --> handler : Problem and version
+alt Invalid identity, closed problem or conflicting pending decision
+ handler --> entry : 403 or 409; no refund call
+else Same request already pending
+ handler --> entry : Existing pending refund status, no duplicate operation
+else Valid first refund decision
+ handler -> db : Commit pending decision and full original-payment Refund.Id
+ db --> handler : Durable pending resolution; problem stays Open [L2-036]
+ handler -> provider : Refund original payment with Refund.Id [L2-030]
+ alt Provider confirms issuance
+  provider --> handler : Confirmed full refund
+  handler -> model : Close problem with explanation
+  handler -> db : Atomically mark refund Issued, order Refunded and notify customer
+ else Temporary failure or unconfirmed issuance
+  provider --> handler : Pending result
+  handler -> db : Keep Open problem and Pending refund for same-key retry
+  note over handler, db : Customer receipt and automatic completion remain blocked
+ end
+ handler --> entry : ProblemDto with refundStatus
+end
+entry --> client : Current problem result or ProblemDetails
+client --> page : Show pending support or confirmed refund
+note over handler, provider
+Provider settlement is never held or released by support.
+A confirmed callback or retry completes the same pending refund once.
+end note
+@enduml

@@ -14,7 +14,7 @@ skinparam package {
   FontColor #101828
   BackgroundColor #F9FAFB
 }
-actor "Member" as actor
+actor "Customer" as actor
 box "Frontend — Sycapooke Web application" #E0F2FE
   participant "Feature page" as page
   participant "ApiErrorInterceptor" as int

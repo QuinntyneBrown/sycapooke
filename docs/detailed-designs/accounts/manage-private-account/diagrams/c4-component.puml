@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Manage a private customer account
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "PrivateAccountController", "Controller", "Feature entry point")
+  Component(handler, "UpdatePrivateAccountHandler", "Application handler", "Executes feature rules")
+  Component(entity, "Member", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
+}
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
+@enduml

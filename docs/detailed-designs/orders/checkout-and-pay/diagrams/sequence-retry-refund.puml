@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Retry a temporary provider failure
+autonumber
+actor "Job scheduler" as actor
+box "Backend - Sycapooke Worker" #D1FADF
+ participant "RetryPendingRefundsJob" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "RetryPendingRefundsHandler" as handler
+ participant "Refund" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> entry : Retry a temporary provider failure
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Load pending refund and original payment [L2-030]
+handler -> provider : Use the persisted refund ID as idempotency key
+provider --> handler : Confirmed result or temporary failure
+handler -> handler : Record confirmation; finalize associated pending support refund atomically
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> actor : One confirmed full refund; temporary failure remains pending
+note over entry, handler
+One confirmed full refund; temporary failure remains pending
+end note
+note over handler, db
+A pending support problem stays Open until confirmed issuance.
+Confirmation closes that problem and applies Refunded once.
+Cancellation orders remain Cancelled with an Issued refund.
+end note
+@enduml

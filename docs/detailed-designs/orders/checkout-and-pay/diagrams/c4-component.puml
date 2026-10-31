@@ -1,37 +1,14 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Check out and pay
-
-Container(web, "Sycapooke Web", "Angular", "@sycapooke/orders: CheckoutPage, HostedCardFieldsComponent, OrderConfirmationPage; @sycapooke/api: CheckoutApi, PAYMENT_FIELDS; @sycapooke/components: sy-reservation-timer, sy-order-summary")
-Container_Boundary(api, "Sycapooke API") {
-  Component(cc, "CheckoutsController", "ASP.NET Core controller", "/api/checkouts and /api/purchases/{id}")
-  Component(wh, "PaymentWebhookController", "ASP.NET Core controller", "POST /api/payments/webhook")
-  Component(handlers, "CheckoutCommandHandlers", "MediatR handlers", "Start (reserve), get, set address, submit payment, release")
-  Component(webhook, "PaymentWebhookHandler", "MediatR handler", "Verifies, deduplicates, creates the Paid order or refunds a duplicate")
-  Component(purchase, "GetPurchaseQueryHandler", "MediatR handler", "The confirmation page's order")
-  Component(dom, "Checkout, Listing, Payment, Order, Refund", "Domain", "Reservation and order rules")
-  Component(ppa, "IPaymentProvider", "Port", "UnconfiguredPaymentProvider until a provider is chosen; a fake in tests")
-  Component(ctx, "SycapookeDbContext", "EF Core", "Conditional reservation update, unique indexes")
+title Components - Checkout and direct shop payment
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "CheckoutsController", "Controller", "Feature entry point")
+  Component(handler, "CheckoutCommandHandlers", "Application handler", "Executes feature rules")
+  Component(entity, "Checkout", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
 }
-Container_Boundary(worker, "Sycapooke Worker") {
-  Component(exp, "ReservationExpiryJob", "Hosted service", "Sends ExpireReservationsCommand every 30 s")
-}
-ContainerDb(db, "Sycapooke database", "SQL Server", "Checkout state")
-System_Ext(pay, "Payment provider", "Payments")
-
-Rel(web, cc, "Calls", "JSON/HTTPS")
-Rel(pay, wh, "Posts events", "Signed webhook")
-Rel(cc, handlers, "Sends commands")
-Rel(cc, purchase, "Sends GetPurchaseQuery")
-Rel(wh, webhook, "Sends HandlePaymentWebhookCommand")
-Rel(exp, handlers, "ExpireReservationsCommand")
-Rel(handlers, dom, "Reserves, prices, pays, releases")
-Rel(webhook, dom, "Creates Order, marks Listing Sold")
-Rel(handlers, ppa, "QuoteTaxAsync, CreatePaymentAsync")
-Rel(webhook, ppa, "ReadWebhook, RefundAsync")
-Rel(ppa, pay, "Calls", "HTTPS")
-Rel(handlers, ctx, "Saves")
-Rel(webhook, ctx, "Saves")
-Rel(ctx, db, "Persists", "SQL")
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
 @enduml

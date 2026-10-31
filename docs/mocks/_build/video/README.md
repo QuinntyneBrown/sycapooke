@@ -33,7 +33,7 @@ chromium`); narration also needs `kokoro-onnx`, `onnxruntime`, `huggingface_hub`
 - **Look**: the slides use the Heirloom tokens by value (paper, cream, ink, terracotta, forest; Fraunces
   600 headings with italic terracotta emphasis; Source Sans 3 body; 2rem photo corners, 1rem tiles,
   pills) and the committed photos. Flat colour only: no shapes, no gradients, crossfades between slides.
-- **Wording**: everything is vintage, at least 20 years old, listed by a real person; the copy never
+- **Wording**: everything is vintage, at least 20 years old, from the founder's own collection (founder-only shop, [ADR general/0010](../../../adr/general/0010-founder-only-shop.md), L2-078); no selling, payouts or invented biography; the copy never
   promises new or reproduction goods and never mentions the video's length
   ([ADR general/0005](../../../adr/general/0005-marketing-wording.md)).
 

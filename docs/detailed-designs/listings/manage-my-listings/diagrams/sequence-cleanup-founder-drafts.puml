@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Process aged drafts
+autonumber
+actor "Job scheduler" as actor
+box "Backend - Sycapooke Worker" #D1FADF
+ participant "DraftCleanupJob" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "CleanUpDraftsHandler" as handler
+ participant "Listing" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> entry : Process aged drafts
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Select untouched founder drafts [L2-019]
+handler -> model : Queue warning seven days before deletion
+handler -> handler : Recheck age and remove 90-day draft and photos
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> actor : Edited drafts survive; no customer-triggered inventory deletion
+note over entry, handler
+Edited drafts survive; no customer-triggered inventory deletion
+end note
+@enduml

@@ -5,7 +5,7 @@ title Containers — Deploy to production
 
 Person(owner, "Owner", "Merges to main; rolls back one unit by hand")
 Person(visitor, "Visitor", "Reads https://sycapooke.canadacentral.cloudapp.azure.com/welcome/")
-Person(member, "Member", "Uses https://sycapooke.canadacentral.cloudapp.azure.com")
+Person(member, "Customer", "Uses https://sycapooke.canadacentral.cloudapp.azure.com")
 System_Ext(gh, "GitHub Actions", "CI (verify), then Deploy marketing and Deploy app side by side")
 System_Ext(ghcr, "GitHub Container Registry", "sycapooke-marketing:{MARKETING_TAG}; sycapooke-app|api|worker|migrator:{APP_TAG}")
 System_Boundary(vm, "Azure Linux VM (B1s/B1ms, 2 GB swap) — /opt/sycapooke") {

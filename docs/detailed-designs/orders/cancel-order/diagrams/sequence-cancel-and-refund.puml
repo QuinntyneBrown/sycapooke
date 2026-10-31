@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Founder cancels directly or accepts request
+autonumber
+actor "Customer or founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "SaleDetailPage" as page
+ participant "OrdersApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "OrdersController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "CancelOrderCommandHandler" as handler
+ participant "Order" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> page : Cancel Paid sale with an allowed reason
+page -> client : cancellation(orderId, reason)
+client -> entry : POST /api/orders/{id}/cancellation
+entry -> handler : Require configured founder [L2-010]
+handler -> db : Load Paid order and current listing
+db --> handler : Current state
+alt Not founder, not Paid or invalid reason
+ handler --> entry : 403, 409 or 422; no mutation
+else Valid founder cancellation
+ handler -> model : Apply Paid to Cancelled [L2-035]
+ handler -> db : Commit order, removed listing, Pending refund and outbox atomically
+ db --> handler : Durable cancellation and Refund.Id
+ handler -> provider : Refund original payment with Refund.Id [L2-030]
+ alt Provider confirms issuance
+  provider --> handler : Confirmed refund reference
+  handler -> db : Mark refund Issued and enqueue confirmed-refund email
+ else Temporary failure or unconfirmed issuance
+  provider --> handler : Retryable or pending result
+  handler -> db : Keep Pending refund for retry with same key
+ end
+ handler --> entry : SaleDto with cancellation and refund status
+end
+entry --> client : 200 sale or ProblemDetails
+client --> page : Cancelled; show refund Pending or Issued
+note over handler, db
+Listing remains off the catalog until founder relists it.
+Process failure cannot lose the committed refund intent.
+end note
+@enduml

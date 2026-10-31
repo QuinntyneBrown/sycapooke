@@ -449,7 +449,6 @@ a.tab { text-decoration: none; }
 @media (min-width: 62rem) { .topbar .search { display: flex; max-width: 22rem; } .topbar__search-btn { display: none; } }
 .topbar__sell { display: none; }
 @media (min-width: 48rem) { .topbar__sell { display: inline-flex; } }
-.topbar__admin { font: var(--text-label); padding: var(--space-0-5) var(--space-3); background: var(--color-accent); color: var(--color-fg-on-accent); border-radius: var(--radius-full); }
 .page { padding-bottom: var(--space-16); }
 .page--narrow { max-width: 40rem; }
 .page--form { max-width: 44rem; }
@@ -606,8 +605,6 @@ a.tab { text-decoration: none; }
 .segmented input:checked + span { background: var(--color-bg-inverse); color: var(--color-fg-inverse); border-color: var(--color-bg-inverse); }
 .segmented input:focus-visible + span { outline: var(--focus-ring-width) solid var(--color-focus-ring); outline-offset: 2px; }
 .segmented input[aria-invalid="true"] + span { border-color: var(--color-danger-solid); }
-.earnings { display: flex; justify-content: space-between; gap: var(--space-4); font: var(--text-body-sm); color: var(--color-fg-muted); }
-.earnings strong { color: var(--color-fg-default); font-variant-numeric: tabular-nums; }
 
 /* ---------- Totals / order summary ---------------------------------------------- */
 .totals { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; }
@@ -716,7 +713,6 @@ a.tab { text-decoration: none; }
 .sell-form .form-section:first-child { padding-top: 0; border-top: 0; }
 .sell-form > .alert { margin-bottom: var(--space-8); }
 .sell-form .fixed-size { align-self: flex-start; flex-wrap: wrap; }
-.sell-form .earnings { max-width: none; }
 .order-list a > .item-row { flex: 1; }
 /* @@selling */
 /* Orders: checkout, order pages, review and problem dialogs */

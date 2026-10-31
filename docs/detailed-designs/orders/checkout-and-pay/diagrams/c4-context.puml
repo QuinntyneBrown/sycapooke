@@ -1,18 +1,10 @@
 @startuml
 !include <C4/C4_Context>
 LAYOUT_WITH_LEGEND()
-title System Context — Check out and pay
-
-Person(buyer, "Buyer", "Verified member buying one listing")
-Person(seller, "Seller", "Member who owns the listing")
-System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
-System_Ext(pay, "Payment provider", "PCI DSS hosted card fields, payments, refunds, tax rates, signed webhooks")
-System_Ext(email, "Email provider", "Transactional email")
-
-Rel(buyer, sycapooke, "Reserves, addresses and pays for a listing using")
-Rel(buyer, pay, "Enters card details into hosted fields served by", "HTTPS iframe")
-Rel(sycapooke, pay, "Creates payments, refunds duplicates, reads tax via", "HTTPS API")
-Rel(pay, sycapooke, "Confirms payment results to", "Signed webhook")
-Rel(sycapooke, email, "Sends the SaleMade email via", "HTTPS API")
-Rel(email, seller, "Delivers new-sale email to")
+title Context - Checkout and direct shop payment
+Person(user, "Verified customer", "Uses this shop capability")
+System(shop, "Sycapooke", "Founder-owned antiques and vintage shop")
+Rel(user, shop, "Checkout and direct shop payment", "HTTPS")
+System_Ext(provider, "Payment provider", "External port; production adapter remains separately configured")
+Rel(shop, provider, "Uses signed, authenticated integration")
 @enduml

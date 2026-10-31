@@ -1,15 +1,10 @@
 @startuml
 !include <C4/C4_Context>
 LAYOUT_WITH_LEGEND()
-title System Context — Cancel an order
-
-Person(seller, "Seller", "Cancels or answers a cancellation request")
-Person(buyer, "Buyer", "Asks the seller to cancel")
-System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
-System_Ext(pay, "Payment provider", "Refunds")
-System_Ext(email, "Email provider", "Transactional email")
-Rel(seller, sycapooke, "Cancels and responds to requests using")
-Rel(buyer, sycapooke, "Requests cancellation using")
-Rel(sycapooke, pay, "Refunds the buyer in full via", "HTTPS API")
-Rel(sycapooke, email, "Sends OrderCancelled and CancellationRequested email via", "HTTPS API")
+title Context - Cancel an order and refund
+Person(user, "Customer or founder", "Uses this shop capability")
+System(shop, "Sycapooke", "Founder-owned antiques and vintage shop")
+Rel(user, shop, "Cancel an order and refund", "HTTPS")
+System_Ext(provider, "Payment provider", "External port; production adapter remains separately configured")
+Rel(shop, provider, "Uses signed, authenticated integration")
 @enduml

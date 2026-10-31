@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - View the founder story and collection
+Person(user, "Visitor or customer", "Uses this shop capability")
+System(shop, "Sycapooke", "Founder-owned antiques and vintage shop")
+Rel(user, shop, "View the founder story and collection", "HTTPS")
+@enduml

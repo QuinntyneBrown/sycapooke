@@ -1,0 +1,39 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Receive authenticated delivery event
+autonumber
+actor "Payment provider" as actor
+box "Backend - Sycapooke API" #D1FADF
+ participant "CarrierWebhookController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "CarrierWebhookHandler" as handler
+ participant "Order" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> entry : Receive authenticated delivery event
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Validate provider event [L2-032]
+handler -> model : Apply Shipped to Delivered idempotently
+handler -> handler : Start three-day completion window and notify customer
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> actor : Delivered once; unrelated or repeated event changes nothing
+note over entry, handler
+Delivered once; unrelated or repeated event changes nothing
+end note
+@enduml

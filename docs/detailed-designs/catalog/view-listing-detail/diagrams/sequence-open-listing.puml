@@ -62,4 +62,8 @@ else server failure
   store --> page : error
   page --> actor : "Couldn't load this item", Ref, "Try again"
 end
+note over handler
+Public queries restrict inventory to the configured founder.
+No public customer profile or numeric rating is projected.
+end note
 @enduml

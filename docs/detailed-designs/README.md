@@ -1,81 +1,48 @@
 # Sycapooke detailed designs
 
-This folder holds the detailed design of every Sycapooke feature. Each design refines the
-level-2 (L2) requirements in [`docs/specs/L2.md`](../specs/L2.md) and draws its screens
-and states from the HTML mocks in [`docs/mocks/`](../mocks/README.md). Each feature
-folder holds a `README.md` with four sections (Overview, Description, Requirements,
-Diagrams) and a `diagrams/` folder of PlantUML sources and rendered PNGs. Each design
-has a matching estimate in [`docs/estimates/`](../estimates/).
+Sycapooke is the shop of one older Caribbean woman, its founder and sole seller. Customers browse and buy antiques and vintage treasures through private accounts. They cannot sell or publish profiles. The four categories and 20-year minimum remain.
+
+These 33 feature designs refine the current [L1](../specs/L1.md) and [L2](../specs/L2.md) requirements under [ADR general/0010](../adr/general/0010-founder-only-shop.md). Each feature has Overview, Description, Requirements and Diagrams sections. Requirements tables reproduce current L2 text and its owning L1. Feature navigation follows [journey value](../journeys.md), not implementation dependency order.
 
 ## Architecture baseline
 
-Every feature design builds on the same baseline, so the names below recur across all
-designs.
+| Boundary | Target responsibility |
+| --- | --- |
+| Sycapooke Web | Angular application shell and lazy feature libraries; customers see private buying navigation, the founder sees shop management |
+| Sycapooke API | ASP.NET Core controllers, server authorization, application commands and domain rules |
+| Sycapooke Worker | Durable email dispatch, reservations, shipment deadlines, completion, refund retries, draft cleanup and customer erasure |
+| Sycapooke database | EF Core account, singleton shop identity, inventory, order, payment, refund and outbox records |
+| Distributed cache | Shared session and rate-limit state; no process-local authoritative state |
+| Photo storage | Public processed listing and founder images; private originals and authenticated support evidence |
+| External ports | Hosted payment and original-payment refunds, email, Google identity and carrier events; tests substitute every port |
 
-### Containers
+The application owns shells and routes. Feature libraries call HTTP only through `@sycapooke/api` and compose `@sycapooke/components`. Heirloom tokens own appearance. The `reviews` library retains its name but presents only the founder story and collection. The `notifications` design subsystem uses the existing accounts and API libraries; it does not add a frontend library.
 
-| Container | Technology | Responsibility |
-|-----------|------------|----------------|
-| `Sycapooke Web` | Angular (TypeScript), standalone components, signals, lazy-loaded routes, in `src/frontend` | Responsive single-page application for visitors, members and administrators |
-| `Sycapooke API` | ASP.NET Core Web API (C#), in `src/backend` | REST API over HTTPS; source of truth for every business rule, including the size rules |
-| `Sycapooke Worker` | .NET worker service, in `src/backend` | Background jobs: outbox email dispatch, reservation expiry, order auto-completion, payouts, photo processing and erasure |
-| `Sycapooke database` | SQL Server through EF Core | Members, listings, orders, reviews, outbox |
-| `Distributed cache` | Redis | Rate-limit counters, refresh-token families and other state shared across API instances (`L2-060`) |
-| `Photo storage` | Object storage behind a CDN | Original uploads (private) and processed, content-addressed photo versions (public through the CDN) |
+## Shared design decisions
 
-### External systems
+- **Founder access:** one `Shop:FounderMemberId` agrees with the persisted singleton `ShopIdentity`. A trusted operator provisions it through the proposed migrator operation. Public registration, verification, Google linking and account changes grant no management capability. The API and application handlers enforce the same boundary.
+- **Navigation:** `CurrentMemberDto` and frontend `CurrentMember` gain server-derived `isFounder`. Navigation uses it; the server independently authorizes every request. Existing `CanSell` is only an internal compatibility policy name.
+- **Privacy:** only the founder has a public story at `/members/{displayName}`. Customer and unknown profile requests share 404. Customers access their own orders; the founder sees shipping addresses only within the existing retention window.
+- **Money:** signed provider callbacks confirm payment to the shop merchant account. Completion creates no financial transfer. Full refunds use the original payment and a persisted idempotency key. Temporary failures remain pending for retry.
+- **Support:** the founder handles `/shop/problems/:reference` and `/api/shop/problems/{reference}`. Existing administrator-facing support contracts are replaced. Open problems pause completion; provider settlement continues independently.
+- **Errors and concurrency:** protected anonymous requests return 401; customer attempts at founder actions return 403; another customer's private resource returns indistinguishable 404. Existing problem details, version conflicts and idempotency contracts remain.
+- **Verification:** backend tests use in-memory substitutes and fake ports. Browser tests use the built Angular application with intercepted APIs. No test starts a backend, real database or other external service. Statelessness is checked by architecture assertions only.
 
-| System | Used for |
-|--------|----------|
-| `Payment provider` | PCI DSS compliant hosted card fields, payments, refunds, seller payout onboarding and payouts, signed webhooks (`L2-030`, `L2-031`) |
-| `Email provider` | Transactional and marketing email (`L2-042`) |
-| `Breached-password service` | k-anonymity lookup of known breached passwords (`L2-001`) |
-
-The specific payment provider, email provider and hosting platform are `<TO SUPPLY>`.
-
-### Backend solution layout
-
-The C# namespace prefix is `Sycapooke`, because a C# identifier cannot start with a digit.
-
-| Project | Layer | Holds |
-|---------|-------|-------|
-| `Sycapooke.Api` | API | Controllers, endpoint policies, middleware (problem details, correlation ID, security headers, rate limiting, anti-forgery) |
-| `Sycapooke.Application` | Application | MediatR commands, queries and handlers; FluentValidation validators; DTOs; interfaces for infrastructure ports |
-| `Sycapooke.Domain` | Domain | Entities, value objects, enumerations, domain events and state machines (`Member`, `Listing`, `Order`, `Review`) |
-| `Sycapooke.Infrastructure` | Infrastructure | `SycapookeDbContext` (EF Core), repositories, outbox, adapters for the payment provider, email provider, photo storage and cache |
-| `Sycapooke.Worker` | Worker | Hosted background services that run the jobs listed above |
-
-### Frontend layout
-
-The frontend is an Angular workspace (`src/frontend`) laid out as `AGENTS.md` mandates:
-the application `projects/sycapooke/` (shell and routes only) and one library per area under
-`projects/`: `api` (typed HTTP services, DTOs, auth state, interceptors), `components`
-(design-system components and styles) and the lazy-loaded feature libraries `accounts`,
-`catalog`, `listings`, `orders`, `reviews` and `privacy`. Each feature library exports its
-route table from `public-api.ts`, holds its pages and dialogs under `src/lib/`, and calls
-`Sycapooke API` only through `@sycapooke/api`. Where an older design names `src/frontend/src/app/...`,
-read it as the matching library.
-
-### Cross-cutting conventions
-
-- **Sessions.** `Sycapooke API` issues a 15-minute access token and a rotating 14-day refresh token in `HttpOnly`, `Secure`, `SameSite=Strict` cookies (`L2-008`). The frontend never stores a token in web storage.
-- **Authorisation.** Every endpoint applies a policy; resources the caller may not see return HTTP 404 (`L2-010`).
-- **Errors.** Every API error is an RFC 9457 problem details response with a stable error code and a correlation ID (`L2-068`).
-- **Outbox.** Handlers that must send email or call an external system write an outbox message in the same database transaction as the state change; `Sycapooke Worker` dispatches it with retry and back-off (`L2-042`).
+The detailed access decision is recorded in [ADR platform/0018](../adr/platform/0018-founder-access-and-shop-contracts.md). Concrete provider selections remain `<TO SUPPLY>` where existing decisions defer them.
 
 ## Subsystems
 
-| Subsystem | Scope (L1) | Features |
-|-----------|------------|----------|
-| [accounts](accounts/README.md) | `L1-001`, `L1-002` | sign-up-and-sign-in (registration, email verification, sign-in, sessions, authorisation); still to design: reset-password, lockout, manage-sessions, edit-profile, close-account |
-| [listings](listings/) | `L1-003`, `L1-004` | create-listing, upload-listing-photos, edit-and-withdraw-listing, manage-my-listings |
-| [catalog](catalog/) | `L1-005`, `L1-006` | browse-catalog, search-and-filter-catalog, view-listing-detail |
-| [orders](orders/) | `L1-007`, `L1-008` | checkout-and-pay, seller-payouts, ship-order, complete-order, cancel-order, resolve-order-problems, order-history |
-| [reviews](reviews/) | `L1-009`, `L1-010` | view-member-profile |
-| [notifications](notifications/) | `L1-011` | send-email-notifications, manage-notification-preferences |
-| [privacy](privacy/) | `L1-014` | protect-personal-data, manage-cookie-consent |
-| [platform](platform/) | `L1-013`, `L1-015` to `L1-018` | harden-http-and-api, protect-credentials-and-supply-chain, meet-performance-and-scale, responsive-accessible-shell, report-errors-and-observe, keep-available-and-recoverable |
+| Subsystem | Responsibility | Features |
+| --- | --- | --- |
+| [catalog](catalog/README.md) | Public browsing, search and treasure detail for the founder collection. | 3 |
+| [orders](orders/README.md) | Private purchases, direct shop payments, founder fulfilment and customer support. | 6 |
+| [listings](listings/README.md) | Founder-only drafts, photographs, publication and inventory changes. | 4 |
+| [notifications](notifications/README.md) | Account, customer order and founder shop messages with optional marketing. | 2 |
+| [reviews](reviews/README.md) | The founder public story, collection and empty review summary. | 1 |
+| [platform](platform/README.md) | Responsive accessibility, security, operations, static marketing and local developer tooling. | 10 |
+| [accounts](accounts/README.md) | Private buyer accounts, authentication and trusted founder access. | 5 |
+| [privacy](privacy/README.md) | Private account and address protection, erasure boundaries and cookie choice. | 2 |
 
-## Deferred
+## Implementation boundary
 
-Moderation (reporting, the moderation queue, member suspension, the administrator audit log and administrator second factor), review authoring and data export have no detailed design, mocks, specs or estimates at this time. See [ADR 0001](../adr/general/0001-defer-moderation-reviews-and-data-export.md). Administrators still resolve order problems through [resolve-order-problems](orders/resolve-order-problems/README.md), guarded by the `Administrator` policy of `L2-010`.
+These documents define the target design. Existing class names identify reusable code; proposed additions and contract changes are called out in each Description. Current code, mocks, screen composition, media and tests still require alignment before compliance can be claimed. The [estimate tables](../estimates/README.md) separate implemented behavior with test evidence from remaining target work. Existing deferred scope remains unchanged.

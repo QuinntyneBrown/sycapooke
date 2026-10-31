@@ -17,7 +17,7 @@ set it inherited through its clone origin (ADR general/0009); only the domain wo
 | Ink | `#2B2118` | `--palette-ink-800` | Text, the inverse toast, dark-theme surfaces (`--color-fg-default`) |
 | Muted | `#665748` | `--palette-ink-500` | Secondary text (`--color-fg-muted`) |
 | Line | `#E0D4BE` | `--palette-paper-300` | Borders and dividers (`--color-border-default`) |
-| Terracotta | `#A04228` | `--palette-terracotta-600` | Primary: the tag logo, primary buttons, the sell and closing bands, focus ring (`--color-accent`, `--color-band-terracotta`) |
+| Terracotta | `#A04228` | `--palette-terracotta-600` | Primary: the tag logo, primary buttons, the From my collection and closing bands, focus ring (`--color-accent`, `--color-band-terracotta`) |
 | Terracotta hover | `#85341E` | `--palette-terracotta-700` | Button hover; terracotta text and links, 7.3:1 on paper (`--color-accent-hover`, `--color-fg-link`) |
 | Forest | `#2F4A3A` | `--palette-forest-600` | Secondary: the forest card, the inverse button's hover, eyebrows and stat labels (`--color-band-forest`; `--color-fg-forest` for forest text) |
 | Mustard | `#C9962E` | `--color-rule-mustard` | The quote rule; a fill only. Mustard text uses 700, dark-theme links use 300 |
@@ -63,22 +63,21 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 | Component | Variants | States | Source mocks |
 |---|---|---|---|
 | [Skip link](components/skip-link.html) | one | hidden, focused | every page |
-| [Top bar](components/top-bar.html) | guest (Sign in link, Start selling pill), member (Sell pill, avatar), admin, bare | default, hover, current | catalog/guest, catalog/default, problem-detail, maintenance |
-| [Footer](components/footer.html) | one (ink; brand column and three link columns) | default, hover | catalog |
+| [Top bar](components/top-bar.html) | guest (Sign in pill), customer (avatar only), founder (Inventory link, Sell an item pill, avatar), bare | default, hover, current | catalog/guest, catalog/default, shop/default, maintenance |
+| [Footer](components/footer.html) | one (ink; brand column and two link columns: Shop, Sycapooke with Shop policies) | default, hover | catalog |
 | [Consent banner](components/consent-banner.html) | one | shown until a choice, then gone | notifications/cookie-consent/info |
 | [Toast](components/toast.html) | info, success, warning, danger; optional action; `ToastService` | entering, leaving, paused | notifications/toast |
 | [Sheet](components/sheet.html) | navigation, filter | open | dialogs/nav-menu, dialogs/filters |
 | [Button](components/button.html) | primary, secondary, inverse, ghost, link, danger, icon | default, hover, focus, active, disabled, loading | catalog/guest, nav-menu, toast |
 | [Provider button](components/provider-button.html) | google; with the "or" divider | default, hover, focus, active, busy, disabled | sign-in/default, sign-in/google-busy, register/default |
-| [Link](components/link.html) | inline, nav, footer | default, hover, focus, current | catalog, rules |
+| [Link](components/link.html) | inline, nav, footer | default, hover, focus, current | catalog, rules (Shop policies) |
 | [Form field](components/form-field.html) | input, textarea, select | default, hover, focus, invalid, disabled, read only | sign-in, sell |
-| [Alert](components/alert.html) | info, success, warning, danger; banner without title; projected actions; dismissible | static, polite, assertive | sign-in/invalid, sell/draft-saved, verify-email-prompt, payout-banner |
-| [Center state](components/center-state.html) | blocked, limited, error, success; icon or status code | static | sell/unverified, sell/limited, sell/error, sell/success, listing-detail/unavailable, listing-detail/error |
+| [Alert](components/alert.html) | info, success, warning, danger; banner without title; projected actions; dismissible | static, polite, assertive | sign-in/invalid, sell/draft-saved, verify-email-prompt, account-banner |
+| [Center state](components/center-state.html) | blocked, limited, error, success; icon or status code | static | forbidden/management, sell/limited, sell/error, sell/success, listing-detail/unavailable, listing-detail/error |
 | [Chip](components/chip.html) | default, selected, with remove button | default, hover, focus | catalog/filtered, catalog/no-results |
 | [Filter chips](components/filter-chips.html) | one pressed toggle chip per value, each with a count | default, hover, focus, pressed | my-listings/default, my-listings/filtered |
-| [Choice](components/choice.html) | plain, with links | unticked, ticked, invalid | register, sell |
+| [Choice](components/choice.html) | plain, with links | unticked, ticked, invalid | register (terms and shop policies), sell |
 | [Dialog](components/dialog.html) | default, with top alert; info or danger icon tone | default, busy, sent, limited | dialogs/verify-email-prompt, dialogs/cancel-order |
-| [Earnings](components/earnings.html) | one | unknown, known | sell/filled |
 | [Error summary](components/error-summary.html) | one | shown and focused | sell/invalid, register/invalid |
 | [Fixed size](components/fixed-size.html) | Vintage | absent, shown | sell/filled |
 | [Icon](components/icon.html) | 22 glyphs (search added by search-and-filter-catalog, flag by resolve-order-problems; play, pause and captions by the pitch video) | static | every page |
@@ -89,8 +88,8 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 | [Load more](components/load-more.html) | one | default, busy, hidden when all shown | catalog/default |
 | [Gallery](components/gallery.html) | one photo, several photos | selected thumbnail, swiped | listing-detail/default |
 | [Buy bar](components/buy-bar.html) | Buy now, Edit listing | sticky below 992 px, inline from 992 px | listing-detail/default, listing-detail/guest, listing-detail/own |
-| [Seller summary](components/seller-summary.html) | established, new seller | static | listing-detail/default, listing-detail/new-seller |
-| [Rating summary](components/rating-summary.html) | rated; "No reviews yet" | static | profile/default, profile/own, profile/empty |
+| [Founder summary](components/founder-summary.html) | founder with completed sales; zero completed sales (no “New seller” variant) | static | listing-detail/default, listing-detail/zero-sales |
+| [Rating summary](components/rating-summary.html) | "No reviews yet" (rated variant retired; no mock uses it) | static | profile/default, profile/own, profile/empty, listing-detail/default |
 | [Order summary](components/order-summary.html) | priced, not yet priced | static | checkout/default, checkout/new-address |
 | [Reservation timer](components/reservation-timer.html) | info, warning, danger | counting, last minute, ended | checkout/default, reservation-timer/warning, reservation-timer/danger |
 | [Order timeline](components/order-timeline.html) | paid, shipped, delivered | done, current, to come | sale-detail/shipped, order-detail/default, order-detail/paid |
@@ -99,15 +98,15 @@ colours in both themes; the string and wordmark follow the text colour, or cream
 | [Segmented control](components/segmented.html) | one | empty, chosen, invalid | sell condition |
 | [Size tag](components/size-tag.html) | Vintage (the category-pill style); default, large | static | sell, catalog |
 | [Spinner](components/spinner.html) | with message | running | verify-email/loading |
-| [Stat](components/stat.html) | in a `.stats` stack; compact | static, loading skeleton | payouts/default, payouts/loading |
+| [Stat](components/stat.html) | in a `.stats` stack; compact | static, loading skeleton | shop/default, shop/loading, profile/default (compact) |
 | [Switch](components/switch.html) | on, off, locked on; hidden label or label with hint | off, on, focus, disabled | notification-settings/default, notification-settings/submitting |
-| [Quote](components/quote.html) | default, small | static | order-detail/cancelled, sale-detail/cancel-requested, respond-cancellation |
+| [Quote](components/quote.html) | default, small | static | order-detail/cancelled, order-detail/refund-pending, sale-detail/cancel-requested, welcome |
 | [Radio group](components/radio-group.html) | one | nothing chosen, chosen, invalid | cancel-order/default, cancel-order/invalid |
 | [Thread](components/thread.html) | one | static, with photos | order-detail/problem, sale-detail/problem, problem-detail/default |
 | [Facts](components/facts.html) | one | static | problem-detail/default, problem-detail/resolved |
 | [Status](components/status.html) | draft, active, reserved, sold, removed, info (plain pills) | static | problem-detail/default, problem-detail/resolved |
 | [Marketing hero](components/marketing-hero.html) | one (on paper, with the photo) | static | welcome |
-| [Feature band](components/feature-band.html) | default (paper), sell (terracotta), story (cream), stacked, closing | static | welcome |
+| [Feature band](components/feature-band.html) | default (paper), sell (terracotta; the From my collection and closing bands), story (cream), stacked, closing | static | welcome |
 | [Steps](components/steps.html) | one (ringed numbers) | static | welcome |
 | [Video poster](components/video-poster.html) | one (the hero photo as a “Play · 0:29” button) | default, hover (photo zoom), focus | welcome |
 | [Video player](components/video-player.html) | one (ink 16:9 frame with Play/Pause and Captions pills) | loading, playing, paused, captions on, error | dialogs/pitch-video |

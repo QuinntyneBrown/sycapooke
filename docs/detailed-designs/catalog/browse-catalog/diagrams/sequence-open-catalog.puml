@@ -1,20 +1,20 @@
 @startuml
-title UML sequence behaviour — Open the catalog
+title UML sequence behaviour â€” Open the catalog
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
 actor "Visitor or member" as actor
-box "Frontend — Sycapooke Web application" #E0F2FE
+box "Frontend â€” Sycapooke Web application" #E0F2FE
   participant "CatalogPage" as page
   participant "CatalogStore" as store
   participant "CatalogApi" as client
 end box
-box "Backend — Sycapooke API application" #D1FADF
+box "Backend â€” Sycapooke API application" #D1FADF
   participant "CatalogController" as controller
 end box
-box "Backend — Sycapooke Application" #ECFDF3
+box "Backend â€” Sycapooke Application" #ECFDF3
   participant "BrowseCatalogQueryHandler" as handler
 end box
 database "Sycapooke database" as db
@@ -41,4 +41,8 @@ else status 0 and navigator.onLine is false, snapshot saved
 else failure
   store --> page : view = error (Ref from correlationId, Try again)
 end
+note over handler
+Public queries restrict inventory to the configured founder.
+No public customer profile or numeric rating is projected.
+end note
 @enduml

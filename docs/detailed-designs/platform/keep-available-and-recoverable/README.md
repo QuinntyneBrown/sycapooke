@@ -24,13 +24,15 @@ API that allows several instances is defined in
 
 ## Description
 
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
+
 Source mocks: `docs/mocks/pages/maintenance/` and
 `docs/mocks/notifications/system-banner/` (`info`).
 
 ### Hosting and load balancing (`deploy/`)
 
 The hosting platform is `<TO SUPPLY>`. The design states the settings it shall
-support; infrastructure-as-code files live under `deploy/infra/` (tool
+support; infrastructure-as-code files live under the existing `deploy/` configuration (tool
 `<TO SUPPLY>`).
 
 - **Instances** — at least 3 `Sycapooke API` instances and 2 `Sycapooke Worker` instances
@@ -107,33 +109,13 @@ support; infrastructure-as-code files live under `deploy/infra/` (tool
 ### Backups and recovery (`Sycapooke database`)
 
 - **Managed SQL Server** (product `<TO SUPPLY>`) with PITR enabled and backup
-  retention 35 days, set in `deploy/infra/` as code. Transaction log backups at
+  retention 35 days, set in the existing `deploy/` configuration as code. Transaction log backups at
   an interval of 10 minutes or less give an RPO of 15 minutes or less. Backup
   storage redundancy (zone or geo) `<TO SUPPLY>`.
 - **`infra-policy` CI check** — parses the infrastructure-as-code plan and
   fails when PITR is disabled or retention is below 35 days (`L2-067` AC1).
-- **Restore runbook** — `docs/runbooks/restore-database.md` (written with this
-  feature): decide the restore point, restore to a new database, run the
-  verifier, switch `ConnectionStrings--Sycapooke` in the secret store, restart
-  instances, replay or reconcile payment provider events received after the
-  restore point using the provider's event list (procedure `<TO SUPPLY>`).
-- **`Sycapooke.RestoreVerifier`** — console app run against a restored database.
-  Checks: `__EFMigrationsHistory` matches the deployed migration set;
-  `DBCC CHECKDB` reports no errors; foreign keys are trusted; business
-  invariants hold — each `Sold` listing has exactly one non-cancelled order,
-  each order total equals item price plus shipping plus tax, each completed order
-  has a payout record or a pending payout; the latest `Orders.CreatedAt` is
-  within 15 minutes of the restore point. Writes `restore-report.json` with
-  timings and results; exit code non-zero on any failure.
-- **Quarterly restore test** — `.github/workflows/restore-test.yml` runs on a
-  schedule in the first week of January, April, July and October (exact cron
-  `<TO SUPPLY>`) and on manual dispatch. It restores production to a new,
-  isolated database at the point 15 minutes before the start, runs
-  `Sycapooke.RestoreVerifier`, records the elapsed time from start to verified
-  (shall be under 4 hours), uploads `restore-report.json` as an artifact, posts
-  the result to the on-call channel, and deletes the restored database. Access
-  to the restored copy is restricted to the operations role because it holds
-  personal data.
+- **Operator restore procedure** — the target runbook belongs in the existing `docs/deployment.md`. A trusted operator restores a separate database to the selected point, checks schema and order/payment consistency, records elapsed time and reconciles signed provider events before switching the application connection. The operator preserves `ShopIdentity` and its deployment binding. Refund records and original payment references remain available after recovery.
+- **Quarterly recovery drill** — an operational activity outside backend, browser and CI test suites. The operator records RPO, RTO and consistency evidence at least quarterly. No test fixture starts a real database, no restore-verifier project is introduced, and no CI lane relaxes the repository test rules. Managed recovery tooling and its exact procedure remain `<TO SUPPLY>` where the existing requirement does not select them.
 
 ### Configuration values
 
@@ -145,10 +127,16 @@ unhealthy threshold 2.
 
 `maintenance` (503).
 
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-066` | `L1-018` | The browsing, listing and purchasing functions shall be available 99.9% of each calendar month, excluding announced maintenance of no more than 2 hours per month outside 06:00 to 23:00 US Eastern time. |
 | `L2-067` | `L1-018` | The database shall support point-in-time recovery with no more than 15 minutes of data loss (RPO) and shall be restorable within 4 hours (RTO). Backups shall be kept for 35 days. A restore shall be tested at least once each quarter. |
 

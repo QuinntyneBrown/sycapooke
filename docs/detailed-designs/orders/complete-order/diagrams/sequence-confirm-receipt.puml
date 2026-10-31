@@ -1,62 +1,47 @@
 @startuml
-title UML sequence behaviour — Buyer confirms receipt
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
-skinparam rectangle {
-  BorderColor #344054
-  FontColor #101828
-}
-skinparam package {
-  BorderColor #667085
-  FontColor #101828
-  BackgroundColor #F9FAFB
-}
-skinparam sequenceMessageAlign left
-skinparam maxMessageSize 260
-actor "Buyer" as actor
-box "Frontend — @sycapooke/orders and @sycapooke/api" #E0F2FE
-  participant "OrderDetailPage" as page
-  participant "ConfirmReceiptDialog" as dlg
-  participant "OrdersApi" as client
+title Behaviour - Confirm safe receipt
+autonumber
+actor "Customer or completion worker" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "OrderDetailPage" as page
+ participant "OrdersApi" as client
 end box
-box "Backend — Sycapooke API application (Sycapooke.Api)" #D1FADF
-  participant "OrdersController" as ctrl
+box "Backend - Sycapooke API" #D1FADF
+ participant "OrdersController" as entry
 end box
-box "Backend — Sycapooke.Application and Sycapooke.Domain" #ECFDF3
-  participant "ConfirmReceiptCommandHandler" as h
-  participant "Order" as order
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "ConfirmReceiptCommandHandler" as handler
+ participant "Order" as model
 end box
-box "Backend — Sycapooke.Infrastructure" #FFF4E5
-  database "Sycapooke database" as db
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
 end box
-actor -> page : Choose "I received it" (Shipped or Delivered)
-page -> dlg : Open "Got it and all good?"
-actor -> dlg : "Yes, complete order"
-dlg -> client : confirmReceipt(orderId) (busy state)
-client -> ctrl : POST /api/orders/{id}/receipt
-ctrl -> h : Send ConfirmReceiptCommand
-h -> db : Load order where BuyerId = caller
-alt not the buyer
-  h --> ctrl : 404 ORDER_NOT_FOUND
-else buyer
-  h -> order : ConfirmReceipt(now)
-  alt Status is Shipped
-    order -> order : MarkDelivered(Buyer, now)
-  end
-  order -> order : Complete(Buyer, now)
-  alt not Shipped or Delivered, or the status changed before the save
-    h --> ctrl : 409 ORDER_INVALID_TRANSITION
-    ctrl --> dlg : Failed state "That didn't go through"
-  else saved
-    h -> db : Save order and status changes in one transaction
-    h -> h : Publish OrderCompleted
-    h --> ctrl : PurchaseDto (Completed)
-    ctrl --> client : 200
-    client --> page : Updated order
-    page --> actor : "Completed" with the full timeline
-  end
+participant "Payment provider" as provider
+actor -> page : Confirm safe receipt
+page -> client : POST /api/orders/{id}/receipt
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Require order buyer [L2-010]
+handler -> model : Reject current open problem [L2-034, L2-036]
+handler -> handler : Record delivery if needed and complete with buyer actor
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
 end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Completed or 409 while problem remains; 404 another buyer
+note over entry, handler
+Completed or 409 while problem remains; 404 another buyer
+end note
 @enduml

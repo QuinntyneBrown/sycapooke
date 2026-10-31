@@ -1,24 +1,18 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Cancel an order
-
-Person(seller, "Seller", "Member")
-Person(buyer, "Buyer", "Member")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "Sale and order pages, cancellation and relist dialogs")
-  Container(api, "Sycapooke API", "ASP.NET Core", "Cancellation, request, response and relist endpoints; issues refunds")
-  Container(worker, "Sycapooke Worker", ".NET worker service", "Ship deadline job; outbox dispatch of email")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "Orders, refunds, listings, outbox")
+title Containers - Cancel an order and refund
+Person(user, "Customer or founder")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-System_Ext(pay, "Payment provider", "Refunds")
-System_Ext(email, "Email provider", "Email")
-Rel(seller, web, "Uses", "HTTPS")
-Rel(buyer, web, "Uses", "HTTPS")
-Rel(web, api, "Calls", "JSON/HTTPS")
-Rel(api, db, "Reads and writes", "EF Core")
-Rel(api, pay, "Refunds in full", "HTTPS")
-Rel(worker, db, "Reads outbox, cancels overdue orders", "EF Core")
-Rel(worker, pay, "Refunds orders it cancels", "HTTPS")
-Rel(worker, email, "Sends email", "HTTPS")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
+System_Ext(provider, "Payment provider")
+Rel(api, provider, "Calls port; validates responses", "HTTPS")
 @enduml

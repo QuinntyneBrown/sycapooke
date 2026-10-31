@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Load current account
+autonumber
+actor "Founder or trusted operator" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "AppShellComponent" as page
+ participant "AuthState" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "AuthController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "GetCurrentMemberQueryHandler" as handler
+ participant "FounderAccess" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> page : Load current account
+page -> client : GET /api/auth/me
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Derive isFounder on the server [L2-003]
+handler -> model : Return private identity and capability
+handler -> handler : Render shop links only for founder
+handler -> db : Project authorized response without mutation
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Customer navigation contains no selling or public-profile actions
+note over entry, handler
+Customer navigation contains no selling or public-profile actions
+end note
+@enduml

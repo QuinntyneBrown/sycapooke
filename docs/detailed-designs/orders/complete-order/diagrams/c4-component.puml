@@ -1,27 +1,14 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Complete an order
-
-Container(web, "Sycapooke Web", "Angular", "@sycapooke/orders: OrderDetailPage, ConfirmReceiptDialog; @sycapooke/api: OrdersApi")
-Container_Boundary(api, "Sycapooke API") {
-  Component(ctrl, "OrdersController", "ASP.NET Core controller", "POST /api/orders/{id}/receipt")
-  Component(h, "ConfirmReceiptCommandHandler", "MediatR handler", "Buyer completes the order")
-  Component(ch, "CompleteDeliveredOrdersHandler", "MediatR handler", "System completes due orders")
-  Component(order, "Order", "Domain aggregate", "State machine from ship-order")
-  Component(evt, "OrderCompleted", "MediatR notification", "Handled by seller-payouts")
+title Components - Complete an order
+Container_Boundary(slice, "Sycapooke API and Application") {
+  Component(entry, "OrdersController", "Controller", "Feature entry point")
+  Component(handler, "ConfirmReceiptCommandHandler", "Application handler", "Executes feature rules")
+  Component(entity, "Order", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
 }
-Container_Boundary(worker, "Sycapooke Worker") {
-  Component(job, "OrderCompletionJob", "Hosted service", "Delivered + 3 days")
-}
-ContainerDb(db, "Sycapooke database", "SQL Server", "Orders, OrderStatusChanges")
-Rel(web, ctrl, "Calls", "JSON/HTTPS")
-Rel(ctrl, h, "Sends ConfirmReceiptCommand")
-Rel(job, ch, "Sends CompleteDeliveredOrdersCommand")
-Rel(h, order, "ConfirmReceipt")
-Rel(ch, order, "Complete(System)")
-Rel(h, evt, "Publishes after save")
-Rel(ch, evt, "Publishes after save")
-Rel(h, db, "Saves", "EF Core")
-Rel(ch, db, "Selects due orders and saves", "EF Core")
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
 @enduml

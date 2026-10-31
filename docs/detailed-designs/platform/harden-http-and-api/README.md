@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. Members
+Sycapooke is the founder's shop for antiques and vintage treasures jewelry, clothing, housewares and electronics. Members
 sign in, list items, pay for them and leave reviews through the `Sycapooke Web`
 single-page application, which calls the `Sycapooke API` over HTTPS. Every one of those
 calls carries a session cookie and, for writes, changes money or personal data.
@@ -26,10 +26,12 @@ The feature covers four concerns, each set by one level-2 requirement:
 Rate limits are shared across all API instances through the `Distributed cache`
 (Redis), because `L2-060` requires the API to be stateless. The stricter sign-in
 limit of `L2-007` is owned by the accounts subsystem
-([sign-in](../../accounts/sign-in/README.md)); this feature provides the limiter
+([sign-in](../../accounts/sign-up-and-sign-in/README.md)); this feature provides the limiter
 it plugs into.
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 The slice runs from the browser through the load balancer into the ASP.NET Core
 middleware pipeline, the MediatR pipeline and EF Core. It ends in CI, where
@@ -157,7 +159,7 @@ Middleware order in `Program.cs`: `UseForwardedHeaders` →
 
   `register` applies in addition to the default policy. The listing creation limit of
   `L2-051` (20 published listings per member per UTC day; drafts are not limited) is not a
-  policy here: create-listing enforces it in `PublishListingCommandHandler` by counting the
+  policy here: create-listing enforces it in `ListingCommandHandlers` by counting the
   member's listings with `PublishedAt` since 00:00 UTC in `Sycapooke database`, and answers 429
   `RATE_LIMITED` with `Retry-After` set to the seconds until midnight UTC
   ([ADR platform-0006](../../../adr/platform/0006-daily-publish-limit-counted-in-database.md)).
@@ -197,14 +199,24 @@ Middleware order in `Program.cs`: `UseForwardedHeaders` →
 `request_too_large` (413), `malformed_json` (400), `validation_failed` (400),
 `antiforgery_invalid` (400), `rate_limited` (429).
 
+### Founder-only target boundary
+
+Founder authorization precedes listing validation and upload processing. Only the founder consumes the publication allowance. Registration, verification, account settings and Google callbacks cannot assign shop capability. Client owner and role fields never bypass authorization. Existing transport, anti-forgery and rate-limit controls apply to private buyer and founder endpoints.
+
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-048` | `L1-013` | All traffic shall use HTTPS with TLS 1.2 or later. HTTP requests shall redirect to HTTPS. Responses shall include `Strict-Transport-Security` (max-age of at least one year), a `Content-Security-Policy` that disallows inline scripts, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and `frame-ancestors 'none'`. |
 | `L2-049` | `L1-013` | The API shall validate every input on the server for type, length, range and format, whatever the client checks. Database access shall use parameterised queries only. User content shall be encoded on output. Unknown fields in a request body shall be ignored and shall never change protected fields such as owner, status or price paid (mass assignment). |
 | `L2-050` | `L1-013` | All state-changing requests shall be protected against cross-site request forgery with an anti-forgery token in addition to `SameSite` cookies. The API shall allow cross-origin requests only from the Sycapooke frontend origins listed in configuration. |
-| `L2-051` | `L1-013` | The API shall limit requests to 120 per minute per IP address for anonymous callers and 300 per minute per member, with stricter limits for sign-in (L2-007), registration (5 per hour per IP) and listing creation (20 published listings per member per UTC day; saving drafts is not limited). Callers over a limit shall receive HTTP 429 with a `Retry-After` header. |
+| `L2-051` | `L1-013` | The API shall limit requests to 120 per minute per IP address for anonymous callers and 300 per minute per member, with stricter limits for sign-in (L2-007), registration (5 per hour per IP) and listing creation (20 published listings by the founder per UTC day; saving drafts is not limited). Callers over a limit shall receive HTTP 429 with a `Retry-After` header. |
 
 ## Diagrams
 

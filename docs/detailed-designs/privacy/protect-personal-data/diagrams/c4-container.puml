@@ -4,7 +4,7 @@ LAYOUT_WITH_LEGEND()
 title Containers — Protect personal data
 
 Person(visitor, "Visitor", "Anonymous reader of public pages")
-Person(member, "Member", "Signed-in buyer or seller")
+Person(member, "Customer", "Signed-in buyer or seller")
 System_Boundary(sycapooke, "Sycapooke") {
   Container(web, "Sycapooke Web", "Angular", "Privacy page; public views typed without personal fields")
   Container(api, "Sycapooke API", "ASP.NET Core", "Public DTO allow-list; field-level encryption of shipping addresses")

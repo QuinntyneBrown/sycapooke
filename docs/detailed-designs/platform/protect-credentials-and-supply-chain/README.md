@@ -17,13 +17,15 @@ has three parts:
 - **supply-chain gates** — CI jobs that scan the repository for committed secrets, scan .NET and npm dependencies for known vulnerabilities, and run static analysis on every pull request (`L2-052`, `L2-053`)
 
 Other features consume these parts. The accounts subsystem calls the password
-hasher in [register-account](../../accounts/register-account/README.md),
-[sign-in](../../accounts/sign-in/README.md) and
-[reset-password](../../accounts/reset-password/README.md). Every adapter in
+hasher in [register-account](../../accounts/sign-up-and-sign-in/README.md),
+[sign-in](../../accounts/sign-up-and-sign-in/README.md) and
+[reset-password](../../accounts/sign-up-and-sign-in/README.md). Every adapter in
 `Sycapooke.Infrastructure` reads its secret through configuration fed by the
 secret store.
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 ### Application and domain (`Sycapooke.Application`, `Sycapooke.Domain`)
 
@@ -129,10 +131,16 @@ default branch (repository setting).
 `secret_source_invalid` (start-up log event), `password_rehashed` (information
 log event, member ID only).
 
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-052` | `L1-013` | Passwords shall be stored only as salted hashes using Argon2id or PBKDF2-HMAC-SHA512 with at least 210,000 iterations. Secrets (connection strings, API keys, signing keys) shall not be stored in source control and shall be loaded from a secret store at runtime. |
 | `L2-053` | `L1-013` | CI shall scan .NET and npm dependencies and run static analysis on every pull request. A high or critical vulnerability with a fix available shall fail the build. |
 

@@ -1,0 +1,36 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure - Close a customer account
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+class "CustomerClosureController" as Entry {
+}
+class "CloseCustomerAccountHandler" as Handler {
+ +Handle(request: CloseCustomerAccountCommand, cancellationToken: CancellationToken): Task<Result>
+}
+class "Member" as Model {
+ +Guid Id
+ +DateTime? ClosedAt
+}
+class "CloseCustomerAccountCommand" as Request {
+ +Guid MemberId
+}
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
+}
+Handler ..> ISycapookeDbContext : persistence boundary
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
+@enduml

@@ -1,159 +1,88 @@
-# Marketing page
+# Introduce the founder and her collection
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage: jewelry, clothing, housewares and
-electronics, every piece at least 20 years old and listed by a real person with a real story.
-This feature, part of the `platform` subsystem, adds a public marketing page at `/welcome`
-that sells Sycapooke to shoppers and sellers: a hero on paper whose photo is the poster of a
-29-second pitch video, four feature bands (shoppers on paper, sellers on terracotta, how it
-works on paper and the founder's story on cream) and a closing terracotta band. Anyone can open
-it, signed in or not. It refines `L1-020` through `L2-078`, `L2-079`, `L2-083` and `L2-089` to
-`L2-091`; `L2-080` to `L2-082` (the video dialog as first cloned) are retired and never reused,
-the video having returned under new numbers
-([ADR platform/0014](../../../adr/platform/0014-pitch-video.md)).
+The public introduction presents the older Caribbean founder and her own collection. Static content and an optional pitch video invite shopping.
 
-Terms used below:
-
-- **band** — one flat, full-width colour from the landing page: paper (the hero, For shoppers,
-  How it works), cream under a line rule (Our story), or terracotta with cream text and ink
-  buttons (For sellers and the closing call to action). The terracotta band keeps its colours
-  in both themes. No gradient, no shapes
-  ([design system](../../../design-system/components/feature-band.html))
-- **hero photo** — `/media/sycapooke-hero.jpg`, the photograph in the hero's media slot; it is
-  also the **poster** of the pitch video
-- **pitch video** — `/media/sycapooke-pitch.mp4` (H.264/AAC) with `/media/sycapooke-pitch.webm`
-  (VP9/Opus) and English captions `/media/sycapooke-pitch.vtt`, 29.5 seconds, built by
-  `docs/mocks/_build/video/build_video.py`
-- **founder photo** — `/media/sycapooke-founder.jpg`, shown beside the founder's quote in
-  the Our story band
-- **share image** — `/media/sycapooke-share.jpg`, the 1200×630 link-preview image
-
-The page calls no Sycapooke API endpoint; the shell's `GET /api/auth/me` decides the seller
-target. Nothing in the vintage rule, the catalog, sell, accounts or the API changes. The copy
-says every piece is at least 20 years old and promises nothing newer
-([ADR general/0005](../../../adr/general/0005-marketing-wording.md),
-[ADR general/0006](../../../adr/general/0006-vintage-only.md)).
+Sycapooke is the shop of one older Caribbean woman, its sole seller. Her jewelry, clothing, housewares and electronics are at least 20 years old. This design refines [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing names identify reusable code; Description identifies target additions.
 
 ## Description
 
-### Library, route and shell ([ADR platform/0011](../../../adr/platform/0011-marketing-feature-library.md))
+### Existing composition and target copy
 
-- `src/frontend/projects/marketing/` (alias `@sycapooke/marketing`), built by `build:libs`,
-  exports `routes`: `{ path: '', loadComponent: WelcomePage, title: 'Treasures with a story ·
-  Sycapooke', data: { shell: 'marketing' } }`.
-- `app.routes.ts` mounts it lazily at `welcome`, before the catalog's empty-path routes.
-- `AppShellComponent` gains the `marketing` shell: same payout banner, top bar and footer, but
-  `<main id="main" class="marketing" tabindex="-1">` without `.container.page`, so bands are
-  full width.
+`WelcomePage` in `@sycapooke/marketing` and `PitchVideoDialog` remain. The page composes `sy-marketing-hero`, `sy-feature-band`, `sy-steps`, `sy-quote`, `sy-video-poster` and `sy-video-player`. Heirloom tokens supply all appearance. The marketing feature calls no Sycapooke API. Shared shell authentication does not change its public shopping actions.
 
-### Components (`@sycapooke/components`)
+The exact hero, bands, founder attribution, steps and actions are specified by L2-078 in the Requirements table. Shop the collection and Browse the collection lead to the catalog; Meet the founder uses the `Our story` anchor. The terracotta band introduces her own collection instead of recruiting sellers. The portrait and text introduce an older Caribbean woman, with no invented precise age or family history. The shell omits the obsolete payout banner and offers founder management only from the server-derived capability.
 
-| Component | Inputs and outputs | Notes |
-|---|---|---|
-| `sy-marketing-hero` | `eyebrow`, `lede`, `headingId`; slots `[title]`, `[actions]`, `[media]` | The h1 band on paper; the media slot holds the video poster (4:5, 2rem corners, no frame) |
-| `sy-video-poster` | `poster`, `label` ("Play"), `duration` ("0:29"); output `watch` | The hero photo as one `button` named by its label, decorative `alt=""`, with the cream "Play · 0:29" pill bottom-left; the photo zooms on hover like a listing card. Nothing plays until it is pressed |
-| `sy-video-player` | `label` ("Sycapooke video"), `sources` (MP4 then WebM), `captions` (WebVTT URL), `poster`, `autoplay` (set only after a press) | Ink 16:9 frame around the native `video` with controls; spinner overlay while loading; "The video didn’t load" alert with Try again on error; primary Play/Pause and secondary Captions (`aria-pressed`, off by default) under the frame |
-| `sy-feature-band` | `eyebrow`, `heading`, `headingId`, `lede`, `points`, `tone: 'default' \| 'sell' \| 'story'`, `stacked`; slots `[actions]`, body | Section labelled by its h2; `sell` is the terracotta band (cream text, `syButton="inverse"` actions), `story` the cream band under a line rule; the closing call to action is `sell` + `stacked` with a lede |
-| `sy-steps` | `steps: { title, text }[]` | Ordered list, h3 titles |
-| `sy-quote` | `cite`, `photo`, `photoAlt`; body | `<blockquote>` with a `<figcaption>` attribution and the founder photo; the photo is not decorative and carries its own alt text |
+### Static media and accessibility
 
-### Feature (`@sycapooke/marketing`)
+The hero photo remains the video poster. Its Play button opens the shared dialog; no sound or video plays before that action. MP4 and WebM sources stay between 26 and 30 seconds. Captions are English WebVTT, off initially. Keyboard controls, Escape, focus return, spinner, error alert and Try again remain. The revised video story and captions describe shopping from the founder. Media regeneration is separate implementation work, not an output of this design refresh.
 
-- **`WelcomePage`** — static copy, composed top to bottom:
-  1. `sy-marketing-hero` (paper) — eyebrow "Jewelry · Clothing · Housewares · Electronics", h1
-     "A home for the things that *mattered.*", lede "Sycapooke is the marketplace made only
-     for vintage — for families downsizing a lifetime of treasures, and the people who’ll love
-     them next.", primary action "Shop the catalog" → `/`, secondary "Start selling" →
-     `sellHref`; the hero photo in the media slot.
-  2. `sy-feature-band` For shoppers (paper) — heading "Every piece is at least 20 years old.",
-     points Four focused categories / Listed by a real person / Honest condition; action
-     "Browse the catalog" → `/`.
-  3. `sy-feature-band` For sellers (`tone="sell"`, terracotta) — heading "Downsizing? Let your
-     treasures find their next home.", points Big buttons, clear steps / A real person to call
-     1-800-555-0123; inverse action "List your first item" → `sellHref`.
-  4. `sy-feature-band` How it works (`stacked`, paper) — heading "Three steps. That’s it." with
-     `sy-steps` List it / Sell it / Get paid.
-  5. `sy-feature-band` Our story (`tone="story"`, `stacked`, cream) — heading "sy·ca·pooke"
-     with `sy-quote`: “It’s the made-up word I whispered to my son when he was a baby. When it
-     came time to clear out our family home, I realized every teacup and brooch deserved that
-     same word — and someone who’d see it too.” — Founder, age 70, grandmother of five; and the
-     founder photo.
-  6. `sy-feature-band` closing (`tone="sell"`, `stacked`, terracotta) — h2 "Treasures with a
-     *story.*", lede "New treasures arrive daily, every one at least 20 years old.", inverse
-     action "Shop the catalog" → `/`.
+The founder story shown here is approved static release content; public story editing updates the dynamic collection page and does not silently introduce API fetching to marketing. Served metadata uses L2-083 shop wording and the existing 1200 by 630 share image. Image licences remain in the media attribution file.
 
-  `sellHref = computed(() => auth.member() ? '/sell' : '/join')` (`L2-078`).
-- **`PitchVideoDialog`** — opened by `sy-video-poster`'s `watch` through `DialogService`:
-  `sy-dialog` of size `lg` with the heading "Sycapooke video" visually hidden, holding
-  `sy-video-player` with the MP4 and WebM sources, the captions track and the hero photo as
-  poster. The video plays with sound because the visitor asked; Space or K pauses; Escape closes
-  the dialog, stops the video and returns focus to the poster (`L2-089` to `L2-091`).
-- **Share tags** — crawlers that build link previews do not run scripts, so the meta
-  description ("The marketplace made only for vintage: jewelry, clothing, housewares and
-  electronics, every piece at least 20 years old and listed by a real person with a real
-  story."), Open Graph (`og:title` "Sycapooke · Treasures with a story", `og:description`,
-  `og:type`, `og:site_name`, `og:image` with type, width, height and alt, `og:locale`) and
-  Twitter card (`summary_large_image`) tags are static in `projects/sycapooke/src/index.html`.
-  The marketing build (served at `https://www.sycapooke.com/`) uses `index.marketing.html`
-  (angular.json `index`), which adds `og:url`, the canonical link and the title "Treasures
-  with a story · Sycapooke". `og:image` is the absolute
-  `https://www.sycapooke.com/media/sycapooke-share.jpg`.
-- **Footer** — `sy-footer` carries the "About Sycapooke" link to `/welcome` on every page
-  (`L2-079`).
+Tests route navigation and authentication with fakes, verify the absence of selling invitations and assert keyboard/video failure states. A 320-pixel viewport has no horizontal scroll. Mocks and screen-composition entries require later alignment before frontend implementation.
 
-### Media
+### Implementation and verification boundary
 
-The hero, founder and share images and the pitch video (`sycapooke-pitch.mp4`,
-`sycapooke-pitch.webm`, `sycapooke-pitch.vtt`) live in
-`src/frontend/projects/sycapooke/public/media/` (served at `/media/`) with their licences in
-`ATTRIBUTION.md`, and are copied to `docs/mocks/assets/media/`. The video is built by
-`docs/mocks/_build/video/build_video.py`: Playwright renders the slides, Kokoro-82M (voice
-`af_heart`, Apache-2.0) narrates them, a 30-second excerpt of "Warm Nostalgic Sentimental Music"
-by andriig (Pixabay Content Licence) is ducked under the voice, and ffmpeg muxes the MP4 and the
-WebM ([ADR platform/0014](../../../adr/platform/0014-pitch-video.md)). Fraunces and Source
-Sans 3 are self-hosted from `public/fonts/`. Nothing on the page autoplays and nothing is loaded
-from a third party. Advertising
-placements from the landing page are not a product feature (deferred).
+Application code and HTML mocks still require alignment with the revised requirements. UI implementation first aligns mocks, design-system components and screen composition. Backend verification uses fake ports and in-memory substitutes. Browser verification uses the built Angular app and intercepted API responses. No external system runs in tests.
 
-### Tests (`src/frontend/e2e/`)
+### Implementation evidence
 
-`tests/marketing-page.spec.ts` with `pages/welcome.page.ts`, served by the static build.
-Covers `L2-078`, `L2-079`, `L2-083` and `L2-089` to `L2-091`: the six sections and their
-headings in order, the CTA targets for a visitor and for a member, the founder quote and photo
-with alt text, the poster button named "Play" with nothing playing before a press, the dialog
-opening on Enter and playing, Pause and Play by keyboard, Captions off by default and pressed
-on, the error state with Try again and the calls to action still working after it, Escape
-returning focus to the poster, reduced motion, the footer link, the title, the meta description
-and the link-preview tags.
+Completed behavior evidence: `retry-video` in `src/frontend/projects/marketing/src/lib/welcome/pitch-video-dialog.ts` and `src/frontend/e2e/tests/marketing-page.spec.ts`. 1 of 3 target behaviors are counted. Remaining target behavior and acceptance checks are not counted merely because older marketplace tests pass.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-078` | `L1-020` | Page sections and CTA targets for visitors and members; copy for vintage only |
-| `L2-079` | `L1-020` | Footer "About Sycapooke" link |
-| `L2-080` to `L2-082` | `L1-020` | Retired at the clone; replaced by `L2-089` to `L2-091`, never reused |
-| `L2-083` | `L1-020` | Flat bands with no decoration, contrast on them, heading order, the decorative poster image, no decorative motion, title, meta description and link-preview tags |
-| `L2-089` | `L1-020` | Pitch video playback: the hero photo as the "Play · 0:29" poster, the dialog named "Sycapooke video", keyboard Play/Pause, Escape returns focus; MP4 and WebM, 26 to 30 s |
-| `L2-090` | `L1-020` | English WebVTT captions, off until Captions is pressed |
-| `L2-091` | `L1-020` | Loading spinner, "The video didn’t load" with Try again, page still works afterwards |
-
-Related requirements applied without restating them: `L2-061` to `L2-065` (responsive,
-accessible shell), `L2-010` (no role needed), `L2-011` to `L2-013` (the vintage rule the
-copy must stay true to).
+| --- | --- | --- |
+| `L2-078` | `L1-020` | `/welcome` shall render a public shop introduction for signed-in and signed-out visitors without making Sycapooke API calls of its own. Keep the Heirloom flat bands, hero photograph `/media/sycapooke-hero.jpg` and founder photograph `/media/sycapooke-founder.jpg`. The hero shall use the eyebrow "Jewelry · Clothing · Housewares · Electronics", h1 "A home for the things that mattered.", supporting line "Antiques and vintage treasures from one Caribbean woman's own collection. Every piece is at least 20 years old.", and actions "Shop the collection" to `/` and "Meet the founder" to `#our-story`.<br><br>The shopper band shall say "Every piece is at least 20 years old." with the points "Four focused categories", "From the founder's own collection" and "Honest condition". Replace the seller-recruitment band with "From my collection" and "Treasures I have kept, ready for their next home.". How it works shall describe buying in three steps: "Find a treasure", "Pay securely", "Receive its story". The Our story band shall have the anchor `our-story`, introduce the founder as an older Caribbean woman and the sole seller, show her portrait and founder-approved story, and attribute her words to "Founder of Sycapooke". It shall not invent a precise age, family history or biography. The closing band shall read "Treasures with a story." and "Explore her collection. Every piece is at least 20 years old.", with "Browse the collection" to `/`.<br><br>Public copy shall use a warm, respectful voice and invite customers to shop, without public selling invitations or unsupported promises of daily new inventory. Navigation shall show shop-management links only to the configured founder under L2-003 and L2-010; customer sign-in shall never turn a shopping call to action into a selling action. `/` shall remain the catalog. The marketing wording in this requirement supersedes the inherited seller-recruitment wording under ADR general/0010. |
+| `L2-079` | `L1-020` | The footer shall have an "About Sycapooke" link to `/welcome` on every page with the app or marketing shell. Navigation shall follow L2-003 and L2-010 so public visitors and customers see no selling or management links. |
+| `L2-083` | `L1-020` | The page shall meet `L2-064` and `L2-065` and in addition: every band is one flat colour (paper, cream, terracotta or ink, as on the landing page) with no gradient and no decorative shape, and text on it keeps a contrast of 4.5:1 or more (3:1 for display text); headings go h1, h2, h3 without skipping; the founder photograph carries descriptive alternative text while the hero photograph, as the video poster, is decorative (`alt=""`) because its button is named "Play"; nothing decorative is animated, so `prefers-reduced-motion: reduce` has nothing to stop beyond the shared transitions; the document title is "Treasures with a story · Sycapooke" and the meta description is "Shop the founder's own antiques and vintage treasures: jewelry, clothing, housewares and electronics, every piece at least 20 years old, with a story to share.". The description and link-preview tags (Open Graph `og:title` "Sycapooke · Treasures with a story", `og:description`, `og:type`, `og:url`, `og:image` with its width, height and alt, and the `summary_large_image` Twitter card) are in the served HTML, not added by script, so a link shared in a chat or social post shows the 1200×630 share image `/media/sycapooke-share.jpg`. |
+| `L2-089` | `L1-020` | The hero photograph of `/welcome` shall be the pitch video's poster: one button, named "Play", drawn as a cream pill reading "Play · 0:29" over the photograph in the same 4:5 frame, and the page shall never play video or sound before the visitor presses it. Pressing it opens a dialog with no visible heading (its accessible name is "Sycapooke video"), which plays the video with native controls and a Play/Pause button that works by keyboard, and returns focus to the poster when it closes. The video is MP4 (H.264/AAC) with a WebM (VP9/Opus) fallback at `/media/sycapooke-pitch.mp4` and `/media/sycapooke-pitch.webm`, 26 to 30 seconds long, built from `docs/mocks/_build/video/` with its narration and music credited in `public/media/ATTRIBUTION.md` ([ADR platform/0014](../../../adr/platform/0014-pitch-video.md)). |
+| `L2-090` | `L1-020` | The video shall have English WebVTT captions at `/media/sycapooke-pitch.vtt`. By default no captions show; the Captions toggle (`aria-pressed`) turns them on. There is no transcript. |
+| `L2-091` | `L1-020` | While the video loads, the dialog shall show a spinner over the poster. When the video cannot load, the dialog shall show "The video didn’t load" with "Check your connection and try again." and a Try again button, and the rest of the page shall keep working once the dialog is closed. |
 
 ## Diagrams
 
-The PlantUML sources are in `diagrams/`, each with its rendered PNG. Re-render after an edit
-with
-`python -B -I .claude/skills/writing-software-design-documents/scripts/render_puml.py docs/detailed-designs/platform/marketing-page/diagrams`.
+### System context
+
+The context identifies the visitor or customer and the systems used by this feature.
+
+![System context for introduce the founder and her collection](diagrams/c4-context.png)
+
+### Containers
+
+The container view separates the delivery surface, application boundary and feature storage. External integrations remain behind their ports.
+
+![Containers for introduce the founder and her collection](diagrams/c4-container.png)
 
 ### Components
 
-![C4 component view of the marketing page](diagrams/c4-component.png)
+The component view connects `Static marketing host` with `PitchVideoDialog` and the relevant feature state.
 
-## Open questions
+![Components for introduce the founder and her collection](diagrams/c4-component.png)
 
-- Deferred: SEO beyond the title, meta description and link-preview tags, analytics, A/B tests,
-  newsletter sign-up, making `/welcome` the home page, translations and advertising placements.
+### Class structure
+
+The class view identifies the relevant fields, operation responsibilities and dependencies. It is a target responsibility model, not a claim that each addition already exists.
+
+![Class structure for introduce the founder and her collection](diagrams/class-structure.png)
+
+### Behaviour - Read founder introduction
+
+Founder-owned shop presentation with no feature API call. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
+
+![Read founder introduction](diagrams/sequence-browse-shop-introduction.png)
+
+### Behaviour - Choose to play founder shop video
+
+Playback only by choice; no autoplay before press. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
+
+![Choose to play founder shop video](diagrams/sequence-play-pitch-video.png)
+
+### Behaviour - Recover failed video load
+
+Accessible retry; shopping remains usable. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
+
+![Recover failed video load](diagrams/sequence-retry-video.png)

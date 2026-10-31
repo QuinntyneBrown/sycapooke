@@ -1,12 +1,8 @@
 @startuml
 !include <C4/C4_Context>
 LAYOUT_WITH_LEGEND()
-title System Context — Upload listing photos
-
-Person(seller, "Seller", "Adds, removes and reorders photos of an item")
-Person(buyer, "Visitor or buyer", "Views listing photos in the catalog")
-System(sycapooke, "Sycapooke", "Marketplace for vintage goods; serves content-addressed photo versions")
-
-Rel(seller, sycapooke, "Uploads and orders photos using", "HTTPS multipart")
-Rel(buyer, sycapooke, "Loads photo versions cached for one year from", "HTTPS (a CDN later)")
+title Context - Upload founder listing photos
+Person(user, "Founder", "Uses this shop capability")
+System(shop, "Sycapooke", "Founder-owned antiques and vintage shop")
+Rel(user, shop, "Upload founder listing photos", "HTTPS")
 @enduml

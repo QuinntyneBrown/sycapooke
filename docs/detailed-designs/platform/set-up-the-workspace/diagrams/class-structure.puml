@@ -1,0 +1,23 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+title Verification command and project boundaries
+class VerifyCommand <<npm script>> {
+ +BackendVerify(): int
+ +Lint(): int
+ +BuildAll(): int
+ +BrowserTests(): int
+}
+class HealthController {
+ +Get(): IActionResult
+}
+class StatelessApiTests {
+ +NoProcessLocalSessionState(): void
+}
+class BackendTestFixture <<test substitute>> {
+ +CreateInMemoryContext(): DbContext
+}
+VerifyCommand ..> HealthController : tested health route
+VerifyCommand ..> StatelessApiTests : architecture assertion
+VerifyCommand ..> BackendTestFixture : no real database
+@enduml

@@ -15,7 +15,7 @@ skinparam package {
   BackgroundColor #F9FAFB
 }
 actor "Buyer" as buyer
-actor "Seller" as seller
+actor "Founder" as seller
 box "Frontend — Sycapooke Web application" #E0F2FE
   participant "CheckoutPage / SaleDetailPage" as page
 end box

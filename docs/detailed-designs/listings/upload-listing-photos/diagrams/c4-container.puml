@@ -1,19 +1,16 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Upload listing photos
-
-Person(seller, "Seller", "Adds photos to a listing")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "@sycapooke/listings SellPage with sy-photo-uploader; @sycapooke/api PhotosApi")
-  Container(api, "Sycapooke API", "ASP.NET Core", "Validates, strips and re-encodes uploads; attaches photos to listings; serves versions")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "ListingPhotos, ListingPhotoVersions")
-  ContainerDb(storage, "Photo storage", "IPhotoStorage (file system now, object storage later)", "Private originals; public content-addressed versions")
+title Containers - Upload founder listing photos
+Person(user, "Founder")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-
-Rel(seller, web, "Uses", "HTTPS")
-Rel(web, api, "Uploads one file per request, saves photoIds", "HTTPS multipart / JSON")
-Rel(api, storage, "Writes originals and versions, reads versions")
-Rel(api, db, "Writes photo rows and positions", "EF Core")
-Rel(web, api, "Loads thumbnails from /photos/{hash}/{size}.{ext}", "HTTPS")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
 @enduml

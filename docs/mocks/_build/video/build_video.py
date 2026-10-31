@@ -37,13 +37,13 @@ SILENT_WPS = 2.4  # words per second used to time captions when there is no narr
 LINES = [
     ("Every teacup has a story. Every brooch, every radio, every coat.",
      "Every teacup has a story. Every brooch, every radio, every coat."),
-    ("Sycapooke is the marketplace made only for vintage.",
-     "Sycapooke is the marketplace made only for vintage."),
+    ("Sycapooke is a home for antiques and vintage treasures.",
+     "Sycapooke is a home for antiques and vintage treasures."),
     ("Jewelry, clothing, housewares and electronics. Every piece at least 20 years old.",
      "Jewelry, clothing, housewares and electronics. Every piece at least twenty years old."),
-    ("Downsizing a family home? List your treasures in minutes, with a real person to call.",
-     "Downsizing a family home? List your treasures in minutes, with a real person to call."),
-    ("Snap a photo. Set a price. Ship it. Get paid.", "Snap a photo. Set a price. Ship it. Get paid."),
+    ("From my collection. Treasures I have kept, ready for their next home.",
+     "From my collection. Treasures I have kept, ready for their next home."),
+    ("Find a treasure. Pay securely. Receive its story.", "Find a treasure. Pay securely. Receive its story."),
     ("Sycapooke. Treasures with a story.", "Sycapooke. Treasures with a story."),
 ]
 
@@ -69,17 +69,17 @@ SLIDES = [
     '<h1>Every teacup<br>has a <em>story.</em></h1><p class="sub">Every brooch, every radio, every coat.</p></div>'
     f'<img class="photo" src="{HERO}" alt=""></div>',
     # 2. logo and the promise
-    f'<img class="logo" src="{LOGO}" alt=""><h1>The marketplace made<br><em>only for vintage.</em></h1>',
+    f'<img class="logo" src="{LOGO}" alt=""><h1>A home for the things<br><em>that mattered.</em></h1>',
     # 3. the four categories as photo tiles
     '<h1 class="h1-sm">Every piece at least<br><em>twenty years old.</em></h1>'
-    '<p class="sub">Listed by a real person, with a real story.</p><div class="tiles">'
+    '<p class="sub">From the founder&rsquo;s own collection, with honest condition.</p><div class="tiles">'
     + "".join(f'<div class="tile"><img src="{src}" alt=""><span class="pill">{name}</span></div>' for name, src in TILES) + '</div>',
-    # 4. the terracotta band for sellers
-    '<p class="k k-cream">For sellers</p><h1>Downsizing<br>a family home?</h1>'
-    '<p class="sub sub-cream">List your treasures in minutes.<br>A real person to call if you get stuck.</p>',
+    # 4. the terracotta band for the founder's collection
+    '<p class="k k-cream">Founder of Sycapooke</p><h1>From my<br><em>collection.</em></h1>'
+    '<p class="sub sub-cream">Treasures I have kept,<br>ready for their next home.</p>',
     # 5. four ringed steps
-    '<p class="k">How it works</p><ol class="steps"><li><b>1</b>Snap a photo</li><li><b>2</b>Set a price</li>'
-    '<li><b>3</b>Ship it</li><li><b>4</b>Get paid</li></ol>',
+    '<p class="k">How it works</p><ol class="steps"><li><b>1</b>Find a treasure</li><li><b>2</b>Pay securely</li>'
+    '<li><b>3</b>Receive its story</li></ol>',
     # 6. the founder and the tagline
     f'<div class="two"><div><img class="logo logo-sm" src="{LOGO}" alt=""><h1>Treasures<br>with a <em>story.</em></h1>'
     '<p class="sub">www.sycapooke.com</p></div>'
@@ -115,7 +115,7 @@ em{{font-style:italic;color:#a04228}}
 .tile img{{width:100%;height:100%;object-fit:cover;display:block}}
 .pill{{position:absolute;left:16px;top:16px;background:rgb(251 247 239 / .95);color:#2b2118;border-radius:999px;
   padding:10px 22px;font:600 30px 'Source Sans 3',sans-serif}}
-.steps{{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:48px;margin:0;padding:0;width:100%}}
+.steps{{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin:0;padding:0;width:100%}}
 .steps li{{font:600 56px/1.2 Fraunces,Georgia,serif}}
 .steps b{{display:grid;place-items:center;width:112px;height:112px;border-radius:50%;border:4px solid #2b2118;
   font:600 56px Fraunces,Georgia,serif;margin-bottom:32px}}

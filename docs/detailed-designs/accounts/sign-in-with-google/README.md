@@ -2,134 +2,84 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. Members join and sign in with an email and a password ([sign-up-and-sign-in](../sign-up-and-sign-in/README.md)). This feature adds "Continue with Google" to `/sign-in` and `/join` of the full application: a member linked to a Google account signs in with one press, a verified member whose email matches links and signs in, and a new person finishes joining with a display name, the age confirmation and the terms, with no password and no verification email, because Google has verified the email. The result is the same session as a password sign-in (`L2-008`), returned to the same `returnUrl` (`L2-006`).
+Google provides an alternative authentication method. New joins become private customers, while existing shop privileges remain bound to the provisioned account identity.
 
-The feature sits in the accounts subsystem (`L1-001`, `L1-002`) and realises `L2-088`. It works on `https://app.sycapooke.com` and locally ([ADR platform/0015](../../../adr/platform/0015-separate-marketing-and-application-deployments.md)); the marketing host `www.sycapooke.com` has no sign-in. The decisions are recorded in [ADR accounts/0001](../../../adr/accounts/0001-sign-in-with-google.md).
-
-Terms used in this design:
-
-- **flow** — one round trip to Google: the `state`, nonce, PKCE verifier and safe `returnUrl` created at the start endpoint and read at the callback
-- **flow cookie** — `sy_google_flow`, which carries the flow signed, `HttpOnly`, `Secure`, `SameSite=Lax`, path `/api/auth/google`, 10 minutes
-- **external login** — a row of `ExternalLogins` linking a member to a provider's stable subject (`sub`), never to an email
-- **pending join** — a row of `PendingExternalJoins` holding a Google identity whose email has no member yet, valid for 10 minutes, used once
-- **join cookie** — `sy_google_join`, the raw pending-join token, `HttpOnly`, `Secure`, `SameSite=Strict`, path `/api/auth/google`, 10 minutes
-- **Google-only member** — a member with an external login and `PasswordHash` null
+Sycapooke is the shop of one older Caribbean woman, its sole seller. Her jewelry, clothing, housewares and electronics are at least 20 years old. This design refines [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing names identify reusable code; Description identifies target additions.
 
 ## Description
 
-The slice runs from the sign-in, join and finish-joining pages in `@sycapooke/accounts` through `GoogleSignInController` in `Sycapooke API` to `Members`, `ExternalLogins`, `PendingExternalJoins` and `Sessions` in `Sycapooke database`, and out to Google's consent page and token endpoint. Screens and copy come from the mocks `docs/mocks/pages/sign-in/` (states `default`, `google-busy`, `google-cancelled`, `google-existing`, `google-failed`), `docs/mocks/pages/register/` and `docs/mocks/pages/join-google/`; the components each state uses are in [`docs/screen-composition.md`](../../../screen-composition.md).
+### Existing server flow
 
-### Frontend (`Sycapooke Web`, `src/frontend/projects/accounts/`, `src/frontend/projects/api/` and `src/frontend/projects/components/`)
+`GoogleSignInController`, `GoogleFlowCookie`, `GoogleIdentityProvider`, `ExternalLogin` and `PendingExternalJoin` implement the server OpenID Connect flow. `SignInPage`, `JoinPage` and `GoogleJoinPage` use `AccountsApi` and `AuthState`. Existing Google start, callback, finish and provider-discovery endpoint names remain. The server validates PKCE, state, nonce, issuer, audience, signature, expiry and verified email.
 
-- **`sy-provider-button` and `sy-or-divider`** (`@sycapooke/components`, design system: Provider button) — a link styled as the secondary `lg` `block` button with Google's published "G" mark and the label "Continue with Google", above an "or" divider. `href` is the API start endpoint; `busy` sets `aria-busy` while the browser leaves; `pressed` lets the page set busy. It is a plain link: the browser navigates to the API, no Google script runs in the page.
-- **`AccountsApi`** (`@sycapooke/api`) — `providers()` (`GET /api/auth/providers` → `{ google: boolean }`), `googleStartUrl(returnUrl)` (`/api/auth/google/start?returnUrl=…`), `googleJoinPending()` (`GET /api/auth/google/pending` → `{ email }`).
-- **`AuthState`** (`@sycapooke/api`) — `finishGoogleJoin(displayName, ageConfirmed, termsAccepted)` posts `/api/auth/google/finish` and, on `200`, sets the member as `signIn()` does. After the callback signs a member in, the next page load's `GET /api/auth/me` sees the new cookies, so nothing else changes.
-- **`SignInPage`** (`/sign-in?returnUrl=…&google=…&ref=…`, mocks `pages/sign-in`) — on load calls `providers()`; with Google configured it renders `sy-provider-button` first, then `sy-or-divider`, then the email form (keyboard order Google, email, password, Sign in). `returnUrl` is passed to the start URL as given; the API makes it safe. The `google` query parameter picks an alert: `cancelled` → info "Google sign-in was cancelled" / "Nothing was changed. Try again, or sign in with your email and password." as a status; `existing` → warning "An account with this email already exists" / "Sign in with your password and verify your email first. After that, Google will sign you in to the same account." with the lock icon; `failed` → danger "Couldn’t sign in with Google" / "Try again in a moment, or sign in with your email and password." with the reference `ref`. A failed `providers()` call hides the button; password sign-in is unchanged.
-- **`JoinPage`** (`/join`, mocks `pages/register`) — the same button and divider above the form, with `returnUrl` `/`.
-- **`GoogleJoinPage`** (`/join/google?returnUrl=…`, mocks `pages/join-google`, auth shell) — `loading` (form-shaped skeleton) while `googleJoinPending()` runs; `default` shows the Google email read-only with the help "From your Google account. It counts as verified.", the display name (help "3–30 letters, numbers, _ or -. Shown publicly."), "I’m 18 or older" and "I accept the terms and marketplace rules", and "Join Sycapooke". Client checks mirror the server messages and show `sy-error-summary` (focused) and inline errors; a `422` maps `displayName`, `ageConfirmed` and `termsAccepted` to their controls. `410` on load or on finish shows `expired`: "That took a little too long" / "Google sign-ins have to be finished within 10 minutes. Nothing was created." with "Continue with Google again" and "Back to sign in" (both to `/sign-in`). Other failures show "Couldn’t create your account" with the reference. On success it navigates to `returnUrl` when it is a same-site path, otherwise to `/`.
-- **Routes** — `@sycapooke/accounts` adds `join/google` (`data.shell = 'auth'`, title "Finish joining · Sycapooke") before `join`'s siblings; the application mounts the routes as before.
+### Private joins and unchanged privileges
 
-### API (`Sycapooke.Api`)
+A new Google identity reaches the display-name, age and terms step. Completion creates a private customer account, never a public profile or founder binding. Pending joins expire after 10 minutes and are single use. Existing verified-email matching and stable Google-subject linking remain. An unverified matching local account is refused until its owner signs in and verifies it.
 
-- **`AuthController`** — `GET /api/auth/providers` → `200 { "google": true | false }` for everyone.
-- **`GoogleSignInController`** (`/api/auth/google`); every action answers `404 GOOGLE_NOT_CONFIGURED` when `IGoogleIdentityProvider.ClientId` is null:
-  - `GET start?returnUrl=…` — creates `state`, nonce and PKCE verifier with `SecureTokens.Create()`, the `code_challenge` as base64url SHA-256 of the verifier, keeps them with the safe `returnUrl` (a path starting with `/` and not `//`, else `/`) in the flow cookie, and answers `302` to `https://accounts.google.com/o/oauth2/v2/auth` with `client_id`, `redirect_uri`, `response_type=code`, `scope=openid email`, `state`, `nonce`, `code_challenge`, `code_challenge_method=S256`, `prompt=select_account`. The redirect URI is `{scheme}://{host}/api/auth/google/callback` with the scheme from `X-Forwarded-Proto` when present, or `Auth:Google:RedirectUri` when set.
-  - `GET callback?state=…&code=…` or `?state=…&error=…` — reads and clears the flow cookie. No cookie, an unreadable cookie or a `state` that does not match → `302 /sign-in?google=failed&ref={correlation id}`. `error` present → `302 /sign-in?google=cancelled`. Otherwise sends `GoogleCallbackCommand(code, verifier, redirectUri, nonce)`: `SignedIn` → writes `sy_access` and `sy_refresh` and answers `302` to the flow's `returnUrl`; a join token → writes the join cookie and answers `302 /join/google?returnUrl=…`; `409 GOOGLE_ACCOUNT_EXISTS` → `302 /sign-in?google=existing`; any other error → `302 /sign-in?google=failed&ref=…`. The code and the token never appear in a response, a redirect or a log.
-  - `GET pending` — reads the join cookie; `200 { email }`, or `410 GOOGLE_JOIN_EXPIRED` ("Start again") when the cookie is missing or the pending join is unknown, expired or used.
-  - `POST finish` — body `displayName`, `ageConfirmed`, `termsAccepted`; reads the join cookie. `200` with the member (as `GET me`) and both session cookies, the join cookie cleared; `422 GOOGLE_JOIN_INVALID` with field errors; `410 GOOGLE_JOIN_EXPIRED`.
-- **`GoogleFlowCookie`** — serialises the flow as JSON, signs it with HMAC-SHA256 over `Auth:SigningKey` under the label `google-flow`, and refuses a cookie whose signature does not match or whose `IssuedAt` is older than 10 minutes by the injected `TimeProvider`.
-- **`GoogleIdentityProvider`** (adapter for `IGoogleIdentityProvider`) — `ClientId` from `GoogleOptions` (null when unset). `ExchangeCodeAsync` posts `grant_type=authorization_code`, `code`, `code_verifier`, `redirect_uri`, `client_id` and `client_secret` to `https://oauth2.googleapis.com/token` through `IHttpClientFactory`, then validates the `id_token` with `JsonWebTokenHandler` against Google's keys from the discovery document (`ConfigurationManager<OpenIdConnectConfiguration>`, refreshed automatically), issuers `https://accounts.google.com` and `accounts.google.com`, audience the client ID, lifetime by the injected clock with no skew. A refused code or an invalid token answers null; the token's `sub`, `email`, `email_verified` and `nonce` become a `GoogleIdentity`.
-- **`GoogleOptions`** (`Auth:Google`) — `ClientId`, `ClientSecret`, `RedirectUri`; validated on start-up: both `ClientId` and `ClientSecret` set, or neither.
-- **Cookies** — `sy_google_flow` and `sy_google_join` are added to `Privacy:Cookies:StrictlyNecessary`, so `CookieAllowListMiddleware` lets them through (`L2-056`).
+Every resulting session obtains `isFounder` from the same trusted identity service as password sign-in. Google claims, email spelling, finish-join fields and a client-supplied founder ID cannot grant access. A previously provisioned founder keeps access because her account ID remains bound, not because Google issues a role.
 
-### Application and domain (`Sycapooke.Application`, `Sycapooke.Domain`)
+The existing 10-minute flow cookie remains Secure, HttpOnly and SameSite=Lax, scoped to Google endpoints. Tokens and codes never enter logs or web storage. Missing Google configuration hides controls and returns 404 on its endpoints. Cancellation and invalid callbacks create no session. Customer closure removes the Google link; the closure-specific fresh authentication is specified by `close-customer-account`.
 
-- **`Member`** — `PasswordHash` becomes nullable. `Member.JoinVerified(displayName, email, now)` creates a member with `EmailVerifiedAt = now` and no password. `SignInCommandHandler` answers `SIGN_IN_FAILED` when the hash is null, exactly as for a wrong password.
-- **`ExternalLogin`** — `Id`, `MemberId`, `Provider` (`google`), `Subject`, `CreatedAt`; `ExternalLogin.Link(memberId, provider, subject, now)`.
-- **`PendingExternalJoin`** — `Id`, `Provider`, `Subject`, `Email`, `TokenHash`, `CreatedAt`, `ExpiresAt` (10 minutes), `UsedAt`; `Start(...)`, `IsUsable(now)`, `MarkUsed(now)`.
-- **`IGoogleIdentityProvider`** (port) — `string? ClientId`; `Task<GoogleIdentity?> ExchangeCodeAsync(code, codeVerifier, redirectUri, cancellationToken)`. `GoogleIdentity(Subject, Email, EmailVerified, Nonce)`.
-- **`GoogleCallbackCommandHandler`** — exchanges the code; null, a nonce that differs from the flow's, or an empty subject or email → `401 GOOGLE_SIGN_IN_FAILED`; `EmailVerified` false → `403 GOOGLE_EMAIL_UNVERIFIED`. Then: an `ExternalLogin` for (`google`, `sub`) → its member (a closed member → `401 GOOGLE_SIGN_IN_FAILED`) and a new session; else a member with the same normalised email → closed → `401`; unverified → `409 GOOGLE_ACCOUNT_EXISTS`; verified → link and a new session; else a `PendingExternalJoin` whose raw token is returned. Returns `GoogleSignInOutcome(SignedIn?, JoinToken?)`.
-- **`GetPendingGoogleJoinQueryHandler`** — the email of a usable pending join by the token's hash, else `410 GOOGLE_JOIN_EXPIRED`.
-- **`FinishGoogleJoinCommandHandler`** — the pending join must be usable (`410`); `MemberRegistrationRules.ValidateDisplayNameAsync` and `ValidateConsent` collect `displayName`, `ageConfirmed` and `termsAccepted` errors with the codes and messages of `L2-001` (`422 GOOGLE_JOIN_INVALID`); a member created meanwhile with the same email → `422` with `email` `EMAIL_TAKEN`. Then `Member.JoinVerified`, `ExternalLogin.Link`, `MarkUsed`, one `SaveChanges`, and `SessionIssuer.StartAsync`.
-- **`MemberRegistrationRules`** — the display name and consent checks lifted out of `RegisterMemberCommandHandler`, which now calls them too; the password and email checks stay in the registration handler.
-- **`SessionIssuer.StartAsync(db, memberId, now)`** — creates the refresh token and the `Session` row and returns `SignedIn`; `SignInCommandHandler` uses it as well.
+### Implementation and verification boundary
 
-### Infrastructure and data (`Sycapooke.Infrastructure`)
+Application code and HTML mocks still require alignment with the revised requirements. UI implementation first aligns mocks, design-system components and screen composition. Backend verification uses fake ports and in-memory substitutes. Browser verification uses the built Angular app and intercepted API responses. No external system runs in tests.
 
-- **Migration `AddGoogleSignIn`** — `Members.PasswordHash` nullable; `ExternalLogins` (`UX_ExternalLogins_Provider_Subject` unique, `IX_ExternalLogins_MemberId`, foreign key to `Members` with cascade delete); `PendingExternalJoins` (`UX_PendingExternalJoins_TokenHash` unique). The model snapshot is updated with it.
-- **Configurations** — `ExternalLoginConfiguration` (`Provider` 32, `Subject` 255) and `PendingExternalJoinConfiguration` (`Provider` 32, `Subject` 255, `Email` 254, `TokenHash` 64) in `MemberConfigurations.cs`.
-- **Compose** — `api` already receives every variable of `/opt/sycapooke/.env` through `env_file`, so `Auth__Google__ClientId` and `Auth__Google__ClientSecret` reach it with no change to `docker-compose.yml`.
+### Implementation evidence
 
-### Security and privacy
+Completed behavior evidence: `reject-google-callback` in `src/backend/Sycapooke.Application/Accounts/GoogleSignIn.cs` and `src/frontend/e2e/tests/sign-in-with-google.spec.ts`. 1 of 3 target behaviors are counted. Remaining target behavior and acceptance checks are not counted merely because older marketplace tests pass.
 
-- **Open redirect** — `returnUrl` is kept only as a path starting with `/` and not `//`, else `/`; `GoogleJoinPage` applies the same test before navigating.
-- **CSRF on the callback** — the `state` in the signed flow cookie must match the query; the cookie is `Lax` so it is sent on the top-level redirect from Google and on nothing cross-site that is not a top-level GET.
-- **Replay** — the nonce in the ID token must match the flow's; the flow cookie is cleared at the callback, a reused code is refused by Google, and a pending join is single use with a 10-minute life.
-- **Tokens** — the code, the ID token and the join token never appear in a response body, a URL or a log; the join token travels only in an `HttpOnly` cookie; nothing is put in web storage (`L2-008`).
-- **Data kept** — only Google's `sub` and the email; no name, picture or locale is requested (`scope=openid email`). Deleting a member deletes its external logins (cascade), which covers account closure (`L2-005`) once closure is built ([protect-personal-data](../../privacy/protect-personal-data/README.md)).
-- **CSP** — no script, frame or XHR to Google from the page; the start endpoint is a link navigation, not a form, so `form-action 'self'` and `script-src 'self'` of [harden-http-and-api](../../platform/harden-http-and-api/README.md) hold unchanged.
-- **Account takeover** — a Google email that matches an unverified member is refused (`GOOGLE_ACCOUNT_EXISTS`); see ADR accounts/0001.
-
-### Tests
-
-- `Sycapooke.Api.Tests` — `SignInWithGoogleTests` hosts the API with `WebApplicationFactory`, SQLite in memory, `FakeGoogleIdentityProvider` and `FakeTimeProvider`; the client keeps cookies over `https://localhost` and does not follow redirects, so each hop is asserted. Covered: the start redirect's parameters and cookie; an existing linked member; a verified member linked by email; an unverified member refused; a new person through pending and finish, including every `L2-001` field error, expiry and single use; cancelled, forged `state`, a refused code, an unverified Google email and an unsafe `returnUrl`; a Google-only member's password sign-in; everything `404` with no client; no code or token in any response.
-- `src/frontend/e2e/tests/sign-in-with-google.spec.ts` with `pages/sign-in.page.ts`, `pages/join.page.ts` and `pages/google-join.page.ts` — Chromium against the built app; `page.route` answers `/api/auth/providers`, `/api/auth/google/start` (a `302` back to `/sign-in` with the chosen result), `/api/auth/google/pending` and `/api/auth/google/finish`. Google is never reached.
-
-### Configuration
-
-| Key | Value | Notes |
-|-----|-------|-------|
-| `Auth:Google:ClientId` | the OAuth client ID | `Auth__Google__ClientId` in `/opt/sycapooke/.env`; `dotnet user-secrets` locally; unset hides the feature |
-| `Auth:Google:ClientSecret` | the OAuth client secret | Same places; required when the client ID is set; never in `appsettings*.json` |
-| `Auth:Google:RedirectUri` | optional | Overrides `{scheme}://{host}/api/auth/google/callback` |
-| `Privacy:Cookies:StrictlyNecessary` | adds `sy_google_flow`, `sy_google_join` | In `appsettings.json` |
-
-### Open questions and deferred items
-
-- The per-IP limits of `L2-007` and `L2-051` are not built for any sign-in endpoint yet; the Google endpoints join that item.
-- Account closure (`L2-005`) has no endpoint yet; the cascade delete removes a closed member's external logins when the erasure job deletes the member.
-- `PendingExternalJoins` rows are not cleaned up after they expire; a sweep in `Sycapooke.Worker` is deferred.
-- Linking or unlinking Google from account settings is deferred; linking happens only through a sign-in.
-- Google's consent screen must be verified by Google before unlisted users can sign in; the owner steps are in `docs/deployment.md`.
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
 ## Requirements
 
-The feature realises the following level-2 (L2) requirements. Each refines the level-1 (L1) requirement cited.
-
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-088` | `L1-002`, `L1-001` | A visitor shall be able to choose "Continue with Google" on the sign-in page and on the join page of the full application and come back signed in with the same session as a password sign-in, returned to the same-site `returnUrl`. The API shall run the OpenID Connect authorization code flow with PKCE on the server and validate the `state`, the nonce, the ID token and `email_verified`. Google's subject identifies a linked account; only the subject and the email are stored. A new person still gives a display name, confirms 18 or older and accepts the terms. A verified matching email links and signs in; an unverified one is refused. A Google-only member's password sign-in gets the answer of `L2-006`. Without a Google client nothing about Google shows and the endpoints answer 404. |
-
-`L2-001`, `L2-002`, `L2-006` and `L2-008` are reused, not changed: the finish step applies the display name, age and terms rules; Google's verified email counts as verified; the session is the one of sign-up-and-sign-in.
+| --- | --- | --- |
+| `L2-001` | `L1-001` | A visitor shall be able to register a private customer account with a display name, an email address and a password. Registration shall never create founder access or a public profile. The display name shall be 3 to 30 characters of letters, digits, underscores or hyphens and unique ignoring case. The email address shall be a valid address unique ignoring case. The password shall be 12 to 128 characters and shall not appear in a list of known breached passwords. The visitor shall confirm they are 18 or older and accept the terms of service. |
+| `L2-002` | `L1-001` | A new account shall be verified by a single-use link emailed to the member. The link shall expire 24 hours after it is sent. Unverified customers shall be able to browse but not buy. Verification shall not grant selling rights; only the verified founder may manage listings under L2-003. |
+| `L2-006` | `L1-002` | A member shall be able to sign in with their email and password. The error shown for an unknown email and for a wrong password shall be identical. |
+| `L2-008` | `L1-002` | Sessions shall use a short-lived access token (15 minutes) and a rotating refresh token (14 days) held in `HttpOnly`, `Secure`, `SameSite=Strict` cookies. Tokens shall never be stored in `localStorage` or `sessionStorage`. Signing out shall revoke the session on the server. |
+| `L2-088` | `L1-002` | A visitor shall be able to choose "Continue with Google" on the sign-in page and on the join page of the full application and come back signed in with the same session as a password sign-in (`L2-008`), returned to the same-site `returnUrl` as in `L2-006`. New Google joins shall create private customer accounts only. Linking or signing in through Google shall never grant founder access; an existing founder retains access only because her immutable account identity was already provisioned under L2-003. The API shall run the OpenID Connect authorization code flow with PKCE on the server: the browser leaves for Google from an API start endpoint and returns to an API callback on the same origin, and the API shall validate the `state`, the nonce, the ID token's signature, issuer, audience and expiry, and `email_verified` before it trusts the identity. Google's stable subject (`sub`), never the email, shall identify a linked Google account; only the subject and the email shall be stored. A member whose email Google has verified needs no verification link (`L2-002`). A new person shall still give a display name, confirm they are 18 or older and accept the terms under the rules of `L2-001`. A Google account whose verified email matches a member whose own email is verified shall sign in to that member and link to it; one that matches a member whose email is not verified shall be refused, so that an account registered with someone else's email cannot be taken over through it. A member with only a Google login shall be able to try a password sign-in and get exactly the answer of `L2-006` criterion 2. The Google endpoints shall carry the sign-in limits of `L2-007` and `L2-051`. When no Google client is configured, nothing about Google shall show and the Google endpoints shall answer HTTP 404. Closing a customer account (`L2-005`) shall remove its Google link. Founder identity and privilege changes remain outside public account flows. |
 
 ## Diagrams
 
+### System context
+
+The context identifies the customer or founder and the systems used by this feature.
+
+![System context for sign in with google](diagrams/c4-context.png)
+
+### Containers
+
+The container view separates the delivery surface, application boundary and feature storage. External integrations remain behind their ports.
+
+![Containers for sign in with google](diagrams/c4-container.png)
+
 ### Components
 
-`GoogleSignInController` writes and reads the flow cookie, sends the Google commands, and writes the session cookies; `GoogleIdentityProvider` implements the port against Google's token endpoint and keys.
+The component view connects `GoogleSignInController` with `FinishGoogleJoinCommandHandler` and the relevant feature state.
 
-![C4 component view for signing in with Google](diagrams/c4-component.png)
+![Components for sign in with google](diagrams/c4-component.png)
 
 ### Class structure
 
-A `Member` has many external logins; a pending join holds a Google identity until the person finishes joining.
+The class view identifies the relevant fields, operation responsibilities and dependencies. It is a target responsibility model, not a claim that each addition already exists.
 
-![Class diagram for signing in with Google](diagrams/class-structure.png)
+![Class structure for sign in with google](diagrams/class-structure.png)
 
-### Behaviour — an existing member
+### Behaviour - Join through a verified Google identity
 
-The start endpoint sends the browser to Google; the callback checks the state, exchanges the code, finds the linked member (or links a verified one by email) and sets the session cookies.
+Customer created without selling rights or public profile. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for an existing member signing in with Google](diagrams/sequence-existing-member.png)
+![Join through a verified Google identity](diagrams/sequence-new-google-customer.png)
 
-### Behaviour — a new person
+### Behaviour - Sign in to an existing linked account
 
-The callback stores a pending join and sends the browser to `/join/google`; the finish step applies the `L2-001` rules and creates a verified member with no password.
+Existing customer remains customer; provisioned founder retains access. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for a new person joining with Google](diagrams/sequence-new-person.png)
+![Sign in to an existing linked account](diagrams/sequence-existing-google-account.png)
 
-### Behaviour — cancelled or refused
+### Behaviour - Handle denied, expired or forged response
 
-Denied consent comes back as `google=cancelled`; a mismatched state, a refused code, an invalid token or an unverified email come back as `google=failed` with a reference and nothing stored.
+No account mutation; configured-off endpoints return 404. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for a cancelled or refused Google sign-in](diagrams/sequence-cancelled.png)
+![Handle denied, expired or forged response](diagrams/sequence-reject-google-callback.png)

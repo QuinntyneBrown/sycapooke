@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Introduce the founder and her collection
+Person(user, "Visitor or customer")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Marketing site", "Static Angular build", "Founder story and shopper actions")
+  Container(host, "Marketing host", "Caddy", "Serves static page, media and metadata")
+}
+Rel(user, web, "Reads and chooses playback", "Browser")
+Rel(web, host, "Requests static assets", "HTTPS")
+@enduml

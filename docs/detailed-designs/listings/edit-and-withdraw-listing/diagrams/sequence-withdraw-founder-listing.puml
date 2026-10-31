@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Confirm withdrawal
+autonumber
+actor "Founder" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "EditListingPage" as page
+ participant "ListingsApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "ListingsController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "ListingCommandHandlers" as handler
+ participant "Listing" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> page : Confirm withdrawal
+page -> client : Existing listing withdrawal endpoint
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Require founder and Active state [L2-020]
+handler -> model : Mark Removed with ordinary withdrawal reason
+handler -> handler : Exclude from public catalog and search
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Removed item cannot be edited or relisted
+note over entry, handler
+Removed item cannot be edited or relisted
+end note
+@enduml

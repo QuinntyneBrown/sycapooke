@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Publish founder collection through commands
+autonumber
+actor "Developer" as actor
+box "Frontend - Local operator terminal" #E0F2FE
+ participant "Local development terminal" as page
+ participant "CliApp" as client
+end box
+box "Backend - Local CLI application" #D1FADF
+ participant "CLI environment guard" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "DemoSeeder" as handler
+ participant "DemoCatalogue" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> page : Publish founder collection through commands
+page -> client : CLI seed publication loop
+client -> entry : Local guarded operation
+entry -> handler : Run guarded operation
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Load committed photos and normal upload processing [L2-075]
+handler -> model : Spread seed clock across sufficient publish days [L2-051]
+handler -> handler : Publish 48 founder-owned Vintage listings across four categories
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : 48 Active listings; no customer sellers; repeat seed writes nothing
+note over entry, handler
+48 Active listings; no customer sellers; repeat seed writes nothing
+end note
+@enduml

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. Like most web
+Sycapooke is the founder's shop for antiques and vintage treasures jewelry, clothing, housewares and electronics. Like most web
 applications it uses cookies: some keep a member signed in and protect forms, and others
 could measure which pages are slow. This feature makes sure that only the cookies Sycapooke
 cannot run without are set until the visitor decides about the rest, and that the
@@ -33,6 +33,8 @@ choice is stored in the browser with no request to `Sycapooke API`. The API's pa
 only strictly necessary cookies on every response.
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 ### Frontend (`Sycapooke Web`, `@sycapooke/privacy` and `@sycapooke/components`)
 
@@ -147,10 +149,16 @@ whose script sets the `_sya` cookie. The `consent` fixture option starts every o
   signed out and signed in, and asserts every `Set-Cookie` name is strictly necessary; a stray
   cookie set by a test-only endpoint is removed.
 
+### Implementation evidence
+
+Completed behavior evidence: `all` in `src/frontend/projects/privacy/src/lib/consent/cookie-consent.service.ts` and `src/frontend/e2e/tests/manage-cookie-consent.spec.ts`. 2 of 2 target behaviors are counted. Other behavior remains uncounted until its target implementation and acceptance coverage exist.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-056` | `L1-014` | Only strictly necessary cookies shall be set before consent. Analytics cookies shall be set only after the visitor accepts them, and the visitor shall be able to change their choice at any time. |
 
 ## Diagrams

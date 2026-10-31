@@ -1,0 +1,35 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Read founder introduction
+autonumber
+actor "Visitor or customer" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "WelcomePage" as page
+ participant "Static marketing navigation" as client
+end box
+box "Backend - Static marketing host" #D1FADF
+ participant "Static marketing host" as entry
+end box
+box "Frontend - Marketing components" #E0F2FE
+ participant "PitchVideoDialog" as handler
+ participant "MarketingContent" as model
+end box
+actor -> page : Read founder introduction
+page -> client : GET /welcome/
+client -> entry : Static request / browser action
+entry -> handler : Dispatch UI action
+handler -> handler : Serve shop copy, founder portrait and static metadata [L2-078, L2-083]
+handler -> model : Keep shopping actions independent of sign-in
+handler -> handler : Navigate catalog or Our story anchor without selling invitation
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Founder-owned shop presentation with no feature API call
+note over entry, handler
+Founder-owned shop presentation with no feature API call
+end note
+@enduml

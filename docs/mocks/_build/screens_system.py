@@ -1,4 +1,4 @@
-"""Administrator problem detail, error pages, legal pages, cookies and system notices
+"""Founder support queue and problem detail, error pages, legal pages, cookies and system notices
 (L1-008, L1-014, L1-018, L2-036, L2-056, L2-068)."""
 from mk import *
 
@@ -8,10 +8,6 @@ from mk import *
 STATIC_NA = {"loading": "Static content ships with the app; nothing is fetched.",
              "empty": "The page always has content.",
              "error": "Static content cannot fail to load once the app is served."}
-
-
-def admin_page(main: str, notes: str = "") -> Page:
-    return Page(main=main, shell="admin", footer=False, notes=notes)
 
 
 def head(title: str, sub: str = "", actions: str = "", crumb: tuple[str, str] | None = None) -> str:
@@ -46,51 +42,144 @@ def load_error(what: str, ref: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Problem detail
+# Support queue and problem detail (founder only; L2-036, L2-030, L2-034)
 # ---------------------------------------------------------------------------
-def problem_main(resolved: bool) -> str:
+IDA = PEOPLE[FOUNDER]["name"]
+CUST = PEOPLE[ME]["name"]
+PIA = PEOPLE["pia_collects"]["name"]
+
+
+def founder_page(main: str, notes: str = "") -> Page:
+    return Page(main=main, user="founder", account="support", notes=notes)
+
+
+def support_li(pid: str, kind: str, oid: str, who: str, st: str, when: str, href: str) -> str:
+    o = ORDERS[oid]
+    return (f'<li><a href="{href}">{item_row(o["item"], f"{pid} · {kind} · {who} · {when}")}'
+            f'<span class="order-list__end"><span class="price">{money(o["total"])}</span>{status(st)}</span></a></li>')
+
+
+def support_list(only: str = "") -> str:
+    rows = [("open", "P-0912", "Problem: not as described", "SY-48140", CUST, "Open", "opened yesterday", P("problem-detail")),
+            ("open", "C-0044", "Cancellation request", "SY-48302", PIA, "Open", "today", P("sale-detail", "cancel-requested")),
+            ("resolved", "P-0907", "Problem: not as described", "SY-48213", CUST, "Refunded", "resolved Sat 24 Oct", P("problem-detail", "resolved"))]
+    lis = "".join(support_li(*r[1:]) for r in rows if not only or r[0] == only)
+    return f'<ul class="order-list">{lis}</ul>'
+
+
+def support_filters(active: str = "all") -> str:
+    def b(label, key):
+        cur = ' aria-current="true"' if active == key else ""
+        return f'<a class="btn btn--sm{" btn--primary" if active == key else ""}" href="{P("support", "default" if key == "all" else "filtered")}"{cur}>{label}</a>'
+    return f'<div class="cluster" role="group" aria-label="Filter support requests">{b("All", "all")}{b("Open", "open")}</div>'
+
+
+su = screen("support", "page", "Support queue", route="/shop/support", reqs=["L2-036"])
+
+
+@su.state("default", "Open and resolved customer problems and cancellation requests, newest first.")
+def _():
+    return founder_page(head("Support", "2 open") + support_filters() + support_list())
+
+
+@su.state("filtered", "Filtered to open requests only.")
+def _():
+    return founder_page(head("Support", "2 open") + support_filters("open") + support_list("open"))
+
+
+@su.state("loading", "Skeleton rows in the list layout.")
+def _():
+    return founder_page(head("Support") + skel_rows())
+
+
+@su.state("empty", "Nothing to deal with: no customer has raised a problem.")
+def _():
+    return founder_page(head("Support") + empty("check-circle", "No requests", "When a customer reports a problem or asks to cancel, it shows up here."))
+
+
+@su.state("error", "The support queue failed to load; the shop navigation stays.")
+def _():
+    return founder_page(head("Support") + load_error("support requests", "7a21-d4e0"))
+
+
+def problem_main(mode: str) -> str:
+    """mode: default | replied | resolved | closed | pending | failed"""
     o = ORDERS["SY-48140"]
     photos = '<ul class="uploader" role="list">' + "".join(
-        f'<li>{photo("pyrex-bowls", tag=False, alt=f"Buyer photo {i} of the bowls", tone=t)}</li>' for i, t in [(1, 1), (2, 3)]) + "</ul>"
-    claim = ('<div class="thread__item"><span class="text-caption">attic_treasures · buyer · Sun 25 Oct</span>'
-             '<p>Two of the four bowls have chips on the rim and the red one has a crack through the base. Listing said excellent.</p>' + photos + "</div>")
-    reply = ('<div class="thread__item"><span class="text-caption">margarets_china · seller · Sun 25 Oct</span>'
-             '<p>They left here wrapped twice and without a chip. Happy to take them back.</p></div>')
-    if resolved:
-        top = alert("success", "Refunded in full", f"{money(o['total'])} back to the buyer. No payout. Today 11:05 ET.")
+        f'<li>{photo("pyrex-bowls", tag=False, alt=f"Customer photo {i} of the bowls", tone=t)}</li>' for i, t in [(1, 1), (2, 3)]) + "</ul>"
+    claim = (f'<div class="thread__item"><span class="text-caption">{CUST} · customer · Sun 25 Oct</span>'
+             '<p>Two of the four bowls have chips on the rim and the red one has a crack through the base. Listing said excellent.</p>' + photos +
+             f'<p class="text-caption">{ic("lock", "icon icon--sm")} Private: only you and {CUST} can see these photos.</p></div>')
+    reply = (f'<div class="thread__item"><span class="text-caption">{IDA} · you · Mon 26 Oct</span>'
+             '<p>I wrapped them twice and they left here without a chip. I’m so sorry. Let me make this right.</p></div>')
+    top, action, comp, st = "", btn("Resolve", "primary", D("resolve-problem")), "Paused", "Delivered"
+    thread = claim + (reply if mode != "default" else "")
+    if mode == "resolved":
+        top = alert("success", "Refunded in full", f"{money(o['total'])} refunded to {CUST}, who has your explanation. Today 11:05 ET.")
+        action, comp, st = "", "Refunded", "Refunded"
+    elif mode == "closed":
+        top = alert("info", "Closed without a refund", f"{CUST} has your explanation and the order is Completed. Today 11:05 ET.")
+        action, comp, st = "", "Completed", "Completed"
+    elif mode == "pending":
+        top = alert("warning", "Refund pending", f"You authorised a full refund of {money(o['total'])}. Waiting for the payment provider to confirm it. The order is not marked Refunded until it does.", icon="clock")
+        action, comp = "", "Refund pending"
+    elif mode == "failed":
+        top = alert("danger", "The refund failed", "The payment provider couldn’t process it. Nothing was refunded and the order is unchanged.",
+                    actions=btn("Retry refund", "primary", D("resolve-problem", "failed"), icon="refresh"))
         action = ""
-    else:
-        top = ""
-        action = btn("Resolve", "primary", D("resolve-problem"))
+    reply_form = ""
+    if mode == "default":
+        reply_form = (field("fr-reply", "Your reply", '<textarea class="textarea" id="fr-reply" rows="3"{db}></textarea>', help="Visible to the customer.") +
+                      f'<div>{btn("Send reply", "primary")}</div>')
     side = (f'<aside class="panel panel--sunken stack"><span class="eyebrow">Order SY-48140</span>{item_row("pyrex-bowls")}'
-            f'<dl class="facts"><dt>Status</dt><dd>{status("Refunded" if resolved else "Delivered")}</dd><dt>Total</dt><dd class="num">{money(o["total"])}</dd>'
-            f'<dt>Delivered</dt><dd>{o["delivered"]}</dd><dt>Payout</dt><dd>{"Not paid" if resolved else "Held"}</dd></dl>{action}</aside>')
-    body = f'<div class="stack stack--lg">{top}<div class="thread">{claim}{reply}</div></div>'
-    return head("Not as described", "Order problem P-0912 · opened yesterday") + f'<div class="split">{body}{side}</div>'
+            f'<dl class="facts"><dt>Status</dt><dd>{status(st)}</dd><dt>Total</dt><dd class="num">{money(o["total"])}</dd>'
+            f'<dt>Delivered</dt><dd>{o["delivered"]}</dd><dt>Completion</dt><dd>{comp}</dd></dl>{action}</aside>')
+    body = f'<div class="stack stack--lg">{top}<div class="thread">{thread}</div>{reply_form}</div>'
+    return head("Not as described", "Order problem P-0912 · opened yesterday", crumb=("Support", P("support"))) + f'<div class="split">{body}{side}</div>'
 
 
-pr = screen("problem-detail", "page", "Problem detail", route="/admin/problems/{id}", reqs=["L2-036", "L2-010"],
-            na={"empty": "A problem always has a buyer claim and an order."})
+pr = screen("problem-detail", "page", "Problem detail", route="/shop/support/{id}", reqs=["L2-036", "L2-030", "L2-034"],
+            na={"empty": "A problem always has a customer claim and an order."})
 
 
-@pr.state("default", "Buyer claim with photos, seller response, payout held; one action to resolve.")
+@pr.state("default", "Customer claim with private photos; completion paused; the founder can reply or resolve.")
 def _():
-    return admin_page(problem_main(False))
+    return founder_page(problem_main("default"))
 
 
-@pr.state("resolved", "Resolved in the buyer's favour: order refunded, no payout.")
+@pr.state("replied", "The founder replied; completion stays paused until she resolves it.")
 def _():
-    return admin_page(problem_main(True))
+    return founder_page(problem_main("replied"))
+
+
+@pr.state("resolved", "Resolved in the customer’s favour: full refund confirmed by the payment provider.")
+def _():
+    return founder_page(problem_main("resolved"))
+
+
+@pr.state("closed-no-refund", "Closed without a refund: the customer has her explanation and the order is Completed.")
+def _():
+    return founder_page(problem_main("closed"))
+
+
+@pr.state("refund-pending", "Refund authorised and waiting for the provider’s confirmation; not shown as Refunded yet.")
+def _():
+    return founder_page(problem_main("pending"))
+
+
+@pr.state("refund-failed", "The provider failed the refund: nothing changed, retry.")
+def _():
+    return founder_page(problem_main("failed"))
 
 
 @pr.state("loading", "Problem detail skeleton.")
 def _():
-    return admin_page('<h1 class="visually-hidden">Loading problem</h1><div style="margin-top: var(--space-10);">' + skel_detail() + "</div>")
+    return founder_page('<h1 class="visually-hidden">Loading problem</h1><div style="margin-top: var(--space-10);">' + skel_detail() + "</div>")
 
 
 @pr.state("error", "The problem failed to load.")
 def _():
-    return admin_page(head("Order problem") + load_error("this problem", "5d10-be3c"))
+    return founder_page(head("Order problem", crumb=("Support", P("support"))) + load_error("this problem", "5d10-be3c"))
 
 
 # ---------------------------------------------------------------------------
@@ -106,9 +195,18 @@ simple("not-found", "Not found", "/*", ["L2-068"], "Unknown URL: say so plainly,
        lambda: Page(main=center("4<em>0</em>4", "Page not found", "The link may be old or mistyped.", btn("Back to shop", "primary", P("catalog")))),
        na={"loading": "Shown after routing; nothing to load.", "empty": "Not a collection.", "error": "This page is itself the error."})
 
-simple("forbidden", "Forbidden", "/403", ["L2-010", "L2-068"], "Signed in but not allowed: who can see this and a way back.",
-       lambda: Page(main=center("4<em>0</em>3", "You can’t open this", "It belongs to another member’s account.", btn("Go to your account", "primary", P("account")))),
-       na={"loading": "Shown after the API refuses; nothing to load.", "empty": "Not a collection.", "error": "This page is itself the error."})
+def forbidden_page(text: str) -> Page:
+    return Page(main=center("4<em>0</em>3", "You can’t open this", text, btn("Go to your account", "primary", P("account"))))
+
+
+fb = simple("forbidden", "Forbidden", "/403", ["L2-003", "L2-010", "L2-068"], "Signed in but not allowed: who can see this and a way back.",
+            lambda: forbidden_page("It belongs to another customer’s account."),
+            na={"loading": "Shown after the API refuses; nothing to load.", "empty": "Not a collection.", "error": "This page is itself the error."})
+
+
+@fb.state("management", "A signed-in customer opened a founder-only route (shop management, sales, support): 403, back to their account.")
+def _():
+    return forbidden_page("Shop management is only for the shop’s founder.")
 
 simple("server-error", "Server error", "/error", ["L2-068"], "Unhandled 500: “Something went wrong”, Try again and the correlation ID.",
        lambda: Page(main=center("5<em>0</em>0", "Something went wrong", "It’s on our side. Your data is safe.",
@@ -136,28 +234,28 @@ def rules_body() -> str:
     rows = "".join(f'<tr><th scope="row">{c}</th><td>{", ".join(s)}</td><td>{size_tag(z)}</td></tr>' for c, s, z in CATEGORIES)
     sizes = ('<div class="table-wrap"><table class="table"><caption class="visually-hidden">Accepted categories and sizes</caption>'
              f'<thead><tr><th scope="col">Category</th><th scope="col">Includes</th><th scope="col">Size</th></tr></thead><tbody>{rows}</tbody></table></div>')
-    rules = [("Vintage only", "Jewelry, clothing, housewares and electronics. Every piece must be at least 20 years old."),
-             ("18 and over", "One account to buy and sell. No approval step."),
-             ("Honest condition", ", ".join(CONDITIONS) + ". Used - Fair needs its flaws described."),
-             ("Ship in 5 business days", "Add tracking or the order is cancelled and refunded."),
-             ("10% fee", "Taken from item plus shipping when the order completes."),
-             ("US only", "Prices in US dollars, shipping within the United States."),
-             ("No counterfeits", "Fakes are removed from the catalog.")]
+    ida = PEOPLE[FOUNDER]["name"]
+    rules = [("Vintage only", "Jewelry, clothing, housewares and electronics. Every piece in the shop is at least 20 years old."),
+             ("Honest condition", ", ".join(CONDITIONS) + ". Used - Fair has its flaws described."),
+             ("Ships in 5 business days", f"{ida} adds tracking when she ships your order."),
+             ("Paid straight to the shop", "Your payment goes directly to the shop’s own account. There is no middleman."),
+             ("Problems handled by the founder", f"Tell {ida} within 3 days of delivery. She replies herself and can refund in full or explain why not."),
+             ("US only", "Prices in US dollars, shipping within the United States.")]
     lst = "".join(f'<li class="settings-list__body" style="padding-block: var(--space-5); border-bottom: 1px solid var(--color-border-default);">'
                   f'<span class="settings-list__title">{t}</span><span class="settings-list__meta">{d}</span></li>' for t, d in rules)
     return f'<div class="stack stack--lg">{sizes}<ol class="rules-list" role="list">{lst}</ol></div>'
 
 
-simple("rules", "Marketplace rules", "/rules", ["L2-011", "L2-016", "L2-031", "L2-033"],
-       "The rules on one short page: sizes, age, condition, shipping, fee, US only, counterfeits.",
-       lambda: doc_page("Marketplace rules", "Short, because it only has to cover vintage.", rules_body()))
+simple("rules", "Shop policies", "/rules", ["L2-011", "L2-016", "L2-033"],
+       "The shop policies on one short page: vintage age, condition, shipping, direct payment, problems, US only.",
+       lambda: doc_page("Shop policies", "Short, because it only has to cover one shop.", rules_body()))
 
 
 def privacy_body() -> str:
-    items = [("What we collect", "Email, password hash, display name, shipping addresses, and orders."),
-             ("Never public", "Your email, phone and street address never appear on Sycapooke pages."),
+    items = [("What we collect", "Email, sign-in details, display name, shipping addresses, and your purchases."),
+             ("Never public", "Customer accounts are private: your name, email and address never appear on Sycapooke pages. Only the founder’s story is public."),
              ("Encrypted", "Shipping addresses are encrypted at rest. Card numbers never reach us."),
-             ("Erasure", "Close your account and we erase your data within 30 days."),
+             ("Erasure", "Close your customer account and we erase your data within 30 days."),
              ("Cookies", "Only necessary cookies until you accept analytics.")]
     lst = "".join(f'<li class="settings-list__body" style="padding-block: var(--space-5); border-bottom: 1px solid var(--color-border-default);">'
                   f'<span class="settings-list__title">{t}</span><span class="settings-list__meta">{d}</span></li>' for t, d in items)
@@ -169,19 +267,18 @@ simple("privacy", "Privacy", "/privacy", ["L2-054", "L2-056", "L2-005"], "What S
 
 
 def terms_body() -> str:
-    terms = ["You must be 18 or older to hold an account.",
-             "List only vintage pieces you own, each at least 20 years old.",
-             "Describe condition and flaws honestly; photos must be of the actual item.",
-             "Payment goes through our payment provider. Sellers are paid when the order completes.",
-             "Buyers can report a problem until 3 days after delivery.",
-             "We may remove listings that break the marketplace rules.",
+    terms = ["You must be 18 or older to hold a customer account.",
+             "Every piece in the shop is at least 20 years old, sold by its founder.",
+             "Condition and flaws are described honestly, with photos of the actual item.",
+             "Payment goes through our payment provider straight to the shop’s account.",
+             "You can report a problem until 3 days after delivery. The founder handles it herself and can refund in full or explain why not.",
              "Sycapooke operates in the United States only."]
     lst = "".join(f"<li>{t}</li>" for t in terms)
     return (f'<ol class="terms-list">{lst}</ol><p class="text-sm text-muted" style="margin-top: var(--space-8);">See also the '
-            f'<a href="{P("rules")}">marketplace rules</a> and <a href="{P("privacy")}">privacy</a>.</p>')
+            f'<a href="{P("rules")}">shop policies</a> and <a href="{P("privacy")}">privacy</a>.</p>')
 
 
-simple("terms", "Terms", "/terms", ["L2-001", "L2-036", "L2-031"], "Terms of service as a short numbered list.",
+simple("terms", "Terms", "/terms", ["L2-001", "L2-036", "L2-030"], "Terms of service as a short numbered list.",
        lambda: doc_page("Terms of service", "Effective 1 Oct 2026", terms_body()))
 
 
@@ -191,34 +288,40 @@ simple("terms", "Terms", "/terms", ["L2-001", "L2-036", "L2-031"], "Terms of ser
 def reason_field(error: str | None = None, value: str = "", busy: bool = False) -> str:
     ro = " readonly" if busy else ""
     ctrl = f'<textarea class="textarea" id="reason" name="reason" rows="3"{{db}}{ro}>{esc(value)}</textarea>'
-    return field("reason", "Reason", ctrl, help="Sent to both members.", error=error)
+    return field("reason", "Your explanation", ctrl, help="Shown to the customer.", error=error)
 
 
-def rp_dialog(error=None, value="", busy=False) -> str:
+def rp_dialog(error=None, value="", busy=False, fail=False) -> str:
     o = ORDERS["SY-48140"]
     ch = ('<fieldset><legend>Decision</legend>'
-          f'<label class="choice"><input type="radio" name="outcome" checked><span class="choice__text">Refund buyer in full<small>{money(o["total"])} to attic_treasures · no payout</small></span></label>'
-          f'<label class="choice"><input type="radio" name="outcome"><span class="choice__text">Release payout to seller<small>Order completes · margarets_china is paid</small></span></label></fieldset>')
-    prim = btn("Refunding", "primary", attrs='aria-busy="true"') if busy else btn("Refund buyer", "primary")
-    return dialog("Resolve problem P-0912", ch + reason_field(error, value, busy), btn("Cancel", attrs="disabled" if busy else "") + prim)
+          f'<label class="choice"><input type="radio" name="outcome" checked><span class="choice__text">Refund in full<small>{money(o["total"])} back to {CUST}</small></span></label>'
+          f'<label class="choice"><input type="radio" name="outcome"><span class="choice__text">Close without refund (order completes)<small>No refund; the order becomes Completed</small></span></label></fieldset>')
+    prim = btn("Sending", "primary", attrs='aria-busy="true"') if busy else btn("Try again" if fail else "Send decision", "primary")
+    top = alert("danger", "The refund didn’t go through", "The payment provider couldn’t process it. Nothing was refunded and the order is unchanged. Try again.") if fail else ""
+    return dialog("Resolve problem P-0912", ch + reason_field(error, value, busy), btn("Cancel", attrs="disabled" if busy else "") + prim, top=top)
 
 
-rp = screen("resolve-problem", "dialog", "Resolve problem", opens_from="problem-detail", reqs=["L2-036"])
+rp = screen("resolve-problem", "dialog", "Resolve problem", opens_from="problem-detail", reqs=["L2-036", "L2-030"])
 
 
-@rp.state("default", "Refund the buyer or release the payout, with a reason.")
+@rp.state("default", "Refund in full or close without refund, with an explanation the customer sees.")
 def _():
     return Dialog(bg=("problem-detail", "default"), html=rp_dialog())
 
 
-@rp.state("invalid", "Reason missing.")
+@rp.state("invalid", "Explanation missing.")
 def _():
-    return Dialog(bg=("problem-detail", "default"), html=rp_dialog(error="Add a reason. Both members see it."))
+    return Dialog(bg=("problem-detail", "default"), html=rp_dialog(error="Add an explanation. The customer sees it."))
 
 
-@rp.state("busy", "Refund in progress: confirm busy.")
+@rp.state("busy", "Decision being sent: confirm busy.")
 def _():
-    return Dialog(bg=("problem-detail", "default"), html=rp_dialog(value="Chips on the rim and the crack weren't disclosed.", busy=True))
+    return Dialog(bg=("problem-detail", "default"), html=rp_dialog(value="Chips on the rim and the crack were not disclosed.", busy=True))
+
+
+@rp.state("failed", "Provider failure: nothing refunded, explanation kept, retry.")
+def _():
+    return Dialog(bg=("problem-detail", "refund-failed"), html=rp_dialog(value="Chips on the rim and the crack were not disclosed.", fail=True))
 
 
 def cookie_dialog(analytics: bool) -> str:

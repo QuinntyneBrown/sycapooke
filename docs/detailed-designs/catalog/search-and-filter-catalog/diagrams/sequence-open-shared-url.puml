@@ -45,4 +45,8 @@ controller --> client : 200 OK
 client --> store : CatalogPageDto
 store --> page : loaded
 page --> actor : Same filters, sort and results (L2-024)
+note over handler
+Public queries restrict inventory to the configured founder.
+No public customer profile or numeric rating is projected.
+end note
 @enduml

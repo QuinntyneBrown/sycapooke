@@ -6,13 +6,13 @@ skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
 actor "Owner" as owner
-box "GitHub" #FFF4E5
+box "Backend - GitHub Actions deployment" #FFF4E5
   participant "CI (verify)" as ci
   participant "Deploy marketing" as dm
   participant "Deploy app" as da
 end box
 participant "GHCR" as ghcr
-box "Azure VM /opt/sycapooke" #D1FADF
+box "Backend - Azure VM /opt/sycapooke" #D1FADF
   participant "docker compose" as compose
   participant "migrator" as mig
   participant "edge + marketing" as mkt

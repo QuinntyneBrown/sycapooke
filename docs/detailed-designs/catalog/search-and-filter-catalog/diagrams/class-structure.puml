@@ -9,7 +9,7 @@ skinparam class {
   FontColor #101828
   BackgroundColor #F9FAFB
 }
-title Class structure — Search and filter the catalog
+title Class structure â€” Search and filter the catalog
 
 class CatalogFilters <<record>> {
   +string? Q

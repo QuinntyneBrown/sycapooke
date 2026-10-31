@@ -1,0 +1,21 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+title Static marketing and optional video structure
+class WelcomePage {
+ +string founderQuote
+ +OpenVideo(): void
+}
+class PitchVideoDialog {
+ +boolean captionsEnabled
+ +Close(): void
+ +Retry(): void
+}
+class MarketingContent <<static release content>> {
+ +string FounderStory
+ +string HeroImage
+ +string VideoSource
+}
+WelcomePage --> MarketingContent : renders approved copy
+WelcomePage ..> PitchVideoDialog : opens through DialogService
+@enduml

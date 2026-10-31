@@ -1,10 +1,10 @@
 # Listings subsystem
 
-The listings subsystem covers how a seller creates, photographs, prices, publishes, edits, withdraws and reviews listings, and how `Sycapooke API` enforces the vintage rule that only pieces at least 20 years old in the four categories (jewelry, clothing, housewares, electronics) are accepted (`L1-003`, `L1-004`). Each feature below is a vertical slice from the Angular pages through `Sycapooke API` and `Sycapooke Worker` to the `Listings`, `ListingPhotos` and `ListingPhotoVersions` tables, built on the [architecture baseline](../README.md). Pages and dialogs live in the `@sycapooke/listings` library (`src/frontend/projects/listings/`) and call `Sycapooke API` through `@sycapooke/api`.
+Founder-only drafts, photographs, publication and inventory changes. The [architecture baseline](../README.md) defines shared boundaries. Features appear in journey-value order, with supporting controls after direct customer capabilities.
 
-| Feature | Design | Estimate | L2 requirements |
-|---------|--------|----------|-----------------|
-| Create a listing | [create-listing](create-listing/README.md) | [estimate](../../estimates/listings.md) | `L2-003`, `L2-011`, `L2-012`, `L2-013`, `L2-015`, `L2-016`, `L2-018`, `L2-019`, `L2-031`, `L2-051` |
-| Upload listing photos | [upload-listing-photos](upload-listing-photos/README.md) | [estimate](../../estimates/listings.md) | `L2-017`, `L2-059` |
-| Edit and withdraw a listing | [edit-and-withdraw-listing](edit-and-withdraw-listing/README.md) | [estimate](../../estimates/listings.md) | `L2-020`, `L2-013`, `L2-049`, `L2-035` |
-| Manage my listings | [manage-my-listings](manage-my-listings/README.md) | [estimate](../../estimates/listings.md) | `L2-021`, `L2-019` |
+| Feature | Design | Requirements | Estimate |
+| --- | --- | --- | --- |
+| Create a founder listing | [create-listing](create-listing/README.md) | `L2-003`, `L2-010`, `L2-011`, `L2-012`, `L2-013`, `L2-015`, `L2-016`, `L2-017`, `L2-018`, `L2-019`, `L2-051` | [estimate](../../estimates/listings.md) |
+| Upload founder listing photos | [upload-listing-photos](upload-listing-photos/README.md) | `L2-003`, `L2-010`, `L2-017`, `L2-059`, `L2-065` | [estimate](../../estimates/listings.md) |
+| Manage founder inventory | [manage-my-listings](manage-my-listings/README.md) | `L2-003`, `L2-010`, `L2-015`, `L2-018`, `L2-019`, `L2-021`, `L2-042` | [estimate](../../estimates/listings.md) |
+| Edit and withdraw founder inventory | [edit-and-withdraw-listing](edit-and-withdraw-listing/README.md) | `L2-003`, `L2-010`, `L2-013`, `L2-020`, `L2-035`, `L2-049` | [estimate](../../estimates/listings.md) |

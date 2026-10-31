@@ -2,7 +2,7 @@
 
 ## Overview
 
-When something fails in Sycapooke, two audiences need to know. A visitor needs a
+The error boundary informs visitors and operators. A visitor receives a
 plain message, a way to retry and a reference to quote to support. An operator
 needs to find every log line for that failure, see whether it is one request or a
 trend, and be alerted before members notice. This feature, part of the `platform`
@@ -24,6 +24,8 @@ load balancer of [keep-available-and-recoverable](../keep-available-and-recovera
 consumes the readiness endpoint.
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 Source mocks: `docs/mocks/pages/server-error/`, `docs/mocks/pages/not-found/`,
 `docs/mocks/pages/forbidden/`, `docs/mocks/pages/offline/`,
@@ -66,7 +68,7 @@ Source mocks: `docs/mocks/pages/server-error/`, `docs/mocks/pages/not-found/`,
   API returns 404 for a resource the caller may not see (`L2-010`).
 - **`ForbiddenPageComponent`** — route `/403`: "403", "You can’t open this",
   "It belongs to another member’s account.", "Go to your account". Used by role
-  guards, for example a member opening `/admin`.
+  guards, for example a customer opening `/shop/problems/{reference}`.
 - **`OfflinePageComponent`** — shown when navigation fails with `offline`:
   wifi-off icon, "You’re offline", "Check your connection. We’ll pick up where
   you left off.", "Try again". It renders from the cached shell without a
@@ -101,7 +103,7 @@ Source mocks: `docs/mocks/pages/server-error/`, `docs/mocks/pages/not-found/`,
   `X-Correlation-ID` and logs the outbound call inside the scope.
 - **Outbox propagation** — `OutboxMessages.CorrelationId nvarchar(64)` is
   written with each message. `Sycapooke Worker` opens a logging scope with that ID
-  before dispatching, so email and payout logs join the originating request.
+  before dispatching, so email and refund logs join the originating request.
 - **`ProblemDetailsExceptionHandler : IExceptionHandler`** with
   `AddProblemDetails(o => o.CustomizeProblemDetails = …)` — every error
   response is `application/problem+json` with `type`
@@ -206,10 +208,16 @@ Source mocks: `docs/mocks/pages/server-error/`, `docs/mocks/pages/not-found/`,
 - **Rule tests** — `promtool test rules deploy/monitoring/alerts.test.yml` in
   CI with synthetic series for each alert.
 
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-068` | `L1-018` | API errors shall be returned as RFC 9457 problem details with a stable error code, a human-readable message and a correlation ID, and shall never include stack traces or internal details. The frontend shall show a friendly message with the correlation ID and a way to retry. |
 | `L2-069` | `L1-018` | The backend shall write structured logs with a correlation ID that follows each request through the system. Logs shall never contain passwords, tokens, card details or full addresses. The system shall expose metrics for request rate, error rate, latency, checkout success rate and background job failures, and shall alert operators when the 5xx error rate exceeds 1% for 5 minutes, the 95th percentile latency exceeds 300 ms for reads or 800 ms for writes for 10 minutes, or a payment webhook fails. |
 | `L2-070` | `L1-018` | The API shall expose a liveness endpoint (`/health/live`) and a readiness endpoint (`/health/ready`). Readiness shall report unhealthy when the database or photo storage cannot be reached. Health endpoints shall not reveal version numbers or internal hostnames. |

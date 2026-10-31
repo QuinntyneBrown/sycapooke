@@ -53,4 +53,8 @@ else totalCount = 0
   actor -> page : Choose "Clear search and filters"
   page -> page : navigate("/") with no parameters
 end
+note over handler
+Public queries restrict inventory to the configured founder.
+No public customer profile or numeric rating is projected.
+end note
 @enduml

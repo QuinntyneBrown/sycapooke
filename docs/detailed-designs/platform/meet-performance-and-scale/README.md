@@ -3,7 +3,7 @@
 ## Overview
 
 Sycapooke shoppers mostly browse on phones, and a sale lost to a failed request loses
-a seller's income. This feature, part of the `platform` subsystem, makes the API
+the founder's income. This feature, part of the `platform` subsystem, makes the API
 safe to run as several identical instances behind a load balancer. No load test,
 performance environment or multi-instance scale test is built
 ([ADR 0002](../../../adr/general/0002-no-load-or-scale-tests.md)), and no frontend
@@ -28,6 +28,8 @@ measured budget.
 
 ## Description
 
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
+
 ### API (`Sycapooke.Api`)
 
 - **`EndpointKindAttribute(EndpointKind.Read | Write | PaymentBound)`** —
@@ -51,7 +53,7 @@ measured budget.
   | State | Owner | Key pattern | Expiry |
   |-------|-------|-------------|--------|
   | ASP.NET Core Data Protection key ring (cookie and antiforgery encryption) | this feature | `sycapooke:dataprotection-keys` | none (keys rotate every 90 days by default) |
-  | Refresh-token families and revocations | accounts ([manage-sessions](../../accounts/manage-sessions/README.md)) | `sycapooke:rt:family:{familyId}` | 14 days |
+  | Refresh-token families and revocations | accounts ([manage-sessions](../../accounts/sign-up-and-sign-in/README.md)) | `sycapooke:rt:family:{familyId}` | 14 days |
   | Rate-limit counters | harden-http-and-api | `sycapooke:rl:…` | window length |
   | `IDistributedCache` entries | any feature | `sycapooke:cache:{name}:{key}` | per entry |
 
@@ -75,11 +77,17 @@ measured budget.
 `Redis:ConnectionString` (secret), `Performance:DbReadTimeoutSeconds` = 5,
 `Performance:DbWriteTimeoutSeconds` = 15, `Performance:DbContextPoolSize` = 128.
 
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-060` | `L1-015` | The API shall be stateless so it can run as several instances behind a load balancer. Sessions, rate limits and reservations shall work across instances. |
+| --- | --- | --- |
+| `L2-060` | `L1-015` | The API shall be stateless so service processes can be replaced without losing account, order or reservation state. Sessions, rate limits and reservations shall work across instances. |
 
 ## Diagrams
 

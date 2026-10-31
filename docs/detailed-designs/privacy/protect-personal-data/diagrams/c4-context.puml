@@ -4,7 +4,7 @@ LAYOUT_WITH_LEGEND()
 title System Context — Protect personal data
 
 Person(visitor, "Visitor", "Browses the catalog, listings and member profiles")
-Person(member, "Member", "Buys and sells; gives an email and shipping address")
+Person(member, "Customer", "Buys and sells; gives an email and shipping address")
 System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
 System_Ext(secrets, "Secret store", "Holds the field-encryption key ring (product <TO SUPPLY>)")
 System_Ext(hosting, "Hosting platform", "Encrypts database, backups and object storage at rest (<TO SUPPLY>)")

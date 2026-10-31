@@ -1,0 +1,39 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Confirm provider payment
+autonumber
+actor "Payment provider" as actor
+box "Backend - Sycapooke API" #D1FADF
+ participant "PaymentWebhookController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "PaymentWebhookHandler" as handler
+ participant "Payment / Order / Listing" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+participant "Payment provider" as provider
+actor -> entry : Confirm provider payment
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Validate signature and deduplicate provider event [L2-030]
+handler -> model : Atomically create Paid order and mark listing Sold
+handler -> handler : Queue customer receipt and founder sale notification [L2-042]
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> actor : 200 once; duplicate ignored; unusable second payment queued for refund
+note over entry, handler
+200 once; duplicate ignored; unusable second payment queued for refund
+end note
+@enduml

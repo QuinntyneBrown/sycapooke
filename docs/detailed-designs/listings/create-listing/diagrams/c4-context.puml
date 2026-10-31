@@ -1,12 +1,8 @@
 @startuml
 !include <C4/C4_Context>
 LAYOUT_WITH_LEGEND()
-title System Context — Create a listing
-
-Person(seller, "Seller", "Verified Sycapooke member listing an item")
-System(sycapooke, "Sycapooke", "Marketplace for vintage jewelry, clothing, housewares and electronics")
-System_Ext(payments, "Payment provider", "Holds seller payout onboarding status")
-
-Rel(seller, sycapooke, "Saves drafts and publishes listings using", "HTTPS")
-Rel(sycapooke, payments, "Payout onboarding status is synchronised from", "Signed webhooks")
+title Context - Create a founder listing
+Person(user, "Founder", "Uses this shop capability")
+System(shop, "Sycapooke", "Founder-owned antiques and vintage shop")
+Rel(user, shop, "Create a founder listing", "HTTPS")
 @enduml

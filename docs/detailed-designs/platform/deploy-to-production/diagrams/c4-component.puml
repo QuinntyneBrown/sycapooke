@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Deploy the shop
+System_Ext(ci, "CI verify", "Required green commit")
+Container_Boundary(deploy, "GitHub deployment workflows") {
+ Component(marketing, "deploy-marketing.yml", "Workflow", "Marketing image and smoke check")
+ Component(app, "deploy-app.yml", "Workflow", "API, worker, migrator and application images")
+ Component(config, "Shop founder binding", "Trusted deployment configuration", "One immutable member ID for API and worker")
+}
+Rel(ci, marketing, "Triggers after success")
+Rel(ci, app, "Triggers after success")
+Rel(app, config, "Preserves operator-controlled value")
+@enduml

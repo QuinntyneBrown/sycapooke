@@ -27,7 +27,9 @@
       "route": "/account",
       "requirements": [
         "L2-003",
-        "L2-002"
+        "L2-002",
+        "L2-004",
+        "L2-010"
       ],
       "states": [
         "default",
@@ -40,10 +42,33 @@
     {
       "id": "edit-profile",
       "kind": "page",
-      "title": "Edit profile",
+      "title": "Account details",
       "route": "/account/profile",
       "requirements": [
         "L2-004",
+        "L2-001",
+        "L2-041"
+      ],
+      "states": [
+        "default",
+        "invalid",
+        "submitting",
+        "success",
+        "loading",
+        "error"
+      ],
+      "not_applicable": {
+        "empty": "An account always has a display name."
+      }
+    },
+    {
+      "id": "edit-story",
+      "kind": "page",
+      "title": "Edit story",
+      "route": "/shop/story",
+      "requirements": [
+        "L2-004",
+        "L2-041",
         "L2-017"
       ],
       "states": [
@@ -55,7 +80,7 @@
         "error"
       ],
       "not_applicable": {
-        "empty": "A profile always has a display name."
+        "empty": "The founder always has a display name and a story."
       }
     },
     {
@@ -86,6 +111,7 @@
       "requirements": [
         "L2-088",
         "L2-001",
+        "L2-003",
         "L2-065"
       ],
       "states": [
@@ -111,6 +137,7 @@
       ],
       "states": [
         "default",
+        "founder",
         "submitting",
         "success",
         "loading",
@@ -123,7 +150,7 @@
     {
       "id": "profile",
       "kind": "page",
-      "title": "Member profile",
+      "title": "Founder page",
       "route": "/members/{displayName}",
       "requirements": [
         "L2-041",
@@ -148,6 +175,7 @@
       "requirements": [
         "L2-001",
         "L2-002",
+        "L2-003",
         "L2-051",
         "L2-065",
         "L2-088"
@@ -216,11 +244,34 @@
       ],
       "states": [
         "default",
+        "founder",
         "loading",
         "error"
       ],
       "not_applicable": {
-        "empty": "Every member has an email, password and session."
+        "empty": "Every account has an email, password and session."
+      }
+    },
+    {
+      "id": "shop",
+      "kind": "page",
+      "title": "Shop",
+      "route": "/shop",
+      "requirements": [
+        "L2-003",
+        "L2-021",
+        "L2-010"
+      ],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "not_applicable": {
+        "invalid": "No inputs on this page.",
+        "submitting": "No form to submit.",
+        "success": "Nothing is saved here."
       }
     },
     {
@@ -313,7 +364,7 @@
       "states": [
         "default",
         "guest",
-        "new-seller",
+        "zero-sales",
         "reserved",
         "sold",
         "own",
@@ -417,6 +468,9 @@
         "cancelled",
         "refunded",
         "problem",
+        "founder-replied",
+        "closed-no-refund",
+        "refund-pending",
         "loading",
         "error"
       ],
@@ -442,10 +496,9 @@
     {
       "id": "sale-detail",
       "kind": "page",
-      "title": "Sale (seller)",
-      "route": "/sales/{id}",
+      "title": "Sale (founder)",
+      "route": "/shop/sales/{id}",
       "requirements": [
-        "L2-031",
         "L2-032",
         "L2-033",
         "L2-035",
@@ -464,14 +517,14 @@
         "error"
       ],
       "not_applicable": {
-        "empty": "A sale always has an item, a buyer and a status."
+        "empty": "A sale always has an item, a customer and a status."
       }
     },
     {
       "id": "sales",
       "kind": "page",
       "title": "Sales",
-      "route": "/account/sales",
+      "route": "/shop/sales",
       "requirements": [
         "L2-037",
         "L2-033"
@@ -515,7 +568,7 @@
     {
       "id": "my-listings",
       "kind": "page",
-      "title": "Your listings",
+      "title": "My listings",
       "route": "/account/listings",
       "requirements": [
         "L2-019",
@@ -524,22 +577,6 @@
       "states": [
         "default",
         "filtered",
-        "loading",
-        "empty",
-        "error"
-      ]
-    },
-    {
-      "id": "payouts",
-      "kind": "page",
-      "title": "Payouts",
-      "route": "/account/payouts",
-      "requirements": [
-        "L2-031"
-      ],
-      "states": [
-        "default",
-        "not-onboarded",
         "loading",
         "empty",
         "error"
@@ -559,7 +596,6 @@
         "L2-017",
         "L2-018",
         "L2-019",
-        "L2-031",
         "L2-051",
         "L2-063"
       ],
@@ -570,7 +606,6 @@
         "submitting",
         "draft-saved",
         "success",
-        "unverified",
         "limited",
         "error"
       ],
@@ -585,11 +620,13 @@
       "title": "Forbidden",
       "route": "/403",
       "requirements": [
+        "L2-003",
         "L2-010",
         "L2-068"
       ],
       "states": [
-        "default"
+        "default",
+        "management"
       ],
       "not_applicable": {
         "loading": "Shown after the API refuses; nothing to load.",
@@ -671,30 +708,34 @@
       "id": "problem-detail",
       "kind": "page",
       "title": "Problem detail",
-      "route": "/admin/problems/{id}",
+      "route": "/shop/support/{id}",
       "requirements": [
         "L2-036",
-        "L2-010"
+        "L2-030",
+        "L2-034"
       ],
       "states": [
         "default",
+        "replied",
         "resolved",
+        "closed-no-refund",
+        "refund-pending",
+        "refund-failed",
         "loading",
         "error"
       ],
       "not_applicable": {
-        "empty": "A problem always has a buyer claim and an order."
+        "empty": "A problem always has a customer claim and an order."
       }
     },
     {
       "id": "rules",
       "kind": "page",
-      "title": "Marketplace rules",
+      "title": "Shop policies",
       "route": "/rules",
       "requirements": [
         "L2-011",
         "L2-016",
-        "L2-031",
         "L2-033"
       ],
       "states": [
@@ -724,6 +765,22 @@
       }
     },
     {
+      "id": "support",
+      "kind": "page",
+      "title": "Support queue",
+      "route": "/shop/support",
+      "requirements": [
+        "L2-036"
+      ],
+      "states": [
+        "default",
+        "filtered",
+        "loading",
+        "empty",
+        "error"
+      ]
+    },
+    {
       "id": "terms",
       "kind": "page",
       "title": "Terms",
@@ -731,7 +788,7 @@
       "requirements": [
         "L2-001",
         "L2-036",
-        "L2-031"
+        "L2-030"
       ],
       "states": [
         "default"
@@ -771,6 +828,7 @@
         "default",
         "invalid",
         "busy",
+        "google",
         "blocked"
       ]
     },
@@ -797,8 +855,7 @@
       "title": "Verify email prompt",
       "opens_from": "listing-detail",
       "requirements": [
-        "L2-002",
-        "L2-003"
+        "L2-002"
       ],
       "states": [
         "default",
@@ -836,7 +893,8 @@
       ],
       "states": [
         "default",
-        "guest"
+        "guest",
+        "founder"
       ],
       "not_applicable": {
         "busy": "Opening the menu makes no request.",
@@ -1016,12 +1074,14 @@
       "title": "Resolve problem",
       "opens_from": "problem-detail",
       "requirements": [
-        "L2-036"
+        "L2-036",
+        "L2-030"
       ],
       "states": [
         "default",
         "invalid",
-        "busy"
+        "busy",
+        "failed"
       ]
     },
     {
@@ -1055,21 +1115,6 @@
         "warning",
         "danger",
         "success"
-      ]
-    },
-    {
-      "id": "payout-banner",
-      "kind": "notification",
-      "title": "Payout banner",
-      "opens_from": "my-listings",
-      "requirements": [
-        "L2-031"
-      ],
-      "states": [
-        "info",
-        "success",
-        "warning",
-        "danger"
       ]
     },
     {

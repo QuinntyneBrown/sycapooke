@@ -1,7 +1,5 @@
 # Estimates: reviews
 
 | Design | Effort | Complete |
-|---|---|---|
-| view-member-profile | 3 days | 95% |
-
-Excludes deferred work (see AGENTS.md).
+| --- | --- | --- |
+| view-founder-story-and-collection | 5 days | 0% |

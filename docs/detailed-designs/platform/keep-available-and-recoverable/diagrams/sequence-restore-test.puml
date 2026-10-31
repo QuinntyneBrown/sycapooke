@@ -14,13 +14,13 @@ skinparam package {
   FontColor #101828
   BackgroundColor #F9FAFB
 }
-participant "restore-test.yml (schedule)" as wf
+participant "Quarterly operator drill (schedule)" as wf
 box "Backend — Sycapooke Infrastructure" #FFF4E5
   database "Sycapooke database (PITR, 35 days)" as db
   database "Restored copy" as copy
 end box
 box "Backend — Operations tooling" #ECFDF3
-  participant "Sycapooke.RestoreVerifier" as ver
+  participant "Operator consistency checks" as ver
 end box
 participant "On-call channel" as oncall
 wf -> wf : Record start time T
@@ -33,7 +33,7 @@ else Restore completes
   wf -> ver : Run against copy with restore point
   ver -> copy : Migrations match deployed set
   ver -> copy : DBCC CHECKDB
-  ver -> copy : Business invariants (sold listings, order totals, payouts)
+  ver -> copy : Business invariants (sold listings, order totals, refunds)
   ver -> copy : Latest order within 15 min of restore point (RPO)
   copy --> ver : Results
   ver --> wf : restore-report.json

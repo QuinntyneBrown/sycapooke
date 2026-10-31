@@ -1,20 +1,16 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Manage my listings
-
-Person(seller, "Seller", "Reviews own listings")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "MyListingsPage")
-  Container(api, "Sycapooke API", "ASP.NET Core", "GET /api/me/listings")
-  Container(worker, "Sycapooke Worker", ".NET worker service", "DraftCleanupJob, outbox dispatch")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "Listings, ListingPhotos, OutboxMessages")
+title Containers - Manage founder inventory
+Person(user, "Founder")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-System_Ext(email, "Email provider", "Transactional email")
-
-Rel(seller, web, "Uses", "HTTPS")
-Rel(web, api, "Calls", "JSON/HTTPS")
-Rel(api, db, "Reads", "EF Core")
-Rel(worker, db, "Finds stale drafts, writes outbox, deletes drafts", "EF Core")
-Rel(worker, email, "Dispatches reminder email", "HTTPS")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
 @enduml

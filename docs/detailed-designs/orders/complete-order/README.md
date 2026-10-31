@@ -2,123 +2,77 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. An order
-is *complete* when the buyer has the item and the sale is final: the seller is paid
-and both parties may review each other. This feature moves an order into the
-`Completed` status in two ways. The buyer can confirm receipt, or Sycapooke can complete
-the order automatically 3 days after delivery when the buyer has not reported a
-problem.
+Completion records the end of the delivery window. Customer confirmation and automatic completion both wait while an order problem remains open.
 
-Completion is the hinge between three other features. It is a transition of the
-order state machine defined in [ship-order](../ship-order/README.md). It makes the
-payout releasable in [seller-payouts](../seller-payouts/README.md) through the
-`OrderCompleted` event. An open problem from
-[resolve-order-problems](../resolve-order-problems/README.md) blocks automatic
-completion and confirming receipt.
-
-Terms used in this design:
-
-- **confirm receipt** — buyer action "I received it" that completes a Shipped or Delivered order
-- **auto-completion** — system transition `Delivered → Completed` once 3 days have passed since `DeliveredAt`
-- **auto-completion time** — `DeliveredAt` plus `Order.AutoCompleteAfter` (3 days), shown to the buyer as "Completes automatically on Tue 27 Oct"
-- **open problem** — `OrderProblem` with status `Open` on the order (resolve-order-problems)
+Sycapooke is the shop of one older Caribbean woman, its sole seller. Her jewelry, clothing, housewares and electronics are at least 20 years old. This design refines [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing names identify reusable code; Description identifies target additions.
 
 ## Description
 
-### Frontend (`src/frontend/projects/orders/src/lib/`, `@sycapooke/orders`)
+### Receipt confirmation
 
-- **`OrderDetailPage`** (`order-detail/`, route `/orders/:id`, mock `docs/mocks/pages/order-detail/`) — buyer view built by ship-order. This feature adds:
-  - `default` (Shipped) and `delivered` — primary "I received it", opening the Confirm receipt dialog through `DialogService`, because `L2-034` permits confirming a Shipped order.
-  - `delivered` — "Completes automatically on {date} unless you report a problem.", from `autoCompletesAt`.
-  - `completed` — heading "Completed", the full timeline and no actions. Review authoring is deferred ([ADR 0001](../../../adr/general/0001-defer-moderation-reviews-and-data-export.md)), so no review panel is shown.
-  - "Report a problem" sits beside "I received it" while `canReportProblem`; resolve-order-problems builds its dialog.
-- **`ConfirmReceiptDialog`** (`confirm-receipt/`, mock `docs/mocks/dialogs/confirm-receipt/`) — `sy-dialog` with `size="sm"`, titled "Got it and all good?", showing the item in `sy-item-row`. The description reads "This completes the order and pays {seller}. You can't report a problem afterwards." Buttons are "Not yet" and primary "Yes, complete order". States: `default`; `busy` (primary `aria-busy`, "Not yet" disabled); `failed` ("That didn't go through", primary becomes "Try again"). It has no `invalid` state because it has no inputs. It closes with the completed order, which the page then shows.
-- **`OrdersApi`** (`@sycapooke/api`, `src/lib/orders/orders-api.ts`) — `confirmReceipt(orderId)` returns `Purchase`. `Purchase` gains `autoCompletesAt`.
+`OrderDetailPage`, `ConfirmReceiptDialog`, `OrdersApi`, `OrdersController`, `ConfirmReceiptCommandHandler`, `CompleteDeliveredOrdersHandler` and `Order` remain. `POST /api/orders/{id}/receipt` is buyer-only; another customer's order returns 404. Receipt on Shipped records Shipped to Delivered and Delivered to Completed with the buyer as actor. Receipt on Delivered records completion. Other states return 409 `ORDER_INVALID_TRANSITION`.
 
-### API (`Sycapooke.Api`)
+### Open-problem and time guards
 
-- **`OrdersController`**
-  - `POST /api/orders/{id}/receipt` — no body. Policy `VerifiedMember`. Responses: `200` `PurchaseDto` with `status: "Completed"`; `401`; `404` `ORDER_NOT_FOUND` when the caller is not the buyer (`L2-010`); `409` `ORDER_INVALID_TRANSITION` when the order is not Shipped or Delivered, or its status changed between the read and the write.
-- **`GET /api/purchases/{id}`** (checkout-and-pay) — `PurchaseDto` gains `autoCompletesAt`: `DeliveredAt` plus 3 days while Delivered, otherwise `null`.
+Both receipt and `OrderCompletionJob` check the current problem state inside the same unit of work as completion. Any open problem blocks the transition, including receipt on a Shipped order. The page shows the automatic completion date only without an open problem; otherwise it explains that completion is paused while the founder handles support.
 
-### Application and domain
+The worker completes an order three days after delivery when no problem exists. Repeated runs do not duplicate completion history or notifications. Founder resolution without refund uses the separate support command and the explicit support transition in L2-032; this is not customer receipt confirmation.
 
-- **`Order.ConfirmReceipt(now)`** — when the status is `Shipped`, first calls `MarkDelivered(Buyer, now)`, since the state machine has no direct `Shipped → Completed` transition. It then calls `Complete(Buyer, now)`. Both changes are recorded with the buyer as actor (`L2-032`, `L2-034` criteria 1 and 4).
-- **`Order.Complete(actor, now)`** — the state machine permits `Delivered → Completed` for Buyer, System and Administrator (the last from resolve-order-problems). It sets `CompletedAt`; the state machine sets `EndedAt`.
-- **`Order.AutoCompletesAt`** and **`IsDueForAutoCompletion(now)`** — `DeliveredAt + AutoCompleteAfter` while Delivered, otherwise null. `AutoCompleteAfter` is a domain constant of 3 days ([ADR orders/0004](../../../adr/orders/0004-complete-order-in-process-event-and-fixed-3-day-window.md)).
-- **`ConfirmReceiptCommand`** / **`ConfirmReceiptCommandHandler`** — loads the order filtered by `BuyerId = caller`, calls `ConfirmReceipt`, saves, publishes `OrderCompleted` and returns the buyer's `PurchaseDto`. An invalid transition or a concurrency conflict on the status token answers `409`.
-- **`CompleteDeliveredOrdersCommand`** / **`CompleteDeliveredOrdersHandler`** — selects Delivered orders with `DeliveredAt <= now − 3 days`, completes each with `Complete(System, now)` and publishes `OrderCompleted` for each (`L2-034` criterion 2). An order whose status changed meanwhile is skipped. Returns how many were completed.
-- **`OrderCompleted`** (MediatR notification: `OrderId`, `BuyerId`, `SellerId`, `CompletedAt`) — published once after the save. seller-payouts' `OrderCompletedPayoutHandler` marks the payout releasable, and its release job also catches up on a completed order whose event was lost ([ADR orders/0005](../../../adr/orders/0005-seller-payouts-payout-port-fee-snapshot-and-shell-banner.md)).
-- The open-problem guard (`L2-034` criterion 3): the completion job skips Delivered orders with an open `OrderProblem`, and confirming receipt answers `409` `ORDER_PROBLEM_OPEN` (resolve-order-problems).
-- No completion email is sent: `L2-042` does not list one.
+`OrderCompleted` remains a domain event for order state and notifications. Its target subscribers contain no payout creator or release handler. Provider settlement already belongs to the shop merchant account. Tests check exact deadline, receipt in both allowed states, open-problem races, invalid transitions, event idempotency and absence of financial transfers on completion.
 
-### Worker (`Sycapooke.Worker`)
+### Implementation and verification boundary
 
-- **`OrderCompletionJob`** — runs every `Orders:CompletionJobInterval` (5 minutes) and sends `CompleteDeliveredOrdersCommand` in its own scope. The mocks count calendar days: delivered Sat 24 Oct gives completion Tue 27 Oct.
+Application code and HTML mocks still require alignment with the revised requirements. UI implementation first aligns mocks, design-system components and screen composition. Backend verification uses fake ports and in-memory substitutes. Browser verification uses the built Angular app and intercepted API responses. No external system runs in tests.
 
-### Data
+### Implementation evidence
 
-One migration (`AddCompleteOrder`) adds the nullable `Orders.CompletedAt` column and the index `IX_Orders_Status_DeliveredAt` for the job. The feature writes `Orders.Status`, `CompletedAt`, `EndedAt` and, for a Shipped order, `DeliveredAt`, plus one `OrderStatusChanges` row, or two when confirming a Shipped order. `Status` is the concurrency token ([ADR orders/0003](../../../adr/orders/0003-ship-order-status-token-weekday-deadline-and-carrier-port.md)).
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
 
-### Error codes
-
-| Code | HTTP | Meaning |
-|------|------|---------|
-| `ORDER_NOT_FOUND` | 404 | No such order, or the caller is not its buyer |
-| `ORDER_INVALID_TRANSITION` | 409 | Order is not Shipped or Delivered, or changed since it was read |
-
-### Testing
-
-- `tests/Sycapooke.Domain.Tests/OrderTests.cs` — confirm receipt from Shipped and Delivered, refusal otherwise, and the 3-day window.
-- `tests/Sycapooke.Api.Tests/CompleteOrderTests.cs` — the endpoint, `autoCompletesAt` and the completion command on SQLite in memory with a fake clock; a recording `OrderCompleted` handler stands in for seller-payouts.
-- `tests/Sycapooke.Worker.Tests/OrderCompletionJobTests.cs` — each pass sends the command.
-- `src/frontend/e2e/tests/complete-order.spec.ts` — the page and the dialog against `page.route` fixtures.
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-034` | `L1-008` | The buyer shall be able to confirm receipt of a Shipped or Delivered order. An order shall complete automatically 3 days after it becomes Delivered unless the buyer has reported a problem. Criterion 3 (open problem) came with resolve-order-problems. |
+| --- | --- | --- |
+| `L2-010` | `L1-002` | Every API endpoint shall enforce the caller's permissions on the server. Customers shall change only their own private account and access only their own purchases, addresses and support submissions. Only the configured founder (L2-003) shall manage inventory, view shop sales, fulfil orders and resolve customer problems. There is no separate administrator decision-maker. Anonymous browsing and the public registration, verification, authentication, password-recovery and signed provider-callback flows remain available under their own validation rules. |
+| `L2-032` | `L1-008` | An order shall move through the statuses Paid, Shipped, Delivered and Completed, or end as Cancelled or Refunded. Only the transitions in this requirement shall be allowed, and every transition shall be recorded with its time and the actor.<br><br>\| From \| To \| Triggered by \|<br>\| --- \| --- \| --- \|<br>\| Paid \| Shipped \| Founder adds tracking \|<br>\| Paid \| Cancelled \| Founder cancels, or ship deadline passes \|<br>\| Shipped \| Delivered \| Carrier reports delivery, or buyer confirms receipt \|<br>\| Delivered \| Completed \| Buyer confirms receipt, or 3 days pass with no open problem \|<br>\| Shipped, Delivered \| Completed \| Founder closes an open customer problem without a refund and supplies an explanation \|<br>\| Shipped, Delivered \| Refunded \| Provider confirms a full refund authorized by the founder for a customer problem \| |
+| `L2-034` | `L1-008` | The buyer shall be able to confirm receipt of a Shipped or Delivered order. An order shall complete automatically 3 days after it becomes Delivered unless the buyer has reported a problem. |
+| `L2-036` | `L1-008` | A customer shall be able to report a problem on their own Shipped or Delivered order until 3 days after delivery, using the reasons not received, not as described, wrong size or counterfeit, a description and up to 4 private photos. An open problem shall pause automatic order completion, not provider settlement. The founder shall respond and resolve it through protected shop management with either a full refund of the original payment or closure without a refund, completing the order. The customer shall see the outcome and explanation. This is shop customer support, not independent arbitration; partial refunds remain outside the existing scope. Support photos shall be visible only to that customer and the founder and follow L2-017 upload validation and metadata-stripping rules. |
 
 ## Diagrams
 
 ### System context
 
-The buyer confirms receipt through Sycapooke. Completion makes the seller's payout
-releasable; the release itself belongs to seller-payouts.
+The context identifies the customer or completion worker and the systems used by this feature.
 
-![C4 system context for completing an order](diagrams/c4-context.png)
+![System context for complete an order](diagrams/c4-context.png)
 
 ### Containers
 
-`Sycapooke API` handles the buyer's confirmation. `Sycapooke Worker` runs auto-completion.
+The container view separates the delivery surface, application boundary and feature storage. External integrations remain behind their ports.
 
-![C4 container view for completing an order](diagrams/c4-container.png)
+![Containers for complete an order](diagrams/c4-container.png)
 
 ### Components
 
-Both paths reach `Order.Complete` and publish `OrderCompleted`, which seller-payouts
-handles.
+The component view connects `OrdersController` with `ConfirmReceiptCommandHandler` and the relevant feature state.
 
-![C4 component view for completing an order](diagrams/c4-component.png)
+![Components for complete an order](diagrams/c4-component.png)
 
 ### Class structure
 
-The two command handlers mutate the shared `Order` aggregate and publish
-`OrderCompleted` for the payout handler of seller-payouts.
+The class view identifies the relevant fields, operation responsibilities and dependencies. It is a target responsibility model, not a claim that each addition already exists.
 
-![Class diagram for completing an order](diagrams/class-structure.png)
+![Class structure for complete an order](diagrams/class-structure.png)
 
-### Behaviour — confirm receipt
+### Behaviour - Confirm safe receipt
 
-A Shipped order passes through Delivered on the way to Completed, with both changes
-recorded against the buyer. A wrong status returns HTTP 409.
+Completed or 409 while problem remains; 404 another buyer. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for confirming receipt](diagrams/sequence-confirm-receipt.png)
+![Confirm safe receipt](diagrams/sequence-confirm-receipt.png)
 
-### Behaviour — auto-completion
+### Behaviour - Process delivered order at three days
 
-The job completes Delivered orders 3 days after delivery and skips an order the
-buyer completed meanwhile.
+Completed once; open problem leaves Delivered unchanged. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for automatic completion](diagrams/sequence-auto-complete.png)
+![Process delivered order at three days](diagrams/sequence-auto-complete.png)

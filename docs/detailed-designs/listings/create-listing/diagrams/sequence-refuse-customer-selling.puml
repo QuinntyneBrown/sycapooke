@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Submit listing data as a customer
+autonumber
+actor "Customer" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "SellPage" as page
+ participant "ListingsApi" as client
+end box
+box "Backend - Sycapooke API" #D1FADF
+ participant "ListingsController" as entry
+end box
+box "Backend - Sycapooke Application and Domain" #ECFDF3
+ participant "ListingCommandHandlers" as handler
+ participant "Listing" as model
+end box
+box "Backend - Sycapooke Infrastructure" #FFF4E5
+ database "Feature state / unit of work" as db
+end box
+actor -> page : Submit listing data as a customer
+page -> client : POST /api/listings
+client -> entry : Typed HTTPS request
+entry -> handler : Authenticate session or signed callback
+handler -> db : Load authorized current state
+db --> handler : Current state
+alt Access, validation or state check refuses the action
+ handler -> handler : Preserve state and return domain refusal
+else Authorized and valid action
+handler -> handler : Evaluate founder identity before loading inventory [L2-010]
+handler -> model : Ignore forged founder and owner fields
+handler -> handler : Leave database and photo storage unchanged
+handler -> db : Commit valid state and outbox atomically
+db --> handler : Result
+end
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : 403 FOUNDER_REQUIRED; no listing created
+note over entry, handler
+403 FOUNDER_REQUIRED; no listing created
+end note
+@enduml

@@ -1,93 +1,42 @@
 @startuml
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
-skinparam roundcorner 8
+skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
+title Class structure - Manage founder inventory
 skinparam class {
-  BorderColor #344054
-  FontColor #101828
-  BackgroundColor #F9FAFB
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
 }
-title Class structure — Manage my listings
-
-package "Sycapooke.Application" {
-  class GetMyListingsQuery {
-    +Guid SellerId
-    +string? Status
-  }
-  class GetMyListingsQueryHandler {
-    +Handle(query): Task<Result<MyListingsDto>>
-  }
-  class MyListingsDto {
-    +IReadOnlyList<MyListingRowDto> Items
-    +MyListingCountsDto Counts
-  }
-  class MyListingRowDto {
-    +string Reference
-    +string Status
-    +string? Title
-    +string Category
-    +decimal? Price
-    +CardPhotoDto? Photo
-    +DateTime CreatedAt
-    +Guid? SaleOrderId
-  }
-  class MyListingCountsDto {
-    +int All
-    +int Draft
-    +int Active
-    +int Reserved
-    +int Sold
-    +int Removed
-  }
-  class "DraftExpiryReminderEmail (deferred)" as DraftExpiryReminderEmail {
-    +Guid MemberId
-    +string Reference
-    +string? Title
-    +DateOnly DeleteOn
-  }
+class "ListingsController" as Entry {
 }
-
-package "Sycapooke.Domain" {
-  class Listing {
-    +Guid Id
-    +string Reference
-    +Guid SellerId
-    +ListingStatus Status
-    +DateTime CreatedAt
-    +DateTime UpdatedAt
-    +DateTime? DraftReminderSentAt
-    +MarkDraftReminderSent(clock): void
-  }
+class "GetMyListingsQueryHandler" as Handler {
+ +Handle(request: GetMyListingsQuery, cancellationToken: CancellationToken): Task<Result<MyListingsDto>>
 }
-
-package "Sycapooke.Worker" {
-  class "DraftCleanupJob (deferred)" as DraftCleanupJob {
-    +ExecuteAsync(ct): Task
-  }
-  class DraftCleanupOptions {
-    +int RetentionDays = 90
-    +int ReminderDaysBefore = 7
-    +string Schedule
-    +int BatchSize
-  }
+class "Listing" as Model {
+ +Guid SellerId
+ +ListingStatus Status
+ +DateTime CreatedAt
 }
-
-package "Sycapooke.Api" {
-  class ListingsController {
-    +Mine(status): Task<IActionResult>
-    +GetMine(reference): Task<IActionResult>
-  }
+class "GetMyListingsQuery" as Request {
+ +Guid SellerId
+ +string? Status
 }
-
-ListingsController ..> GetMyListingsQuery : sends
-GetMyListingsQueryHandler ..> GetMyListingsQuery : handles
-GetMyListingsQueryHandler ..> MyListingsDto : returns
-MyListingsDto "1" *-- "*" MyListingRowDto
-MyListingsDto *-- MyListingCountsDto
-GetMyListingsQueryHandler ..> Listing : projects
-DraftCleanupJob --> Listing : reminds / deletes
-DraftCleanupJob ..> DraftExpiryReminderEmail : writes to outbox
-DraftCleanupJob --> DraftCleanupOptions
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
+}
+Handler ..> ISycapookeDbContext : persistence boundary
+interface IFounderAccess {
+ +IsFounderAsync(memberId: Guid): Task<bool>
+}
+Handler ..> IFounderAccess : protected shop actions
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
 @enduml

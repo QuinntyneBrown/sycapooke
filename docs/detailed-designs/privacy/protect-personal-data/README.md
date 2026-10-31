@@ -34,11 +34,13 @@ Terms used below:
 
 The feature belongs to the `privacy` subsystem (`L1-014`). It supplies building blocks
 that other subsystems use: the catalog, listing detail and profile features return
-public DTOs, checkout stores an encrypted address, and the seller's order view decrypts
+public DTOs, checkout stores an encrypted address, and the founder's order view decrypts
 it under the visibility rule owned by the orders subsystem (`L2-037`). The public
 Privacy page (`docs/mocks/pages/privacy/`) explains these rules to visitors.
 
 ## Description
+
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
 
 The slice runs from the Privacy page through `Sycapooke API` down to the stored bytes.
 
@@ -50,7 +52,6 @@ The slice runs from the Privacy page through `Sycapooke API` down to the stored 
   - "What we collect" — "Email, password hash, display name, shipping addresses, and orders."
   - "Never public" — "Your email, phone and street address never appear on Sycapooke pages."
   - "Encrypted" — "Shipping addresses are encrypted at rest. Card numbers never reach us."
-  - "Your copy" — "Download everything we hold from Settings as a JSON file."
   - "Erasure" — "Close your account and we erase your data within 30 days."
   - "Cookies" — "Only necessary cookies until you accept analytics."
 
@@ -84,10 +85,9 @@ The slice runs from the Privacy page through `Sycapooke API` down to the stored 
   `record` types with only init-only properties:
   - `PublicListingCardDto` — `Id`, `Title`, `Brand`, `SizeLabel`, `Condition`, `PriceCents`, `PrimaryPhotoUrl`, `SellerDisplayName`.
   - `PublicListingDetailDto` — the card fields plus `Description`, `PhotoUrls`, `ShippingCents`, `Status`, `Seller` (a `PublicSellerSummaryDto`).
-  - `PublicSellerSummaryDto` and `PublicMemberProfileDto` — `DisplayName`, `AvatarUrl`, `Bio`, `PublicLocation` (city and state only, `L2-004`), `MemberSince`, `RatingAverage`, `RatingCount`, `CompletedSales`.
-  - `PublicReviewDto` — `Id`, `Rating`, `Text`, `ReviewerDisplayName`, `Role`, `CreatedAt`.
+  - Founder-only public projections — `DisplayName`, `AvatarUrl`, `Bio`, `PublicLocation` (city and state only, `L2-004`), `MemberSince`, a null rating average, zero reviews and `CompletedSales`.
 
-  The member profile is built as `PublicProfileDto` (`reviews/view-member-profile`), whose
+  The member profile is built as `PublicProfileDto` (`reviews/view-founder-story-and-collection`), whose
   property names are already checked against an allow-list in `MemberProfileTests`.
   The owning subsystems define the exact field lists; this feature owns the rule and
   the tests that enforce it.
@@ -105,7 +105,7 @@ The slice runs from the Privacy page through `Sycapooke API` down to the stored 
 - **`ShippingAddressProtector`** — application service that serialises a
   `ShippingAddress` to UTF-8 JSON and calls `IFieldEncryptor`. Handlers in the orders
   subsystem call it; they never write a plaintext address.
-- **Address read rule.** Decryption happens only in the handler that serves the seller's
+- **Address read rule.** Decryption happens only in the handler that serves the founder's
   order view, after the visibility rule of `L2-037` passes (seller of the order, within
   30 days of the order ending). The buyer's own checkout and saved-address queries also
   decrypt. No public query decrypts.
@@ -181,10 +181,20 @@ No plaintext address column exists once this feature is built. Searching by addr
   `ShippingAddressCipher` with raw ADO.NET and asserts the bytes do not contain the
   seeded street text and do decrypt to the original value.
 
+### Founder-only target boundary
+
+Public projection resolves only the configured founder. Customer display names, purchase histories and addresses remain private. Support-photo requests check the order customer or founder and never redirect to the public CDN. Founder address access ends after the 30-day post-order window. Customer closure revokes sessions and erases personal data within 30 days, without selecting founder inventory. Existing encryption and key-handling controls apply.
+
+### Implementation evidence
+
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
+| --- | --- | --- |
 | `L2-054` | `L1-014` | Email addresses, shipping addresses and phone numbers shall never appear in public pages or public API responses. Shipping addresses shall be encrypted at rest at the field level, and all databases, backups and photo storage shall be encrypted at rest. |
 
 ## Diagrams
@@ -231,7 +241,7 @@ A non-public type is refused with HTTP 500.
 ### Behaviour — store and read a shipping address
 
 Checkout saves an order and the converter encrypts the address in the same unit of
-work. When the seller opens the order, the handler applies the `L2-037` rule before
+work. When the founder opens the order, the handler applies the `L2-037` rule before
 the converter decrypts. A failed decryption returns problem details without the
 ciphertext.
 

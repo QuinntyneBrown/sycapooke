@@ -1,9 +1,9 @@
 # Catalog subsystem
 
-The catalog subsystem is the public, read-only shop window of Sycapooke. It lets anyone, signed in or not, browse the Active and Reserved listings, narrow them by keyword, category, subcategory, brand, condition and price, and open a single listing with everything needed to decide whether to buy it (`L1-005`, `L1-006`). The subsystem owns no write model of its own: it reads the `Listing` aggregate that the [listings](../listings/) subsystem writes, the reputation figures that the [reviews](../reviews/) and [orders](../orders/) subsystems maintain, and the photo versions that `upload-listing-photos` produces. All three features share one Angular feature area (`src/frontend/src/app/catalog/`), one controller (`CatalogController` in `Sycapooke.Api`) and one read port (`ICatalogReadStore` in `Sycapooke.Application`).
+Public browsing, search and treasure detail for the founder collection. The [architecture baseline](../README.md) defines shared boundaries. Features appear in journey-value order, with supporting controls after direct customer capabilities.
 
-| Feature | Summary | L2 requirements |
-|---------|---------|-----------------|
-| [browse-catalog](browse-catalog/README.md) | Paged grid of listing cards, newest first, with responsive images and 2/3/4-column layout | `L2-022`, `L2-059`, `L2-061` |
-| [search-and-filter-catalog](search-and-filter-catalog/README.md) | Keyword search, filters, sort, URL-held result sets, filter sidebar and filter panel | `L2-023`, `L2-024`, `L2-062` |
-| [view-listing-detail](view-listing-detail/README.md) | Listing detail page with gallery, price breakdown, seller reputation and buyer restrictions | `L2-025`, `L2-026`, `L2-063`, `L2-028` |
+| Feature | Design | Requirements | Estimate |
+| --- | --- | --- | --- |
+| Browse the catalog | [browse-catalog](browse-catalog/README.md) | `L2-022`, `L2-059`, `L2-061` | [estimate](../../estimates/catalog.md) |
+| View a listing's detail | [view-listing-detail](view-listing-detail/README.md) | `L2-025`, `L2-026`, `L2-028`, `L2-063` | [estimate](../../estimates/catalog.md) |
+| Search and filter the catalog | [search-and-filter-catalog](search-and-filter-catalog/README.md) | `L2-023`, `L2-024`, `L2-062` | [estimate](../../estimates/catalog.md) |

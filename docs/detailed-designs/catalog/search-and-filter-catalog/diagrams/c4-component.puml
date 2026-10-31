@@ -1,7 +1,7 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Search and filter the catalog
+title Components â€” Search and filter the catalog
 
 Person(visitor, "Visitor or member", "Narrows the catalog")
 Container_Boundary(web, "Sycapooke Web") {

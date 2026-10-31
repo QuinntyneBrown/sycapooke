@@ -1,25 +1,25 @@
 @startuml
-title UML sequence behaviour — Apply filters in the filter sheet
+title UML sequence behaviour â€” Apply filters in the filter sheet
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
 actor "Visitor or member" as actor
-box "Frontend — Sycapooke Web application" #E0F2FE
+box "Frontend â€” Sycapooke Web application" #E0F2FE
   participant "CatalogPage" as page
   participant "FiltersSheet" as panel
   participant "FilterForm" as form
   participant "CatalogApi" as client
 end box
-box "Backend — Sycapooke API application" #D1FADF
+box "Backend â€” Sycapooke API application" #D1FADF
   participant "CatalogController" as controller
 end box
-box "Backend — Sycapooke Application" #ECFDF3
+box "Backend â€” Sycapooke Application" #ECFDF3
   participant "CountCatalogListingsQueryHandler" as count
   participant "CatalogCriteria" as criteria
 end box
-box "Backend — Sycapooke Infrastructure" #FFF4E5
+box "Backend â€” Sycapooke Infrastructure" #FFF4E5
   database "Sycapooke database" as db
 end box
 actor -> page : Tap "Filters" (viewport under 992 px)
@@ -50,7 +50,7 @@ else valid range (after correction to 20 to 200)
     actor -> panel : Choose "Show 38 items"
     panel --> page : close(draft), focus returns to "Filters"
     page -> page : navigate("/", toParams(draft)); parse URL and load results
-    page --> actor : Results with chips "Jewelry", "New with tags", "$20–$200"
+    page --> actor : Results with chips "Jewelry", "New with tags", "$20â€“$200"
   end
 end
 @enduml

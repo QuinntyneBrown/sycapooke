@@ -1,17 +1,17 @@
 @startuml
-title UML sequence behaviour — Load the next catalog page
+title UML sequence behaviour â€” Load the next catalog page
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
 actor "Visitor or member" as actor
-box "Frontend — Sycapooke Web application" #E0F2FE
+box "Frontend â€” Sycapooke Web application" #E0F2FE
   participant "sy-load-more" as more
   participant "CatalogStore" as store
   participant "CatalogApi" as client
 end box
-box "Backend — Sycapooke API application" #D1FADF
+box "Backend â€” Sycapooke API application" #D1FADF
   participant "CatalogController" as controller
 end box
 participant "Photo origin (/photos)" as photos
@@ -28,6 +28,6 @@ alt success
   actor -> photos : lazy images below the first screen, 400 w on a 375 px phone
 else failure
   client --> store : problem
-  store --> more : cards stay; danger alert "Couldn’t load more items", Ref, Try again
+  store --> more : cards stay; danger alert "Couldnâ€™t load more items", Ref, Try again
 end
 @enduml

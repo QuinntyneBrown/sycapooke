@@ -1,139 +1,81 @@
-# Manage my listings
+# Manage founder inventory
 
 ## Overview
 
-A Sycapooke seller may have drafts in progress, live listings, items in a buyer's checkout, sold items and withdrawn ones. This feature gives the seller one page, "Your listings", that shows every listing they own in each status. The seller can filter the page by status and open any listing from it (`L2-021`). The feature also enforces the draft lifecycle: a draft not edited for 90 days is deleted together with its photos, and the seller is emailed 7 days before (`L2-019`).
+The founder sees drafts and published inventory in one protected workspace. Customers have purchase history but no inventory workspace.
 
-The feature sits in the listings subsystem (`L1-004`). It reads the `Listings` table written by [create-listing](../create-listing/README.md) and [edit-and-withdraw-listing](../edit-and-withdraw-listing/README.md), and photo versions produced by [upload-listing-photos](../upload-listing-photos/README.md). The payout banner of the seller-payouts feature stays in the app shell above the page.
-
-Terms used in this design:
-
-- **"Your listings" page** — account page at `/account/listings` that lists every listing the signed-in member owns, newest first; "My listings" in the specs
-- **status filter** — chip group that limits the list to one listing status, with the count of listings in each status
-- **listing reference** — public identifier of a listing in the form `L-<number>`, used in routes
-- **stale draft** — draft whose `UpdatedAt` is more than 90 days in the past
-- **draft expiry reminder** — transactional email sent 7 days before a stale draft is deleted
+Sycapooke is the shop of one older Caribbean woman, its sole seller. Her jewelry, clothing, housewares and electronics are at least 20 years old. This design refines [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing names identify reusable code; Description identifies target additions.
 
 ## Description
 
-Screens, states and copy come from `docs/mocks/pages/my-listings/` and `docs/mocks/notifications/payout-banner/`. The info toast "Drafts older than 90 days are deleted" of `docs/mocks/notifications/toast/` is shown through `ToastService`.
+### Protected inventory list
 
-### Frontend (`Sycapooke Web`, `@sycapooke/listings` in `src/frontend/projects/listings/src/lib/my-listings/`)
+`MyListingsPage`, `ListingsApi.mine`, `GetMyListingsQueryHandler`, `MyListingRowDto` and `MyListingCountsDto` remain. Only the founder opens My listings. The API and query filter by the configured founder identity; a customer receives 403 rather than an empty personal-selling dashboard.
 
-- **`MyListingsPage`** — routed standalone component at `/account/listings`, inside the app shell. The listings library is mounted at `/` and owns `/sell`, `/sell/{reference}` and `/account/listings`. A visitor gets the error state from the `401` until the account shell adds a guard. The header shows "Your listings", a subtitle such as "5 listings · 1 active", and a primary "Sell an item" button with a plus icon that links to `/sell`. States:
-  - `loading` — the filter chips plus 4 skeleton rows matching thumbnail, title and price, `aria-busy="true"`, `aria-label="Loading listings"`; no subtitle.
-  - `default` — all listings, newest first.
-  - `filtered` — one chip pressed, for example "Sold", with only the matching rows.
-  - `empty` — tag icon, "Nothing listed yet", "List a pair of 12s or something in L." and a primary "Sell an item" action, without chips (`L2-021`).
-  - `error` — refresh icon, "Couldn't load your listings", "Try again in a moment." with the correlation reference ("Ref …") and a "Try again" button (`L2-068`).
-  - A filter that matches nothing shows the chips with a count of 0 and no rows; its copy is `<TO SUPPLY>`.
-- **Status filter** — `sy-filter-chips` from `@sycapooke/components`: `role="group"` with `aria-label="Filter by status"`, 6 toggle chips ("All", "Draft", "Active", "Reserved", "Sold", "Removed"), each with its count and `aria-pressed`. The chosen status is kept in the URL query (`?status=sold`), so the filter survives reload and back navigation; each change asks the API again with that status.
-- **Rows** — `sy-item-row` in the `.order-list`, with `sy-status` projected under the title:
-  - the cover's 400 px WebP and JPEG versions in a `picture`, with explicit `width` and `height`, or the `image` icon when the listing has no photo;
-  - the title, or "Untitled draft · {Category}" for a draft without one;
-  - the status in the tone of the status (`draft`, `active`, `reserved`, `sold`, `removed`);
-  - the price as whole dollars when the cents are zero (for example "$60"), or "—" when no price is set;
-  - the date first saved as "Today", "Yesterday" or "Sat 24 Oct", by UTC calendar day like the order pages.
-  The row links by status: `Draft` to `/sell/{reference}`; `Sold` to `/sales/{saleOrderId}`; `Active`, `Reserved` and `Removed` to `/items/{reference}`.
-- **Draft expiry toast** — when the first load of a visit finds `counts.draft` above 0, the page shows one info toast through `ToastService`: "Drafts older than 90 days are deleted", "We’ll email you a week before." Changing the filter does not show it again.
-- **Payout banner** — stays in the app shell above the top bar ([ADR orders/0005](../../../adr/orders/0005-seller-payouts-payout-port-fee-snapshot-and-shell-banner.md)), so it shows on this page too. Moving it into the page would make `@sycapooke/listings` import `@sycapooke/orders`, which the workspace forbids ([ADR listings/0002](../../../adr/listings/0002-my-listings-unpaged-list-and-deferred-draft-clean-up.md)).
-- **`ListingsApi.mine(status?)`** in `@sycapooke/api` — typed call to `GET /api/me/listings`.
+The existing own-listings endpoint returns cover, title, price, status, date and status counts. The optional status filter persists in the route query. Results sort newest first. Draft entries open the listing form, Active entries open detail, and Sold entries open the sale. An empty founder list offers creation; public catalog empty states invite browsing later rather than selling.
 
-### API (`Sycapooke.Api`)
+### Draft lifecycle
 
-- **`ListingsController`** — requires a verified member (`CanSell`), like every listings endpoint; anonymous calls return `401`.
-  - `GET /api/me/listings?status={Draft|Active|Reserved|Sold|Removed}` — returns `200` with `MyListingsDto { items, counts }`. The status is case-insensitive. Errors: `400 VALIDATION_FAILED` for an unknown status; `401`.
-  - Every listing of the seller is returned; paging waits for a supplied page size and copy (ADR listings/0002).
-  - `GET /api/me/listings/{reference}` serves the edit form with its ETag and is described in [edit-and-withdraw-listing](../edit-and-withdraw-listing/README.md).
+`DraftCleanupJob` selects founder drafts not edited for 90 days. It queues the existing seven-day warning and removes eligible draft records and photos. The worker checks the latest modification time before deletion, so editing after a warning prevents premature cleanup. Customer account closure never selects shop inventory. Worker ownership checks use the configured shop identity rather than public member eligibility.
 
-### Application and domain (`Sycapooke.Application`, `Sycapooke.Domain`)
+Acceptance scenarios cover founder filters and counts, persisted status, customer denial, correct destinations and warning/deletion timing. The UI uses the library listing grid, status chips, loading and empty components; no alternative inventory markup is introduced.
 
-- **`GetMyListingsQuery`** / **`GetMyListingsQueryHandler`** — reads the seller ID from the authenticated principal, never from the request (`L2-010`). It runs:
-  1. a grouped count of `Listings` by `Status` where `SellerId` equals the caller, for the chips;
-  2. a projection of the seller's `Listings`, optionally filtered by `Status`, ordered by `CreatedAt DESC, Id DESC`;
-  3. the cover photo (lowest `Position`) of each row with its versions, and the order of each `Sold` row for `saleOrderId`.
-- **`MyListingRowDto`** — `reference`, `status`, `title?`, `category`, `price?`, `photo?` (the catalog's `CardPhotoDto`: `width`, `height`, `src`, `webp` and `jpeg` srcsets), `createdAt`, `saleOrderId?`.
-- **`MyListingCountsDto`** — `all`, `draft`, `active`, `reserved`, `sold`, `removed`.
-- **Sort order** — "newest first" means by `CreatedAt`, the date the listing was first saved. The row shows the same date.
-- **Draft reminder reset** — `Listing.UpdateDetails` clears `DraftReminderSentAt` whenever a draft is saved, so an edited draft restarts its 90-day period and earns a fresh reminder.
+### Implementation and verification boundary
 
-### Worker and infrastructure (`Sycapooke.Worker`, `Sycapooke.Infrastructure`)
+Application code and HTML mocks still require alignment with the revised requirements. UI implementation first aligns mocks, design-system components and screen composition. Backend verification uses fake ports and in-memory substitutes. Browser verification uses the built Angular app and intercepted API responses. No external system runs in tests.
 
-The draft clean-up landed after the page as its own slice ([ADR listings/0004](../../../adr/listings/0004-draft-clean-up-deletes-photo-files-directly.md)). The indexes `IX_Listings_SellerId_CreatedAt` and `IX_Listings_SellerId_Status_CreatedAt` already exist from create-listing.
+### Implementation evidence
 
-- **`DraftCleanupJob`** — hosted service that sends `CleanUpDraftsCommand` once every `Listings:DraftCleanup:Interval` (one day). `CleanUpDraftsHandler` (`Sycapooke.Application/Listings/CleanUpDrafts.cs`):
-  1. **reminds** — selects drafts with `UpdatedAt` at or before now − (90 − 7) days, that is 83 days, and `DraftReminderSentAt` null. For each draft, one save sets `DraftReminderSentAt` (bumping `Version`, not `UpdatedAt`) and queues a `DraftExpiryReminderEmail { listingReference, title, deleteOn }` through `IEmailOutbox`; a draft edited meanwhile loses the race on `Version` and is skipped;
-  2. **deletes** — selects drafts with `UpdatedAt` at or before now − 90 days and `DraftReminderSentAt` at or before now − 7 days. One save deletes the `Listings` row and its `ListingPhotos` rows with the `Version` check, and skips a draft edited meanwhile. After the commit it deletes each photo's original through `IPhotoStorage.DeleteOriginalAsync` and its versions through `DeletePublicAsync`, unless another photo still shares them by content hash. A failed file delete is logged and leaves an orphan file, never a broken listing.
-  The second condition guarantees that the email was sent at least 7 days before deletion, even after a missed run (`L2-019`).
-- **`OutboxDispatcher`** (shared, baseline) — sends `DraftExpiryReminderEmail` through the email provider adapter with retry and back-off (`L2-042`). The template "Your draft {title} will be deleted on {day}" links to `/sell/{reference}`. `NotificationType.DraftExpiryReminder` falls in the always-on transactional category, so the dispatcher's preference check (`L2-043`) lets it through even with marketing off.
-- **Indexes on `Listings`** — `IX_Listings_SellerId_CreatedAt` (`SellerId`, `CreatedAt DESC`, `Id DESC`) including `Status`, `Title`, `Price`, `Category`, `Reference`; `IX_Listings_SellerId_Status_CreatedAt` (`SellerId`, `Status`, `CreatedAt DESC`, `Id DESC`) with the same included columns; and the filtered index `IX_Listings_Draft_UpdatedAt` (`UpdatedAt`) `WHERE Status = 'Draft'` for the clean-up job.
-- **Query safety** — EF Core LINQ only, so filter values are parameterised (`L2-049`).
+No complete target behavior is counted. Reusable implementation exists where identified, but the revised founder, privacy or infrastructure boundary and its acceptance coverage remain unfinished.
 
-### Configuration
-
-| Key | Value | Notes |
-|-----|-------|-------|
-| `Listing.DraftRetentionDays` | 90 | Domain constant, `L2-019` |
-| `Listing.DraftReminderDaysBefore` | 7 | Domain constant, `L2-019` |
-| `Listings:DraftCleanup:Interval` | `1.00:00:00` | How often the job runs |
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
 ## Requirements
 
-The feature realises the following level-2 (L2) requirements. Each refines the level-1 (L1) requirement cited.
-
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-021` | `L1-004` | A seller shall have a "My listings" page showing all of their listings with cover photo, title, price, status and date, filterable by status and sorted newest first. |
-| `L2-019` | `L1-004` | A listing shall have one of these statuses: Draft, Active, Reserved, Sold or Removed. A seller shall be able to save an incomplete listing as a Draft and publish it later. Only Active and Reserved listings appear in the catalog. Validation rules L2-015 to L2-018 apply when publishing; drafts only need a category. |
-
-This feature covers the parts of `L2-019` that concern seeing drafts by status and the 90-day draft clean-up. Saving and publishing drafts belong to [create-listing](../create-listing/README.md).
+| --- | --- | --- |
+| `L2-003` | `L1-001` | Public registration shall create customer accounts only. A trusted operator shall provision one founder account through a protected deployment or operator process outside public registration. The server shall bind management access to that account's immutable identity, never a display name, email supplied by the client or Google claim. Provisioning shall not create a second founder. Only the verified founder shall manage listings, photos, sales, shipping and customer problems. Customers shall have no selling links, public profile creation or management navigation. |
+| `L2-010` | `L1-002` | Every API endpoint shall enforce the caller's permissions on the server. Customers shall change only their own private account and access only their own purchases, addresses and support submissions. Only the configured founder (L2-003) shall manage inventory, view shop sales, fulfil orders and resolve customer problems. There is no separate administrator decision-maker. Anonymous browsing and the public registration, verification, authentication, password-recovery and signed provider-callback flows remain available under their own validation rules. |
+| `L2-015` | `L1-004` | A listing shall have a title (5 to 80 characters), a description including the piece's story (20 to 2,000 characters), a category and subcategory (L2-011), a brand (1 to 50 characters, chosen from a suggested list or typed freely), a condition (L2-016), 1 to 8 photos (L2-017), a price and a shipping cost (L2-018). All text shall be trimmed and stored as plain text. |
+| `L2-018` | `L1-004` | The item price shall be between $1.00 and $5,000.00 inclusive, with at most two decimal places. The founder shall set a flat shipping cost between $0.00 and $100.00 inclusive. Sycapooke shall operate in the United States only, in US dollars. |
+| `L2-019` | `L1-004` | A listing shall have one of these statuses: Draft, Active, Reserved, Sold or Removed. The founder shall be able to save an incomplete listing as a Draft and publish it later. Only Active and Reserved listings appear in the catalog. Validation rules L2-015 to L2-018 apply when publishing; drafts only need a category, and any field a draft does contain must be within its limits. |
+| `L2-021` | `L1-004` | The founder shall have a "My listings" page showing all of their listings with cover photo, title, price, status and date, filterable by status and sorted newest first. |
+| `L2-042` | `L1-011` | The system shall send email for: email verification, password reset, account lockout, purchase confirmation (to the customer), a new sale (to the founder), shipping with tracking (to the buyer), delivery, cancellation, refund, ship-by reminders, and customer problems reported and resolved. Only the founder shall receive shop sale, inventory and ship-by notifications; customers shall receive only their own account and order messages. Emails shall be sent within 2 minutes of the event and shall not contain passwords or full card details. |
 
 ## Diagrams
 
 ### System context
 
-The seller reviews their listings in Sycapooke. Sycapooke emails the seller through the email provider before a stale draft is deleted.
+The context identifies the founder and the systems used by this feature.
 
-![C4 system context for managing my listings](diagrams/c4-context.png)
+![System context for manage founder inventory](diagrams/c4-context.png)
 
 ### Containers
 
-`Sycapooke Web` reads the list from `Sycapooke API`. `Sycapooke Worker` finds stale drafts in `Sycapooke database`, writes reminder emails to the outbox and deletes expired drafts.
+The container view separates the delivery surface, application boundary and feature storage. External integrations remain behind their ports.
 
-![C4 container view for managing my listings](diagrams/c4-container.png)
+![Containers for manage founder inventory](diagrams/c4-container.png)
 
 ### Components
 
-`MyListingsController` sends `GetMyListingsQuery` to its handler, which projects rows and counts through `SycapookeDbContext`. In the worker, `DraftCleanupJob` writes reminders that `OutboxDispatcher` delivers.
+The component view connects `ListingsController` with `GetMyListingsQueryHandler` and the relevant feature state.
 
-![C4 component view for managing my listings](diagrams/c4-component.png)
+![Components for manage founder inventory](diagrams/c4-component.png)
 
 ### Class structure
 
-`GetMyListingsQueryHandler` returns a `MyListingsPage` of `MyListingSummaryDto` rows with `MyListingCounts`. `DraftCleanupJob` reads `DraftCleanupOptions`, updates `Listing` and writes `DraftExpiryReminderEmail` messages.
+The class view identifies the relevant fields, operation responsibilities and dependencies. It is a target responsibility model, not a claim that each addition already exists.
 
-![Class diagram for managing my listings](diagrams/class-structure.png)
+![Class structure for manage founder inventory](diagrams/class-structure.png)
 
-### Behaviour — view and filter my listings
+### Behaviour - Open My listings with optional status
 
-The page shows skeleton rows, then the seller's listings newest first with per-status counts. It shows the empty state when the seller has none and the error state with a reference on failure. Each row opens the place that fits its status.
+Inventory rows; 403 for customers. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for viewing and filtering my listings](diagrams/sequence-view-my-listings.png)
+![Open My listings with optional status](diagrams/sequence-view-founder-inventory.png)
 
-### Behaviour — remind about and delete stale drafts
+### Behaviour - Process aged drafts
 
-The daily job first records and queues reminders for drafts 83 days old. It then deletes drafts at least 90 days old whose reminder is at least 7 days old, with their photos and stored files.
+Edited drafts survive; no customer-triggered inventory deletion. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-![Sequence diagram for reminding about and deleting stale drafts](diagrams/sequence-draft-cleanup.png)
-
-## Testing
-
-- `tests/Sycapooke.Api.Tests/MyListingsTests.cs` — xUnit acceptance tests through `SycapookeApiFactory` with the in-memory database and fakes: every status newest first with counts and the sale order, the Sold filter, the empty page, `400` for an unknown status and `401` for a visitor.
-- `tests/Sycapooke.Api.Tests/DraftCleanupTests.cs` — the reminder at 83 days, once, linking to the draft; deletion at 90 days with photo rows and files; a missed reminder buys 7 more days; an edit restarts the period; versions shared by content are kept; the reminder is sent with marketing off.
-- `tests/Sycapooke.Worker.Tests/DraftCleanupJobTests.cs` — each pass sends `CleanUpDraftsCommand`; the job runs at least daily.
-- `src/frontend/e2e/tests/manage-my-listings.spec.ts` with `e2e/pages/my-listings.page.ts` — Playwright (Chromium) with every `Sycapooke API` call served by `page.route` fixtures: rows, dates and prices, links by status, the filter in the URL across a reload, empty, error with retry, loading, and the draft expiry toast once per visit only for a seller with drafts.
-
-## Open questions
-
-- Paging: page size and "Load more" copy are `<TO SUPPLY>`; the API returns every listing until then.
-- Copy for a filter that matches nothing is `<TO SUPPLY>`.
+![Process aged drafts](diagrams/sequence-cleanup-founder-drafts.png)

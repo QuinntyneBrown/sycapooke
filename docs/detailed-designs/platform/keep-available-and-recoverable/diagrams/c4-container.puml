@@ -11,7 +11,7 @@ System_Boundary(sycapooke, "Sycapooke") {
   Container(worker, "Sycapooke Worker (2+ instances)", ".NET worker", "Background jobs")
   ContainerDb(db, "Sycapooke database", "Managed SQL Server", "PITR, 35-day retention")
   ContainerDb(restored, "Restored copy", "Managed SQL Server", "Temporary database for the restore test")
-  Container(verifier, "Sycapooke.RestoreVerifier", ".NET console", "Checks restored data")
+  Container(verifier, "Operator consistency checks", ".NET console", "Checks restored data")
 }
 Rel(visitor, lb, "Requests", "HTTPS")
 Rel(lb, web, "Routes pages", "HTTPS")

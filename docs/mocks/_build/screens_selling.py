@@ -1,15 +1,9 @@
-"""Selling: listing form, edit, my listings, payouts (L1-003, L1-004, L1-007 payouts)."""
+"""Selling: the founder's listing form, edit and inventory (L1-004). No payouts: payment goes straight to her shop account."""
 from mk import *
 
-FEE = FEE_PERCENT / 100
-
-# A new listing Tessa is creating in the sell form (not yet in the catalog).
+# A new listing Ida is creating in the sell form (not yet in the catalog).
 NEW = {"cat": "Jewelry", "sub": "Brooches and pins", "title": "Enamel daisy brooch", "brand": "Trifari", "cond": "Used - Good",
        "desc": "c.1960s. White enamel petals with a rhinestone centre. A few tiny enamel losses on one petal, hardly noticeable. Clasp tested and secure.", "price": "24.00", "ship": "5.00"}
-
-
-def earn(price: float, ship: float) -> str:
-    return money(round((price + ship) * (1 - FEE), 2))
 
 
 # ---------------------------------------------------------------------------
@@ -68,9 +62,6 @@ def sell_form(v: dict, *, photos=(), errors: dict | None = None, rejected: bool 
     if cond == "Used - Fair":
         flaws = field("flaws", "Describe the flaws", f'<textarea class="textarea" id="flaws" rows="2"{{db}}>{esc(v.get("flaws", ""))}</textarea>',
                       help="Shown on the listing. At least 10 characters.", error=e.get("flaws"))
-    p = float(v["price"]) if v.get("price") and not e.get("price") else None
-    s = float(v["ship"]) if v.get("ship") else 0.0
-    earnings = earn(p, s) if p is not None else "—"
     tlen = len(v.get("title", ""))
     dlen = len(v.get("desc", ""))
     brands = "".join(f'<option value="{esc(b)}"></option>' for b in BRANDS)
@@ -91,25 +82,25 @@ def sell_form(v: dict, *, photos=(), errors: dict | None = None, rejected: bool 
             + field("title", "Title", value=v.get("title", ""), error=e.get("title"), counter=f"{tlen} / 80")
             + field("brand", "Brand", f'<input class="input" id="brand" name="brand" list="brands" value="{esc(v.get("brand", ""))}"{{db}}><datalist id="brands">{brands}</datalist>')
             + f'{condition_group(cond)}{flaws}'
-            + field("desc", "Description", f'<textarea class="textarea" id="desc" rows="4"{{db}}>{esc(v.get("desc", ""))}</textarea>',
+            + field("desc", "Description and story", f'<textarea class="textarea" id="desc" rows="4"{{db}}>{esc(v.get("desc", ""))}</textarea>',
                     error=e.get("desc"), counter=f"{dlen} / 2,000")
             + '</section>'
             f'<section class="form-section" aria-labelledby="s-price"><h2 id="s-price">Price</h2><div class="form-row">'
             + field("price", "Price", money_input("price", v.get("price", "")), error=e.get("price"))
             + field("ship", "Shipping", money_input("ship", v.get("ship", "")), help="Flat rate. $0 shows as free shipping.")
-            + f'</div><p class="earnings"><span>You earn after the {FEE_PERCENT}% fee</span><strong>{earnings}</strong></p></section>'
+            + '</div></section>'
             f'<div class="form-actions form-actions--sticky form-actions--split">{actions}</div></form>')
 
 
 def sell_page(form: str, title: str = "Sell an item") -> Page:
     head = f'<div class="page-header"><h1>{title}</h1></div>'
-    return Page(main=head + form, nav="sell", main_class="container page page--form", footer=False)
+    return Page(user="founder", main=head + form, nav="sell", main_class="container page page--form", footer=False)
 
 
 def blocked(icon: str, title: str, text: str, actions: str, code: str | None = None) -> Page:
     c = f'<span class="code" aria-hidden="true">{code}</span>' if code else f'<div class="empty__icon">{ic(icon, "icon icon--lg")}</div>'
     main = f'<div class="center-state">{c}<h1>{title}</h1><p class="text-muted">{text}</p><div class="actions">{actions}</div></div>'
-    return Page(main=main, nav="sell")
+    return Page(user="founder", main=main, nav="sell")
 
 
 FILLED_PHOTOS = [("daisy-brooch", 6), ("daisy-brooch", 1), ("daisy-brooch", 4)]
@@ -118,7 +109,7 @@ FILLED_PHOTOS = [("daisy-brooch", 6), ("daisy-brooch", 1), ("daisy-brooch", 4)]
 # Sell
 # ---------------------------------------------------------------------------
 s = screen("sell", "page", "Sell an item", route="/sell",
-           reqs=["L2-003", "L2-011", "L2-012", "L2-015", "L2-016", "L2-017", "L2-018", "L2-019", "L2-031", "L2-051", "L2-063"],
+           reqs=["L2-003", "L2-011", "L2-012", "L2-015", "L2-016", "L2-017", "L2-018", "L2-019", "L2-051", "L2-063"],
            na={"loading": "A new listing form needs no data; categories ship with the app shell.",
                "empty": "The form is the page; an empty form is the default state."})
 
@@ -130,7 +121,7 @@ def _():
     return pg
 
 
-@s.state("filled", "Jewelry chosen: size fixed at Vintage, three photos with a cover, earnings after the fee.")
+@s.state("filled", "Jewelry chosen: size fixed at Vintage, three photos with a cover.")
 def _():
     return sell_page(sell_form(NEW, photos=FILLED_PHOTOS))
 
@@ -153,31 +144,25 @@ def _():
     return sell_page(sell_form(NEW, photos=FILLED_PHOTOS, busy=True))
 
 
-@s.state("draft-saved", "Draft saved: kept out of the catalog, finish it later from Your listings.")
+@s.state("draft-saved", "Draft saved: kept out of the catalog, finish it later from My listings.")
 def _():
-    top = alert("success", "Draft saved", f'Finish it any time from <a href="{P("my-listings")}">your listings</a>.', role="status")
+    top = alert("success", "Draft saved", f'Finish it any time from <a href="{P("my-listings")}">My listings</a>.', role="status")
     return sell_page(sell_form({**NEW}, photos=FILLED_PHOTOS, top=top))
 
 
-@s.state("success", "Published: the item is live, with a nudge to set up payouts.")
+@s.state("success", "Published: the item is live, with a link to the inventory.")
 def _():
     main = (f'<div class="center-state"><div class="empty__icon">{ic("check", "icon icon--lg")}</div><h1>It’s live</h1>'
             f'<div class="panel" style="width: 100%;">{item_row("daisy-brooch", "Trifari · Vintage · $24.00")}</div>'
-            f'<p class="text-muted"><a href="{P("payouts", "not-onboarded")}">Set up payouts</a> so you’re paid when it sells.</p>'
+            f'<p class="text-muted">See it with the rest of your <a href="{P("my-listings")}">inventory</a>.</p>'
             f'<div class="actions">{btn("View listing", "primary", P("listing-detail", "own"))}{btn("Sell another", href=P("sell"))}</div></div>')
-    return Page(main=main, nav="sell")
-
-
-@s.state("unverified", "Unverified member: listing is blocked until the email is verified (HTTP 403).")
-def _():
-    return blocked("mail", "Verify your email to sell", "We sent a link to tessa.bell@example.com.",
-                   btn("Resend link", "primary", D("verify-email-prompt")) + btn("Back to shop", href=P("catalog")))
+    return Page(user="founder", main=main, nav="sell")
 
 
 @s.state("limited", "Daily limit reached: 20 new listings per day (HTTP 429).")
 def _():
     return blocked("clock", "That’s 20 listings today", "You can list more tomorrow. Drafts still save.",
-                   btn("Your listings", "primary", P("my-listings")))
+                   btn("My listings", "primary", P("my-listings")))
 
 
 @s.state("error", "Categories failed to load: the form can’t start, retry with a reference.")
@@ -201,7 +186,7 @@ e = screen("edit-listing", "page", "Edit listing", route="/items/{id}/edit", req
 def edit_page(form: str) -> Page:
     head = (f'<div class="page-header"><div class="stack stack--sm"><a class="text-sm text-muted" href="{P("listing-detail", "own")}">Camel wool overcoat, size M</a>'
             f'<h1>Edit listing</h1></div>{status("Active")}</div>')
-    return Page(main=head + form, main_class="container page page--form", footer=False)
+    return Page(user="founder", main=head + form, main_class="container page page--form", footer=False)
 
 
 @e.state("default", "Editing an active Used - Fair listing: every field prefilled, flaws visible.")
@@ -215,14 +200,14 @@ def _():
           + '<span class="skeleton skeleton--rect" style="aspect-ratio: 1;"></span>' * 3 + '</div>'
           + ('<div class="stack stack--sm"><span class="skeleton skeleton--text" style="width: 20%;"></span>'
              '<span class="skeleton skeleton--rect" style="height: var(--control-height-md);"></span></div>') * 4 + '</div>')
-    return Page(main='<div class="page-header"><h1>Edit listing</h1></div>' + sk, main_class="container page page--form", footer=False)
+    return Page(user="founder", main='<div class="page-header"><h1>Edit listing</h1></div>' + sk, main_class="container page page--form", footer=False)
 
 
 @e.state("error", "The listing failed to load for editing.")
 def _():
     main = (f'<div class="center-state"><h1>Couldn’t load this listing</h1><p class="text-muted">Your listing is safe. Try again in a moment.</p>'
-            f'<span class="ref">Ref 9d02-77b1</span><div class="actions">{btn("Try again", "primary", icon="refresh")}{btn("Your listings", href=P("my-listings"))}</div></div>')
-    return Page(main=main)
+            f'<span class="ref">Ref 9d02-77b1</span><div class="actions">{btn("Try again", "primary", icon="refresh")}{btn("My listings", href=P("my-listings"))}</div></div>')
+    return Page(user="founder", main=main)
 
 
 @e.state("invalid", "Save refused: flaws emptied and price out of range.")
@@ -248,7 +233,7 @@ def _():
     main = (f'<div class="center-state"><div class="empty__icon">{ic("clock", "icon icon--lg")}</div><h1>This item is in someone’s checkout</h1>'
             f'<p class="text-muted">You can edit it again if they don’t finish within 10 minutes.</p>'
             f'<div class="actions">{btn("Back to listing", "primary", P("listing-detail", "own"))}</div></div>')
-    return Page(main=main)
+    return Page(user="founder", main=main)
 
 
 @e.state("changed", "Save refused because the listing changed since the form opened (412): reload, nothing overwritten.")
@@ -258,20 +243,20 @@ def _():
     return edit_page(sell_form({**OVERCOAT, "price": "110.00"}, photos=OVERCOAT_PHOTOS, mode="edit", top=top))
 
 
-@e.state("sold", "Sold listing: it can no longer be edited; the seller goes to their sales.")
+@e.state("sold", "Sold listing: it can no longer be edited; Ida goes to her sales.")
 def _():
     main = (f'<div class="center-state"><div class="empty__icon">{ic("check", "icon icon--lg")}</div><h1>This item has sold</h1>'
             f'<p class="text-muted">Sold listings can’t be edited.</p>'
-            f'<div class="actions">{btn("Your sales", "primary", P("sales"))}{btn("Your listings", href=P("my-listings"))}</div></div>')
-    return Page(main=main)
+            f'<div class="actions">{btn("Your sales", "primary", P("sales"))}{btn("My listings", href=P("my-listings"))}</div></div>')
+    return Page(user="founder", main=main)
 
 
 @e.state("withdrawn", "Withdrawn listing: it is gone for good and can no longer be edited.")
 def _():
     main = (f'<div class="center-state"><div class="empty__icon">{ic("trash", "icon icon--lg")}</div><h1>This listing was withdrawn</h1>'
             f'<p class="text-muted">Withdrawn listings can’t be edited or relisted.</p>'
-            f'<div class="actions">{btn("Your listings", "primary", P("my-listings"))}</div></div>')
-    return Page(main=main)
+            f'<div class="actions">{btn("My listings", "primary", P("my-listings"))}</div></div>')
+    return Page(user="founder", main=main)
 
 
 # ---------------------------------------------------------------------------
@@ -303,15 +288,15 @@ def filter_chips(active: str = "All") -> str:
 
 
 def listings_page(body: str, sub: str = "6 listings · 1 active") -> Page:
-    head = (f'<div class="page-header"><div><h1>Your listings</h1>' + (f'<p class="subtitle">{sub}</p>' if sub else "")
+    head = (f'<div class="page-header"><div><h1>My listings</h1>' + (f'<p class="subtitle">{sub}</p>' if sub else "")
             + f'</div>{btn("Sell an item", "primary", P("sell"), icon="plus")}</div>')
-    return Page(main=head + body, account="listings")
+    return Page(user="founder", main=head + body, account="listings")
 
 
-ml = screen("my-listings", "page", "Your listings", route="/account/listings", reqs=["L2-019", "L2-021"])
+ml = screen("my-listings", "page", "My listings", route="/account/listings", reqs=["L2-019", "L2-021"])
 
 
-@ml.state("default", "All of Tessa's listings, newest first, filterable by status.")
+@ml.state("default", "All of Ida's listings, newest first, filterable by status.")
 def _():
     rows = "".join(listing_row(*r) for r in ROWS)
     return listings_page(filter_chips() + f'<ul class="order-list" role="list">{rows}</ul>')
@@ -339,63 +324,6 @@ def _():
 def _():
     return listings_page(empty("refresh", "Couldn’t load your listings", 'Try again in a moment. <span class="ref">Ref 3e88-1a40</span>',
                                btn("Try again", icon="refresh"), cls="empty--error empty--compact"), sub="")
-
-
-# ---------------------------------------------------------------------------
-# Payouts
-# ---------------------------------------------------------------------------
-pay = screen("payouts", "page", "Payouts", route="/account/payouts", reqs=["L2-031"])
-
-PAYOUT_ROWS = [
-    ("SY-48302", "ceramic-vase", "Held until the order completes", earn(64, 9), "Pending"),
-    ("SY-47511", "jasperware-plate", f"Fee {money(5.30)} · Mon 5 Oct", money(47.70), "Paid"),
-]
-
-
-def payout_list(rows) -> str:
-    out = "".join(
-        f'<li><a href="{P("sale-detail")}">{item_row(k, f"{oid} · {meta}")}<div class="order-list__end"><span class="price">{amt}</span>'
-        f'<span class="text-caption">{st}</span></div></a></li>' for oid, k, meta, amt, st in rows)
-    return f'<ul class="order-list" role="list">{out}</ul>'
-
-
-def payouts_page(body: str) -> Page:
-    return Page(main=f'<div class="page-header"><h1>Payouts</h1></div>{body}', account="payouts")
-
-
-@pay.state("default", "Payouts connected: totals, the bank on file, each payout with its fee.")
-def _():
-    stats = (f'<div class="stats" style="margin-bottom: var(--space-12);"><div class="stat"><span class="stat__label">Paid out</span><span class="stat__value">{money(47.70)}</span></div>'
-             f'<div class="stat"><span class="stat__label">Pending</span><span class="stat__value">{earn(64, 9)}</span></div></div>')
-    method = (f'<ul class="settings-list" role="list" style="margin-bottom: var(--space-12);"><li><div class="settings-list__body"><span class="settings-list__title">Chase checking •••• 6021</span>'
-              f'<span class="settings-list__meta">Managed by our payment provider</span></div>{btn("Change", href="https://payments.example.com/onboarding", icon_after="external")}</li></ul>')
-    return payouts_page(stats + method + '<div class="section-head"><h2>History</h2></div>' + payout_list(PAYOUT_ROWS))
-
-
-@pay.state("not-onboarded", "No payout method yet: earnings are held until setup is done.")
-def _():
-    a = alert("warning", "Set up payouts to get paid", f"{earn(64, 9)} is waiting for you.",
-              btn("Set up payouts", "primary sm", "https://payments.example.com/onboarding", icon_after="external"))
-    return payouts_page(a + '<div class="section-head" style="margin-top: var(--space-12);"><h2>Held</h2></div>' + payout_list(PAYOUT_ROWS[:1]))
-
-
-@pay.state("loading", "Skeleton totals and rows.")
-def _():
-    sk = ('<div class="stats" style="margin-bottom: var(--space-12);" aria-busy="true">'
-          + '<div class="stat"><span class="skeleton skeleton--text" style="width: 5rem;"></span><span class="skeleton skeleton--title" style="width: 7rem;"></span></div>' * 2
-          + '</div><span class="skeleton skeleton--rect" style="height: 4rem;"></span>')
-    return payouts_page(sk)
-
-
-@pay.state("empty", "No sales yet: payouts appear after the first one.")
-def _():
-    return payouts_page(empty("dollar", "No payouts yet", "Your earnings show up here after your first sale.", btn("Sell an item", "primary", P("sell"))))
-
-
-@pay.state("error", "Payout details failed to load.")
-def _():
-    return payouts_page(empty("refresh", "Couldn’t load payouts", 'Try again in a moment. <span class="ref">Ref 61fa-c3d9</span>',
-                              btn("Try again", icon="refresh"), cls="empty--error empty--compact"))
 
 
 # ---------------------------------------------------------------------------
@@ -469,33 +397,3 @@ def _():
 def _():
     return on_listings(toast("info", "Draft saved", ""), toast("success", "Listing published", "Enamel daisy brooch is live.", "View listing"),
                        toast("warning", "Ship by Fri 30 Oct", "Teal drip-glaze ceramic vase", "Add tracking"))
-
-
-# ---------------------------------------------------------------------------
-# Payout banner
-# ---------------------------------------------------------------------------
-pb = screen("payout-banner", "notification", "Payout banner", opens_from="my-listings", reqs=["L2-031"])
-
-
-def on_listings_banner(b: str) -> Note:
-    return Note(bg=("my-listings", "default"), top=b)
-
-
-@pb.state("info", "A payout is on its way.")
-def _():
-    return on_listings_banner(banner("info", f"{money(47.70)} is on its way to Chase •••• 6021.", f'<a href="{P("payouts")}">Payouts</a>'))
-
-
-@pb.state("success", "Payout setup finished.")
-def _():
-    return on_listings_banner(banner("success", "Payouts are set up. You’ll be paid when orders complete."))
-
-
-@pb.state("warning", "Payout setup unfinished: held earnings, persistent until done.")
-def _():
-    return on_listings_banner(banner("warning", f"Finish payout setup to receive {earn(64, 9)}.", f'<a href="{P("payouts", "not-onboarded")}">Set up payouts</a>', dismiss=False))
-
-
-@pb.state("danger", "A payout bounced: update bank details.")
-def _():
-    return on_listings_banner(banner("danger", "Your last payout was returned by the bank.", f'<a href="{P("payouts")}">Update bank details</a>', dismiss=False))

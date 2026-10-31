@@ -1,124 +1,44 @@
 @startuml
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
-skinparam roundcorner 8
+skinparam roundcorner 12
 skinparam defaultFontName Arial
 skinparam ArrowColor #344054
+title Class structure - Edit and withdraw founder inventory
 skinparam class {
-  BorderColor #344054
-  FontColor #101828
-  BackgroundColor #F9FAFB
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
 }
-title Class structure — Edit and withdraw a listing
-
-package "Sycapooke.Domain" {
-  enum ListingStatus {
-    Draft
-    Active
-    Reserved
-    Sold
-    Removed
-  }
-  enum ListingRemovalReason {
-    OrderCancelled
-    Withdrawn
-  }
-  class Listing {
-    +Guid Id
-    +string Reference
-    +Guid SellerId
-    +ListingStatus Status
-    +ListingRemovalReason? RemovalReason
-    +string Category
-    +string Size
-    +decimal? Price
-    +int Version
-    +string? EditRefusal
-    +bool CanRelist
-    +UpdateDetails(details, now): void
-    +Edit(details, photoCount, now): RuleViolation[]
-    +Withdraw(now): void
-    +RemoveAfterCancellation(now): void
-    +Relist(now): void
-    +{static} CheckPublish(details, photoCount): RuleViolation[]
-  }
+class "ListingsController" as Entry {
 }
-
-package "Sycapooke.Application" {
-  class GetMyListingQuery {
-    +string Reference
-  }
-  class MyListingDto {
-    +string Reference
-    +string Status
-    +string? RemovalReason
-    +PhotoDto[] Photos
-    +int Version (JSON ignored, sent as ETag)
-  }
-  class UpdateListingCommand {
-    +string Reference
-    +ListingDetails Details
-    +Guid[]? PhotoIds
-    +int? ExpectedVersion
-  }
-  class WithdrawListingCommand {
-    +string Reference
-  }
-  class RelistListingCommand {
-    +string Reference
-  }
-  class ListingCommandHandlers {
-    +Handle(UpdateListingCommand): Result<MyListingDto>
-    +Handle(GetMyListingQuery): Result<MyListingDto>
-  }
-  class WithdrawListingCommandHandler {
-    +Handle(command): Result<WithdrawListingResult>
-  }
-  class RelistListingCommandHandler {
-    +Handle(command): Result<bool>
-  }
-  class ListingRefusals {
-    +Reserved, Sold, NotEditable, Changed, PreconditionRequired
-    +AfterConflictAsync(db, listingId): Error
-  }
-  class ListingPhotoAttacher
+class "ListingCommandHandlers" as Handler {
+ +Handle(request: UpdateListingCommand, cancellationToken: CancellationToken): Task<Result<MyListingDto>>
 }
-
-package "Sycapooke.Api" {
-  class ListingsController {
-    +GetMine(reference): IActionResult
-    +Update(reference, body): IActionResult
-    +Withdraw(reference): IActionResult
-    +Relist(reference): IActionResult
-  }
-  class ListingDetailsRequest {
-    +string? Category
-    +string? Subcategory
-    +string? Size
-    +string? Title
-    +string? Description
-    +string? Brand
-    +string? Condition
-    +string? Flaws
-    +decimal? Price
-    +decimal? ShippingCost
-    +Guid[]? PhotoIds
-  }
+class "Listing" as Model {
+ +ListingStatus Status
+ +string? RemovalReason
 }
-
-ListingsController ..> ListingDetailsRequest : binds (no sellerId or status)
-ListingsController ..> UpdateListingCommand : sends (If-Match as ExpectedVersion)
-ListingsController ..> WithdrawListingCommand : sends
-ListingsController ..> RelistListingCommand : sends
-ListingCommandHandlers ..> UpdateListingCommand : handles
-ListingCommandHandlers ..> GetMyListingQuery : handles
-ListingCommandHandlers --> Listing : loads / edits
-ListingCommandHandlers ..> ListingPhotoAttacher : uses
-ListingCommandHandlers ..> ListingRefusals : refuses with
-WithdrawListingCommandHandler --> Listing : withdraws
-WithdrawListingCommandHandler ..> ListingRefusals : refuses with
-RelistListingCommandHandler --> Listing : relists
-Listing --> ListingStatus
-Listing --> ListingRemovalReason
-ListingCommandHandlers ..> MyListingDto : returns
+class "UpdateListingCommand" as Request {
+ +Guid SellerId
+ +string Reference
+ +string? Description
+ +IReadOnlyList<Guid>? PhotoIds
+ +int? ExpectedVersion
+}
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
+}
+Handler ..> ISycapookeDbContext : persistence boundary
+interface IFounderAccess {
+ +IsFounderAsync(memberId: Guid): Task<bool>
+}
+Handler ..> IFounderAccess : protected shop actions
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
 @enduml

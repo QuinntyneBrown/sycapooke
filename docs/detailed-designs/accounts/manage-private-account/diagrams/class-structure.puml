@@ -1,0 +1,36 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Class structure - Manage a private customer account
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+class "PrivateAccountController" as Entry {
+}
+class "UpdatePrivateAccountHandler" as Handler {
+ +Handle(request: UpdatePrivateAccountCommand, cancellationToken: CancellationToken): Task<Result>
+}
+class "Member" as Model {
+ +Guid Id
+ +string DisplayName
+}
+class "UpdatePrivateAccountCommand" as Request {
+ +Guid MemberId
+}
+Handler ..> Request : handles
+Entry ..> Handler : dispatches
+Handler --> Model : reads or changes
+interface ISycapookeDbContext {
+ +SaveChangesAsync(): Task<int>
+}
+Handler ..> ISycapookeDbContext : persistence boundary
+note bottom of Handler
+Operation names summarize target responsibilities.
+Description distinguishes existing and proposed types.
+end note
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Behaviour - Choose to play founder shop video
+autonumber
+actor "Visitor or customer" as actor
+box "Frontend - Sycapooke Web" #E0F2FE
+ participant "WelcomePage" as page
+ participant "Static marketing navigation" as client
+end box
+box "Backend - Static marketing host" #D1FADF
+ participant "Static marketing host" as entry
+end box
+box "Frontend - Marketing components" #E0F2FE
+ participant "PitchVideoDialog" as handler
+ participant "MarketingContent" as model
+end box
+actor -> page : Choose to play founder shop video
+page -> client : Poster Play action
+client -> entry : Static request / browser action
+entry -> handler : Dispatch UI action
+handler -> handler : Open accessible dialog only after explicit action [L2-089]
+handler -> model : Play native MP4/WebM controls with captions initially off [L2-090]
+handler -> handler : Escape stops playback and restores poster focus
+handler --> entry : Result or domain refusal
+entry --> client : Typed result or ProblemDetails
+client --> page : Update feature state
+page --> actor : Playback only by choice; no autoplay before press
+note over entry, handler
+Playback only by choice; no autoplay before press
+end note
+@enduml

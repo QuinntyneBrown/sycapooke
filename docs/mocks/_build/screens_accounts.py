@@ -149,7 +149,7 @@ def _():
 # ---------------------------------------------------------------------------
 # Register (L2-001)
 # ---------------------------------------------------------------------------
-r = screen("register", "page", "Join", route="/join", reqs=["L2-001", "L2-002", "L2-051", "L2-065", "L2-088"],
+r = screen("register", "page", "Join", route="/join", reqs=["L2-001", "L2-002", "L2-003", "L2-051", "L2-065", "L2-088"],
            na={"loading": "The form renders without fetching data.", "empty": "A form, not a collection."})
 
 
@@ -157,7 +157,7 @@ def register(*, filled: bool = False, errs: dict | None = None, busy: bool = Fal
     errs = errs or {}
     v = (lambda x: x) if filled else (lambda x: "")
     name = field("display-name", "Display name", value=v("attic_treasures"), error=errs.get("display-name"),
-                 help="3–30 letters, numbers, _ or -. Shown publicly.", attrs=f'autocomplete="username" autofocus{ro(busy)}')
+                 help="3–30 letters, numbers, _ or -. Private: only you see it.", attrs=f'autocomplete="username" autofocus{ro(busy)}')
     email = field("email", "Email", value=v(ME_P["email"]), type="email", error=errs.get("email"), attrs=f'autocomplete="email"{ro(busy)}')
     pwd = pw("password", "Password", error=errs.get("password"), help="At least 12 characters.", value="x" if filled else "", auto="new-password")
 
@@ -167,9 +167,9 @@ def register(*, filled: bool = False, errs: dict | None = None, busy: bool = Fal
         inv = f' aria-invalid="true" aria-describedby="{fid}-error"' if e else ""
         msg = f'<span class="field__error" id="{fid}-error">{e}</span>' if e else ""
         return f'<div class="field"><label class="choice"><input type="checkbox" id="{fid}"{chk}{inv}><span>{label}</span></label>{msg}</div>'
-    ticks = tick("age", "I’m 18 or older") + tick("terms", f'I accept the <a href="{P("terms")}">terms</a> and <a href="{P("rules")}">marketplace rules</a>')
+    ticks = tick("age", "I’m 18 or older") + tick("terms", f'I accept the <a href="{P("terms")}">terms</a> and <a href="{P("rules")}">shop policies</a>')
     body = google_option() + form(name + email + pwd + f'<div class="stack stack--sm">{ticks}</div>', submit("Join Sycapooke", busy))
-    return auth("Join Sycapooke", body, "Buy and sell with one account.", f'Already a member? <a href="{P("sign-in")}">Sign in</a>', top)
+    return auth("Join Sycapooke", body, "Make a customer account to buy from the shop.", f'Already a member? <a href="{P("sign-in")}">Sign in</a>', top)
 
 
 @r.state("default", "Continue with Google, or join with display name, email and password; 18+ and terms ticks.")
@@ -209,7 +209,7 @@ def _():
 # ---------------------------------------------------------------------------
 # Finish joining with Google (L2-088)
 # ---------------------------------------------------------------------------
-jg = screen("join-google", "page", "Finish joining with Google", route="/join/google", reqs=["L2-088", "L2-001", "L2-065"],
+jg = screen("join-google", "page", "Finish joining with Google", route="/join/google", reqs=["L2-088", "L2-001", "L2-003", "L2-065"],
             na={"empty": "A form, not a collection."})
 
 
@@ -218,7 +218,7 @@ def join_google(*, errs: dict | None = None, busy: bool = False, top: str = "", 
     email = field("email", "Google email", value=ME_P["email"], type="email", attrs='readonly aria-describedby="email-help"',
                   help="From your Google account. It counts as verified.")
     name = field("display-name", "Display name", value="attic_treasures" if filled else "", error=errs.get("display-name"),
-                 help="3–30 letters, numbers, _ or -. Shown publicly.", attrs=f'autocomplete="username" autofocus{ro(busy)}')
+                 help="3–30 letters, numbers, _ or -. Private: only you see it.", attrs=f'autocomplete="username" autofocus{ro(busy)}')
 
     def tick(fid, label):
         e = errs.get(fid)
@@ -226,7 +226,7 @@ def join_google(*, errs: dict | None = None, busy: bool = False, top: str = "", 
         inv = f' aria-invalid="true" aria-describedby="{fid}-error"' if e else ""
         msg = f'<span class="field__error" id="{fid}-error">{e}</span>' if e else ""
         return f'<div class="field"><label class="choice"><input type="checkbox" id="{fid}"{chk}{inv}><span>{label}</span></label>{msg}</div>'
-    ticks = tick("age", "I’m 18 or older") + tick("terms", f'I accept the <a href="{P("terms")}">terms</a> and <a href="{P("rules")}">marketplace rules</a>')
+    ticks = tick("age", "I’m 18 or older") + tick("terms", f'I accept the <a href="{P("terms")}">terms</a> and <a href="{P("rules")}">shop policies</a>')
     body = form(email + name + f'<div class="stack stack--sm">{ticks}</div>', submit("Join Sycapooke", busy))
     foot = f'Not you? <a href="{P("sign-in")}">Back to sign in</a>'
     return auth("Almost there", body, "Pick a display name to finish joining with Google.", foot, top)
@@ -278,10 +278,10 @@ v = screen("verify-email", "page", "Verify email", route="/verify", reqs=["L2-00
            na={"empty": "A single confirmation, not a collection."})
 
 
-@v.state("default", "Link opened within 24 hours: email verified, ready to buy and sell.")
+@v.state("default", "Link opened within 24 hours: email verified, ready to buy.")
 def _():
-    body = f'<div class="stack">{btn("Start shopping", "primary lg block", P("catalog"))}{btn("Sell an item", "lg block", P("sell"))}</div>'
-    return auth("You’re verified", body, "Buying and selling are open.")
+    body = f'<div class="stack">{btn("Browse the shop", "primary lg block", P("catalog"))}</div>'
+    return auth("You’re verified", body, "Buying is open.")
 
 
 @v.state("loading", "Checking the link.")
@@ -403,7 +403,7 @@ def _():
 # ---------------------------------------------------------------------------
 # Account overview
 # ---------------------------------------------------------------------------
-ac = screen("account", "page", "Account", route="/account", reqs=["L2-003", "L2-002"])
+ac = screen("account", "page", "Account", route="/account", reqs=["L2-003", "L2-002", "L2-004", "L2-010"])
 
 
 def stat(value: str, label: str, href: str) -> str:
@@ -412,29 +412,29 @@ def stat(value: str, label: str, href: str) -> str:
 
 
 def overview(stats: str, top: str = "", user: str = "member", extra: str = "") -> Page:
-    h = head(f'Hi, {ME}', f'Member since {ME_P["since"]}', btn("Sell an item", "primary", P("sell"), icon="plus") if user == "member" else "")
+    h = head(f'Hi, {ME}', f'Customer since {ME_P["since"]}. Only you see your account.')
     grid = f'<div class="grid grid--auto" style="--layout-gutter: var(--space-4);">{stats}</div>' if stats else ""
     return account_page(h + extra + grid, "overview", user, top)
 
 
-@ac.state("default", "Three numbers that matter: listings live, sales to ship, purchases on the way.")
+@ac.state("default", "Two numbers that matter: purchases on the way, and delivered purchases to confirm.")
 def _():
-    return overview(stat("3", "Active listings", P("my-listings")) + stat("1", "To ship by Fri 30 Oct", P("sales")) + stat("1", "On the way", P("purchases")))
+    pg = overview(stat("1", "On the way", P("purchases")) + stat("1", "To confirm", P("purchases")))
+    pg.notes = note("A customer account has no selling, sales, listing or public-profile actions (L2-003 AC1).", "top: 12rem; right: 1rem;")
+    return pg
 
 
 @ac.state("loading", "Overview skeleton.")
 def _():
     sk = '<div class="panel stat" aria-hidden="true"><span class="skeleton skeleton--title" style="width: 3rem;"></span><span class="skeleton skeleton--text" style="width: 60%;"></span></div>'
-    return overview(sk * 3)
+    return overview(sk * 2)
 
 
-@ac.state("empty", "New member, nothing yet: one nudge to list or shop.")
+@ac.state("empty", "New customer, nothing bought yet: one nudge to browse the shop.")
 def _():
-    e = empty("tag", "Nothing here yet", "List a treasure, or find the one that’s been waiting for you.",
-              btn("Sell an item", "primary", P("sell")) + btn("Browse", href=P("catalog")))
-    pg = overview("", extra=e)
-    pg.main = pg.main.replace(btn("Sell an item", "primary", P("sell"), icon="plus"), "")
-    return pg
+    e = empty("tag", "Nothing here yet", "Find the treasure that’s been waiting for you.",
+              btn("Browse the shop", "primary", P("catalog")))
+    return overview("", extra=e)
 
 
 @ac.state("error", "Overview failed to load; tabs still work.")
@@ -442,198 +442,289 @@ def _():
     return overview("", extra=load_error("Couldn’t load your account", "1f8e-77c0"))
 
 
-@ac.state("unverified", "Unverified member: verify to buy and sell.")
+@ac.state("unverified", "Unverified customer: verify to buy.")
 def _():
-    a = alert("warning", "Verify your email to buy and sell", f'We sent a link to {ME_P["email"]}.', btn("Resend link", "sm"), icon="mail")
+    a = alert("warning", "Verify your email to buy", f'We sent a link to {ME_P["email"]}.', btn("Resend link", "sm"), icon="mail")
     return overview("", extra=a, user="unverified")
 
 
 # ---------------------------------------------------------------------------
-# Public profile (L2-041, L2-040)
+# Founder public page (L2-041, L2-040). Customers have no public profile.
 # ---------------------------------------------------------------------------
-pr = screen("profile", "page", "Member profile", route="/members/{displayName}", reqs=["L2-041", "L2-040", "L2-054"])
+pr = screen("profile", "page", "Founder page", route="/members/{displayName}", reqs=["L2-041", "L2-040", "L2-054"])
 
-REVIEWS = {
-    "the_brooch_box": [("attic_treasures", 5, "Fri 9 Oct", "Shipped next day, exactly as pictured.", "Thanks Tessa, enjoy it."),
-                 ("pia_collects", 5, "Mon 28 Sep", "Packed with tissue paper. Would buy again.", None),
-                 ("margarets_china", 4, "Tue 15 Sep", "Lovely pieces, took a week to arrive.", None)],
-    "attic_treasures": [("pia_collects", 5, "Mon 5 Oct", "Plate arrived wrapped like a jewel. Fast shipping.", None),
-                  ("rosas_workshop", 4, "Thu 17 Sep", "Good seller, a little slow to reply.", None)],
-}
+FOUNDER_P = PEOPLE[FOUNDER]
 
 
-def review_html(author, stars_n, date, text, reply, reply_btn=False) -> str:
-    rp_ = f'<div class="review__reply"><strong>Reply:</strong> {esc(reply)}</div>' if reply else ""
-    rb = ""
-    return (f'<article class="review"><div class="review__head">{avatar(author, "avatar--sm")}<a href="{P("profile")}">{author}</a>'
-            f'{rating(float(stars_n), 1, short=True).replace("(1)", "")}<span class="text-caption"><time>{date}</time></span></div>'
-            f'<p>{esc(text)}</p>{rp_}{rb}</article>')
-
-
-def profile(handle: str, keys, *, own: bool = False, reviews=None, listings_count: int | None = None, more: str = "") -> Page:
-    p = PEOPLE[handle]
+def profile(keys, *, own: bool = False, listings_count: int | None = None, more: str = "") -> Page:
+    p = FOUNDER_P
     bio = f'<p class="text-muted">{esc(p["bio"])}</p>' if p["bio"] else ""
-    if own:
-        act = btn("Edit profile", href=P("edit-profile"), icon="edit")
-    else:
-        act = ""
-    sales = p["sales"]
-    stats = (f'<div class="stats stats--compact"><div class="stat"><span class="stat__value">{sales}</span><span class="stat__label">Sales</span></div>'
+    act = btn("Edit story", href=P("edit-story"), icon="edit") if own else ""
+    stats = (f'<div class="stats stats--compact"><div class="stat"><span class="stat__value">{p["sales"]}</span><span class="stat__label">Completed sales</span></div>'
              f'<div class="stat"><span class="stat__value">{p["since"]}</span><span class="stat__label">Member since</span></div></div>')
-    headh = (f'<section class="profile-head">{avatar(handle, "avatar--xl")}<div class="profile-head__body"><h1>{handle}</h1>'
-             f'<span class="text-muted" style="display: inline-flex; gap: var(--space-1); align-items: center;">{ic("map-pin", "icon icon--sm")}{p["city"]}</span>{rating(handle)}{bio}</div>'
+    headh = (f'<section class="profile-head">{avatar(FOUNDER, "avatar--xl")}<div class="profile-head__body"><h1>{p["name"]}</h1>'
+             f'<span class="text-muted" style="display: inline-flex; gap: var(--space-1); align-items: center;">{ic("map-pin", "icon icon--sm")}{p["city"]}</span><span class="text-muted text-sm">No reviews yet</span>{bio}</div>'
              f'<div class="stack" style="align-items: flex-end;">{act}</div></section>{stats}')
     n = listings_count if listings_count is not None else len(keys)
     if keys:
         lst = listing_grid(keys) + more
     else:
-        lst = empty("tag", "No items for sale", f"{handle} hasn’t listed anything yet.", cls="empty--compact", heading="h3")
-    reviews = reviews if reviews is not None else REVIEWS.get(handle, [])
-    if reviews:
-        rv = "".join(review_html(*r, reply_btn=own) for r in reviews)
-    else:
-        rv = '<p class="text-muted">No reviews yet</p>'
+        lst = empty("tag", "Nothing for sale right now", "New pieces from the collection are added often. Check back soon.", cls="empty--compact", heading="h3")
     main = (f'{headh}<section class="section" style="margin-top: var(--space-16);" aria-labelledby="l-h"><div class="section-head"><h2 id="l-h">For sale</h2><span class="text-muted text-sm">{n}</span></div>{lst}</section>'
-            f'<section class="section" style="margin-top: var(--space-16); max-width: var(--layout-measure);" aria-labelledby="r-h"><div class="section-head"><h2 id="r-h">Reviews</h2><span class="text-muted text-sm">{p["reviews"]}</span></div>{rv}</section>')
-    return Page(main=main)
+            f'<section class="section" style="margin-top: var(--space-16); max-width: var(--layout-measure);" aria-labelledby="r-h"><div class="section-head"><h2 id="r-h">Reviews</h2></div><p class="text-muted">No reviews yet</p></section>')
+    return Page(main=main, user="founder" if own else "member")
 
 
 TARA = ["garnet-brooch", "pearl-necklace", "seiko-watch", "bakelite-bangles"]
 
 
-@pr.state("default", "the_brooch_box’s public profile: rating, sales, items for sale and reviews; no contact details.")
+@pr.state("default", "Ida Campbell’s public page: portrait, story, completed sales, items for sale and “No reviews yet”; no contact details.")
 def _():
-    pg = profile("the_brooch_box", TARA)
-    pg.notes = note("No email, phone or street address appears on the page or in its API response (L2-054).", "top: 6rem; right: 1rem;")
+    pg = profile(TARA)
+    pg.notes = note("The only public page. No email, phone, street address, customer identity or purchase history appears on it or in its API response (L2-041 AC2, L2-054).", "top: 6rem; right: 1rem;")
     return pg
 
 
-@pr.state("own", "Tessa viewing her own profile: Edit profile.")
+@pr.state("own", "Ida viewing her own page: Edit story.")
 def _():
-    return profile("attic_treasures", ["camel-overcoat", "fiesta-pitcher"], own=True)
+    return profile(TARA, own=True)
 
 
-@pr.state("empty", "Member with nothing for sale and only buyer reviews (pia_collects).")
+@pr.state("empty", "Nothing for sale right now: the story still shows.")
 def _():
-    return profile("pia_collects", [], reviews=[("attic_treasures", 5, "Wed 7 Oct", "Paid fast, easy to deal with.", None),
-                                            ("attic_treasures", 5, "Sat 3 Oct", "Smooth sale.", None)])
+    return profile([])
 
 
-@pr.state("loading", "Profile skeleton.")
+@pr.state("loading", "Page skeleton.")
 def _():
-    main = ('<section class="profile-head" aria-busy="true" aria-label="Loading profile"><span class="skeleton avatar avatar--xl"></span>'
+    main = ('<section class="profile-head" aria-busy="true" aria-label="Loading page"><span class="skeleton avatar avatar--xl"></span>'
             '<div class="profile-head__body"><span class="skeleton skeleton--title" style="width: 12rem;"></span><span class="skeleton skeleton--text" style="width: 8rem;"></span>'
             '<span class="skeleton skeleton--text" style="width: 10rem;"></span></div></section>'
-            '<h1 class="visually-hidden">Loading profile</h1>' + skeleton_grid(4))
+            '<h1 class="visually-hidden">Loading page</h1>' + skeleton_grid(4))
     return Page(main=main)
 
 
-@pr.state("error", "Profile failed to load: retry.")
+@pr.state("error", "Page failed to load: retry.")
 def _():
-    return Page(main=center("", "Couldn’t load this profile", 'It’s us, not you. <span class="ref">Ref 4c11-8e02</span>',
+    return Page(main=center("", "Couldn’t load this page", 'It’s us, not you. <span class="ref">Ref 4c11-8e02</span>',
                             btn("Try again", "primary", icon="refresh") + btn("Back to shop", href=P("catalog"))))
 
 
-@pr.state("unavailable", "Closed member: “This member isn’t available” (HTTP 404).")
+@pr.state("unavailable", "A customer display name, a closed account or an unknown name: the same “not available” (HTTP 404).")
 def _():
-    return Page(main=center('4<em>0</em>4', "This member isn’t available", "The account may have been closed.",
-                            btn("Back to shop", "primary", P("catalog"))))
+    pg = Page(main=center('4<em>0</em>4', "This page isn’t available", "There is no public page here.",
+                          btn("Back to shop", "primary", P("catalog"))))
+    pg.notes = note("Customer accounts never resolve to a public profile; every case returns the same MEMBER_UNAVAILABLE response (L2-041 AC3).", "top: 6rem; right: 1rem;")
+    return pg
 
 
-@pr.state("long", "Busy seller: listings paged 24 at a time.")
+@pr.state("long", "Busy shop: listings paged 24 at a time.")
 def _():
     keys = TARA + ["cameo-earrings", "opal-ring", "monet-chain", "silk-blouse"]
-    more = ('<div class="load-more"><span class="text-sm text-muted">Showing 24 of 141</span>'
+    more = ('<div class="load-more"><span class="text-sm text-muted">Showing 24 of 31</span>'
             + btn("Load more") + '</div>')
-    pg = profile("the_brooch_box", keys, listings_count=141, more=more)
+    pg = profile(keys, listings_count=31, more=more)
     pg.notes = note("The mock shows 8 cards; pages hold 24.", "top: 30rem; right: 1rem;")
     return pg
 
 
 # ---------------------------------------------------------------------------
-# Edit profile (L2-004)
+# Account details (L2-004 AC1): a customer's private display name only
 # ---------------------------------------------------------------------------
-ep = screen("edit-profile", "page", "Edit profile", route="/account/profile", reqs=["L2-004", "L2-017"],
-            na={"empty": "A profile always has a display name."})
+ep = screen("edit-profile", "page", "Account details", route="/account/profile", reqs=["L2-004", "L2-001", "L2-041"],
+            na={"empty": "An account always has a display name."})
 
 
-def edit_profile(*, errs: dict | None = None, busy: bool = False, top: str = "", bio: str | None = None) -> Page:
+def edit_profile(*, errs: dict | None = None, busy: bool = False, top: str = "") -> Page:
     errs = errs or {}
-    bio = ME_P["bio"] if bio is None else bio
-    av = (f'<div class="cluster" style="gap: var(--space-6);">{avatar(ME, "avatar--xl")}<div class="stack stack--sm">'
-          f'{btn("Change photo", icon="camera")}<span class="field__help">JPEG, PNG or WebP, up to 10 MB.</span></div></div>')
-    name = field("display-name", "Display name", value=errs.get("_name", ME), error=errs.get("display-name"), attrs=ro(busy))
-    count = len(bio)
-    btxt = field("bio", "Bio", f'<textarea class="textarea" id="bio" rows="4"{{db}}{ro(busy)}>{esc(bio)}</textarea>', optional=True,
-                 error=errs.get("bio"), counter=f"{count} / 500")
-    city = field("city", "City", value="Brooklyn", attrs=ro(busy), optional=True)
-    region = field("region", "State", f'<select class="select" id="region"{{db}}><option>New York</option></select>', optional=True)
-    loc = f'<fieldset class="stack"><legend>Public location</legend><div class="form-row">{city}{region}</div><span class="field__help">Only city and state are shown.</span></fieldset>'
-    fm = (f'<form class="stack stack--lg" novalidate>{av}{name}{btxt}{loc}'
-          f'<div class="form-actions" style="justify-content: flex-start;">{btn("Save profile", "primary", attrs="type=\"submit\"" + (" aria-busy=\"true\"" if busy else ""))}'
-          f'{btn("View public profile", "ghost", P("profile", "own"))}</div></form>')
-    return account_page(head("Profile") + top + f'<div class="page--form">{fm}</div>', "profile")
+    name = field("display-name", "Display name", value=errs.get("_name", ME), error=errs.get("display-name"),
+                 help="3–30 letters, numbers, _ or -. Private: only you see it. It is never shown on a public page.",
+                 attrs=f'autocomplete="username"{ro(busy)}')
+    email = field("email", "Email", value=ME_P["email"], type="email", attrs="readonly",
+                  help="Change your sign-in details under Settings.")
+    fm = (f'<form class="stack stack--lg" novalidate>{name}{email}'
+          f'<div class="form-actions" style="justify-content: flex-start;">{btn("Save details", "primary", attrs="type=\"submit\"" + (" aria-busy=\"true\"" if busy else ""))}</div></form>')
+    return account_page(head("Account details") + top + f'<div class="page--form">{fm}</div>', "overview")
 
 
-@ep.state("default", "Edit display name, photo, bio and city; no street address.")
+@ep.state("default", "A private display name; no photo, bio, location or public page.")
 def _():
-    return edit_profile()
+    pg = edit_profile()
+    pg.notes = note("Customers have no avatar, bio, public location or public profile (L2-004).", "top: 10rem; right: 1rem;")
+    return pg
 
 
-@ep.state("invalid", "Name taken and bio over 500 characters: summary plus inline errors.")
+@ep.state("invalid", "Name already used (ignoring case): summary plus inline error.")
 def _():
-    long_bio = ("Clearing out my mother’s house one shelf at a time. " * 10)[:501]
-    errs = {"_name": "THE_BROOCH_BOX", "display-name": "That display name is taken", "bio": "Bio must be 500 characters or fewer"}
-    return edit_profile(errs=errs, bio=long_bio, top=error_summary([("display-name", errs["display-name"]), ("bio", errs["bio"])]))
+    errs = {"_name": "ATTIC_TREASURES2", "display-name": "That display name is taken"}
+    return edit_profile(errs=errs, top=error_summary([("display-name", errs["display-name"])]))
 
 
-@ep.state("submitting", "Saving: button busy, fields read-only.")
+@ep.state("submitting", "Saving: button busy, field read-only.")
 def _():
     return edit_profile(busy=True)
 
 
-@ep.state("success", "Saved: inline confirmation with a link to the public profile.")
+@ep.state("success", "Saved: inline confirmation.")
 def _():
-    return edit_profile(top=alert("success", "Profile saved", "", f'<a href="{P("profile", "own")}">View public profile</a>', role="status") + '<div style="height: var(--space-8);"></div>')
+    return edit_profile(top=alert("success", "Details saved", "", role="status") + '<div style="height: var(--space-8);"></div>')
 
 
 @ep.state("loading", "Form skeleton.")
 def _():
-    sk = ('<div class="page--form stack stack--lg" aria-busy="true" aria-label="Loading profile"><span class="skeleton avatar avatar--xl"></span>'
-          + '<span class="skeleton skeleton--rect" style="height: 2.5rem;"></span>' * 2 + '<span class="skeleton skeleton--rect" style="height: 7rem;"></span></div>')
-    return account_page(head("Profile") + sk, "profile")
+    sk = ('<div class="page--form stack stack--lg" aria-busy="true" aria-label="Loading details">'
+          + '<span class="skeleton skeleton--rect" style="height: 2.5rem;"></span>' * 2 + '</div>')
+    return account_page(head("Account details") + sk, "overview")
 
 
-@ep.state("error", "Profile failed to load: retry.")
+@ep.state("error", "Details failed to load: retry.")
 def _():
-    return account_page(head("Profile") + load_error("Couldn’t load your profile", "a7c3-55e1"), "profile")
+    return account_page(head("Account details") + load_error("Couldn’t load your details", "a7c3-55e1"), "overview")
+
+
+# ---------------------------------------------------------------------------
+# Shop overview (founder; L2-003, L2-021)
+# ---------------------------------------------------------------------------
+sh = screen("shop", "page", "Shop", route="/shop", reqs=["L2-003", "L2-021", "L2-010"],
+            na={"invalid": "No inputs on this page.", "submitting": "No form to submit.", "success": "Nothing is saved here."})
+
+
+def shop_page(stats: str, extra: str = "") -> Page:
+    h = head("Shop", f'{FOUNDER_P["name"]}’s collection', btn("Sell an item", "primary", P("sell"), icon="plus"))
+    grid = f'<div class="grid grid--auto" style="--layout-gutter: var(--space-4);">{stats}</div>' if stats else ""
+    links = (f'<ul class="settings-list" style="margin-top: var(--space-8);">'
+             f'{row("Inventory", "Drafts, active, reserved and sold pieces", btn("Open inventory", href=P("my-listings")))}'
+             f'{row("Sales", "Orders to ship and finished sales", btn("Open sales", href=P("sales")))}'
+             f'{row("Support", "Problems customers have reported", btn("Open support", href=P("support")))}'
+             f'{row("Your story", "Portrait, story and city shown on your public page", btn("Edit story", href=P("edit-story")))}</ul>') if stats else ""
+    return Page(main=h + extra + grid + links, account="shop", user="founder")
+
+
+@sh.state("default", "The shop at a glance: active listings, sales to ship, open problems; links to inventory, sales, support and story.")
+def _():
+    pg = shop_page(stat("18", "Active listings", P("my-listings")) + stat("1", "To ship by Fri 30 Oct", P("sales")) + stat("1", "Open problem", P("support")))
+    pg.notes = note("Only the verified founder reaches shop management; anyone else gets HTTP 403 (L2-003 AC2, L2-010).", "top: 12rem; right: 1rem;")
+    return pg
+
+
+@sh.state("loading", "Overview skeleton.")
+def _():
+    sk = '<div class="panel stat" aria-hidden="true"><span class="skeleton skeleton--title" style="width: 3rem;"></span><span class="skeleton skeleton--text" style="width: 60%;"></span></div>'
+    return shop_page(sk * 3)
+
+
+@sh.state("empty", "A new shop with nothing listed yet: one nudge to add the first piece.")
+def _():
+    e = empty("tag", "Nothing for sale yet", "List your first piece and it appears in the shop as soon as you publish it.",
+              btn("Sell an item", "primary", P("sell")))
+    pg = shop_page("", extra=e)
+    pg.main = pg.main.replace(btn("Sell an item", "primary", P("sell"), icon="plus"), "")
+    return pg
+
+
+@sh.state("error", "Overview failed to load; tabs still work.")
+def _():
+    return shop_page("", extra=load_error("Couldn’t load the shop", "3b90-6d12"))
+
+
+# ---------------------------------------------------------------------------
+# Edit story (founder; L2-004 AC3, AC4)
+# ---------------------------------------------------------------------------
+es = screen("edit-story", "page", "Edit story", route="/shop/story", reqs=["L2-004", "L2-041", "L2-017"],
+            na={"empty": "The founder always has a display name and a story."})
+
+
+def edit_story(*, errs: dict | None = None, busy: bool = False, top: str = "", story: str | None = None, name: str | None = None) -> Page:
+    errs = errs or {}
+    story = FOUNDER_P["bio"] if story is None else story
+    name = FOUNDER_P["name"] if name is None else name
+    av = (f'<div class="cluster" style="gap: var(--space-6);">{avatar(FOUNDER, "avatar--xl")}<div class="stack stack--sm">'
+          f'{btn("Change portrait", icon="camera")}<span class="field__help">JPEG, PNG or WebP, up to 10 MB. Location data is removed.</span></div></div>')
+    nm = field("display-name", "Display name", value=name, error=errs.get("display-name"),
+               help="Shown on your public page.", attrs=f'autocomplete="username"{ro(busy)}')
+    count = len(story)
+    st_ = field("story", "Story", f'<textarea class="textarea" id="story" rows="6"{{db}}{ro(busy)}>{esc(story)}</textarea>',
+                error=errs.get("story"), counter=f"{count} / 500")
+    city = field("city", "City", value="Kingston", attrs=ro(busy), optional=True)
+    region = field("region", "State or region", f'<select class="select" id="region"{{db}}><option>Saint Andrew</option></select>', optional=True)
+    loc = (f'<fieldset class="stack"><legend>Public location</legend><div class="form-row">{city}{region}</div>'
+           f'<span class="field__help">Only city and state or region are shown. There is no street address.</span></fieldset>')
+    fm = (f'<form class="stack stack--lg" novalidate>{av}{nm}{st_}{loc}'
+          f'<div class="form-actions" style="justify-content: flex-start;">{btn("Save story", "primary", attrs="type=\"submit\"" + (" aria-busy=\"true\"" if busy else ""))}'
+          f'{btn("View public page", "ghost", P("profile", "own"))}</div></form>')
+    return Page(main=head("Story") + top + f'<div class="page--form">{fm}</div>', account="story", user="founder")
+
+
+@es.state("default", "Edit portrait, display name, story (up to 500 characters) and city; no street address.")
+def _():
+    return edit_story()
+
+
+@es.state("invalid", "Story over 500 characters and a taken display name: summary plus inline errors.")
+def _():
+    long_story = ("Clearing out the house one shelf at a time, and sending each piece on with its story. " * 8)[:501]
+    errs = {"display-name": "That display name is taken", "story": "Story must be 500 characters or fewer"}
+    return edit_story(errs=errs, story=long_story, name="MISS_IDA",
+                      top=error_summary([("display-name", errs["display-name"]), ("story", errs["story"])]))
+
+
+@es.state("submitting", "Saving: button busy, fields read-only.")
+def _():
+    return edit_story(busy=True)
+
+
+@es.state("success", "Saved: inline confirmation with a link to the public page.")
+def _():
+    return edit_story(top=alert("success", "Story saved", "", f'<a href="{P("profile", "own")}">View public page</a>', role="status") + '<div style="height: var(--space-8);"></div>')
+
+
+@es.state("loading", "Form skeleton.")
+def _():
+    sk = ('<div class="page--form stack stack--lg" aria-busy="true" aria-label="Loading story"><span class="skeleton avatar avatar--xl"></span>'
+          + '<span class="skeleton skeleton--rect" style="height: 2.5rem;"></span>' + '<span class="skeleton skeleton--rect" style="height: 9rem;"></span></div>')
+    return Page(main=head("Story") + sk, account="story", user="founder")
+
+
+@es.state("error", "Story failed to load: retry.")
+def _():
+    return Page(main=head("Story") + load_error("Couldn’t load your story", "c8d1-24f6"), account="story", user="founder")
 
 
 # ---------------------------------------------------------------------------
 # Settings (L2-005, L2-008, L2-056)
 # ---------------------------------------------------------------------------
 st = screen("settings", "page", "Settings", route="/account/settings", reqs=["L2-005", "L2-008", "L2-009", "L2-056"],
-            na={"empty": "Every member has an email, password and session."})
+            na={"empty": "Every account has an email, password and session."})
 
 
 def row(title: str, meta: str, action: str) -> str:
     return f'<li><div class="settings-list__body"><span class="settings-list__title">{title}</span><span class="settings-list__meta">{meta}</span></div>{action}</li>'
 
 
-def settings_rows() -> str:
+def settings_rows(founder: bool = False) -> str:
+    who = FOUNDER_P if founder else ME_P
     rows = [
-        row("Email", ME_P["email"], ""),
+        row("Email", who["email"], ""),
         row("Password", "Changed Tue 2 Jun", btn("Change", href=D("change-password"))),
         row("Sessions", "Signed in on 2 devices", btn("Sign out everywhere", href=D("sign-out-everywhere"))),
         row("Cookies", "Strictly necessary only", btn("Cookie settings", href=D("cookie-settings"))),
-        row("Close account", "Removes your listings and erases your data within 30 days", btn("Close account", "ghost", D("close-account"), attrs='style="color: var(--color-danger-fg);"')),
     ]
+    if not founder:
+        rows.append(row("Close account", "Erases your data within 30 days. Finish any open orders first.",
+                        btn("Close account", "ghost", D("close-account"), attrs='style="color: var(--color-danger-fg);"')))
     return f'<ul class="settings-list page--form">{"".join(rows)}</ul>'
 
 
-@st.state("default", "Account settings as a short list: email, password, sessions, cookies, close account.")
+@st.state("default", "Customer settings as a short list: email, password, sessions, cookies, close account.")
 def _():
     return account_page(head("Settings") + settings_rows(), "settings")
+
+
+@st.state("founder", "Founder settings: the same list with no close-account row; the shop account cannot be closed here.")
+def _():
+    pg = account_page(head("Settings") + settings_rows(founder=True), "settings", user="founder")
+    pg.notes = note("The founder account has no close-account action (L2-005 AC6).", "top: 12rem; right: 1rem;")
+    return pg
 
 
 @st.state("loading", "Settings rows as skeletons.")
@@ -658,36 +749,51 @@ def sw(fid: str, checked: bool, disabled: bool = False, label: str = "") -> str:
             f'<span class="visually-hidden">{label}</span></label>')
 
 
-def emails(*, reviews: bool = True, marketing: bool = False, busy: bool = False, top: str = "") -> Page:
-    rows = [
-        row("Account security", "Sign-in alerts, password resets", sw("sec", True, True, "Account security emails, always on")),
-        row("Orders", "Sales, shipping, delivery, refunds", sw("ord", True, True, "Order emails, always on")),
-        row("Reviews", "When someone reviews you", sw("rev", reviews, busy, "Review emails")),
-        row("News from Sycapooke", "New treasures, now and then", sw("mkt", marketing, busy, "Marketing emails")),
-    ]
-    save = btn("Save", "primary", attrs='type="submit"' + (' aria-busy="true"' if busy else ""))
-    main = head("Emails", "Security and order emails are always on.") + top + f'<form class="page--form"><ul class="settings-list">{"".join(rows)}</ul><div class="form-actions" style="justify-content: flex-start;">{save}</div></form>'
-    return account_page(main, "notifications")
+def emails(*, marketing: bool = False, busy: bool = False, top: str = "", founder: bool = False) -> Page:
+    if founder:
+        rows = [
+            row("Account security", "Sign-in alerts, password resets", sw("sec", True, True, "Account security emails, always on")),
+            row("Sales", "New sales, cancellations, refunds", sw("sal", True, True, "Sales emails, always on")),
+            row("Ship-by reminders", "Before a sale’s ship-by date", sw("shp", True, True, "Ship-by reminder emails, always on")),
+            row("Support", "When a customer reports a problem", sw("sup", True, True, "Support emails, always on")),
+        ]
+        sub = "Security, sales, ship-by and support emails are always on."
+    else:
+        rows = [
+            row("Account security", "Sign-in alerts, password resets", sw("sec", True, True, "Account security emails, always on")),
+            row("Purchases", "Order confirmation, shipping, delivery, refunds", sw("ord", True, True, "Purchase emails, always on")),
+            row("News from Sycapooke", "New treasures, now and then", sw("mkt", marketing, busy, "Marketing emails")),
+        ]
+        sub = "Security and purchase emails are always on."
+    save = "" if founder else btn("Save", "primary", attrs='type="submit"' + (' aria-busy="true"' if busy else ""))
+    actions = f'<div class="form-actions" style="justify-content: flex-start;">{save}</div>' if save else ""
+    main = head("Emails", sub) + top + f'<form class="page--form"><ul class="settings-list">{"".join(rows)}</ul>{actions}</form>'
+    return account_page(main, "notifications", "founder" if founder else "member")
 
 
-@ns.state("default", "Security and order emails locked on; reviews on; marketing off until opted in.")
+@ns.state("default", "Security and purchase emails locked on; marketing off until opted in; no review emails.")
 def _():
     return emails()
 
 
-@ns.state("submitting", "Saving after turning reviews off.")
+@ns.state("founder", "Founder: security, sales, ship-by and support emails, all always on.")
 def _():
-    return emails(reviews=False, busy=True)
+    return emails(founder=True)
 
 
-@ns.state("success", "Saved: reviews off.")
+@ns.state("submitting", "Saving after turning marketing on.")
 def _():
-    return emails(reviews=False, top=alert("success", "Email settings saved", role="status") + '<div style="height: var(--space-6);"></div>')
+    return emails(marketing=True, busy=True)
+
+
+@ns.state("success", "Saved: marketing on.")
+def _():
+    return emails(marketing=True, top=alert("success", "Email settings saved", role="status") + '<div style="height: var(--space-6);"></div>')
 
 
 @ns.state("loading", "Rows as skeletons.")
 def _():
-    return account_page(head("Emails") + f'<div class="page--form">{sk_rows(4)}</div>', "notifications")
+    return account_page(head("Emails") + f'<div class="page--form">{sk_rows(3)}</div>', "notifications")
 
 
 @ns.state("error", "Settings failed to load: retry.")
@@ -706,12 +812,12 @@ def failed(title: str, ref: str) -> str:
     return alert("danger", title, f'Try again. <span class="ref">Ref {ref}</span>')
 
 
-vp = screen("verify-email-prompt", "dialog", "Verify email prompt", opens_from="listing-detail", reqs=["L2-002", "L2-003"],
+vp = screen("verify-email-prompt", "dialog", "Verify email prompt", opens_from="listing-detail", reqs=["L2-002"],
             na={"invalid": "No inputs; the email is the account’s."})
 
 
 def verify_prompt(footer: str, top: str = "", desc: str | None = None) -> Dialog:
-    desc = desc or f'Open the link we sent to <strong>{ME_P["email"]}</strong> to buy and sell.'
+    desc = desc or f'Open the link we sent to <strong>{ME_P["email"]}</strong> to buy.'
     return Dialog(bg=("listing-detail", "default"), html=dialog("Verify your email first", "", footer, desc=desc, icon="mail", top=top))
 
 
@@ -796,7 +902,7 @@ ca = screen("close-account", "dialog", "Close account", opens_from="settings", r
 
 def close_acc(*, err: str | None = None, busy: bool = False, top: str = "", blocked: bool = False) -> Dialog:
     if blocked:
-        orders = "".join(f'<li><a href="{P("order-detail" if o == "SY-48213" else "sale-detail")}">{o}</a> · {status(ORDERS[o]["status"])}</li>' for o in ["SY-48213", "SY-48302"])
+        orders = "".join(f'<li><a href="{P("order-detail")}">{o}</a> · {status(ORDERS[o]["status"])}</li>' for o in ["SY-48213", "SY-48140"])
         body = f'<ul class="stack stack--sm" style="padding-left: var(--space-5);">{orders}</ul>'
         foot = btn("Close", "primary", attrs="autofocus")
         top = alert("warning", "Finish your open orders first", "You can close your account once these are completed, cancelled or refunded.")
@@ -804,7 +910,7 @@ def close_acc(*, err: str | None = None, busy: bool = False, top: str = "", bloc
     body = pw("confirm-pw", "Enter your password to confirm", error=err, value="x" if (err or busy) else "")
     foot = cancel(disabled=busy) + btn("Close account", "danger", attrs='type="submit"' + (' aria-busy="true"' if busy else ""))
     return Dialog(bg=("settings", "default"), html=dialog("Close your account?", body, foot, icon="trash", icon_kind="danger", top=top,
-                                                          desc="Your 2 listings come down now. Your data is erased within 30 days. This can’t be undone."))
+                                                          desc="Your data is erased within 30 days. This can’t be undone."))
 
 
 @ca.state("default", "Re-enter password; red button, never the default focus.")
@@ -820,6 +926,15 @@ def _():
 @ca.state("busy", "Closing.")
 def _():
     return close_acc(busy=True)
+
+
+@ca.state("google", "Google-only account: no password to type, so closing needs a fresh Google sign-in (L2-005 AC5).")
+def _():
+    body = ('<p>This account signs in with Google, so there is no password to confirm. '
+            'Choose Continue with Google and sign in again to finish closing it.</p>')
+    foot = cancel() + btn("Continue with Google", "danger", icon="external")
+    return Dialog(bg=("settings", "default"), html=dialog("Close your account?", body, foot, icon="trash", icon_kind="danger",
+                                                          desc="Your data is erased within 30 days. This can’t be undone."))
 
 
 @ca.state("blocked", "Open orders block closure and are listed.")
@@ -841,11 +956,11 @@ def _():
 
 @ab.state("success", "Email verified.")
 def _():
-    return Note(bg=("catalog", "default"), top=banner("success", "Email verified. Buying and selling are open."))
+    return Note(bg=("catalog", "default"), top=banner("success", "Email verified. You can buy now."))
 
 
-@ab.state("warning", "Persistent until verified: verify to buy and sell.")
+@ab.state("warning", "Persistent until verified: verify to buy.")
 def _():
-    n = Note(bg=("catalog", "default"), top=banner("warning", "Verify your email to buy and sell.", '<button type="button">Resend link</button>', dismiss=False, icon="mail"))
+    n = Note(bg=("catalog", "default"), top=banner("warning", "Verify your email to buy.", '<button type="button">Resend link</button>', dismiss=False, icon="mail"))
     n.notes = note("Stays on every page until the email is verified; cannot be dismissed.", "top: 8rem; right: 1rem;")
     return n

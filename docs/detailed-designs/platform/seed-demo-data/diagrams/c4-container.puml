@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Seed founder demo inventory
+Person(user, "Developer")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke.Cli", ".NET console", "Guarded local reset and founder demo")
+  ContainerDb(db, "Local demo database", "SQL Server", "Development runtime only; tests fake the port")
+  Container(store, "Local photo store", "File system", "Processed demo photographs")
+}
+Rel(user, web, "Runs locally")
+Rel(web, db, "Invokes application commands", "EF Core")
+Rel(web, store, "Processes committed seed photos")
+@enduml

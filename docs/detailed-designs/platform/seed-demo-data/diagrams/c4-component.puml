@@ -1,47 +1,14 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Components — Seed demo data (Sycapooke.Cli)
-
-Person(dev, "Developer", "Runs reset and seed on their own machine")
-System_Boundary(cli, "Sycapooke.Cli (src/backend/Sycapooke.Cli)") {
-  Component(program, "Program / CliApp", "Console entry point", "Reads configuration and DOTNET_ENVIRONMENT, parses arguments, maps failures to exit codes")
-  Component(args, "CliArguments", "Plain argument parsing", "help | reset [~--force] | seed [~--reset] [~--force]")
-  Component(guard, "ResetGuard", "Safety check", "Development or ~--force; prints server and database, never credentials")
-  Component(reset, "DemoReset", "Command", "Drops and rebuilds the schema, empties the photo store")
-  Component(schema, "IDatabaseSchema", "Port", "MigratedSchema: EnsureDeleted + MigratorApp.ApplyMigrations")
-  Component(seeder, "DemoSeeder", "Command", "Registers, verifies, uploads, drafts and publishes through MediatR")
-  Component(catalogue, "DemoCatalogue", "Static data", "8 members, 48 listings, photo file names per listing")
-  Component(clock, "SeedClock", "TimeProvider", "Moved back in time per listing so publishes spread over 30 days")
-  Component(photos, "SeedPhotos/{category}/", "24 JPEG files + ATTRIBUTION.md", "CC BY 2.0, copied to the output folder")
+title Components - Seed founder demo inventory
+Container_Boundary(slice, "Sycapooke.Cli") {
+  Component(entry, "CLI environment guard", "CLI guard", "Feature entry point")
+  Component(handler, "DemoSeeder", "Application handler", "Executes feature rules")
+  Component(entity, "DemoCatalogue", "Domain or read model", "Feature state and invariants")
+  ComponentDb(db, "Sycapooke database", "SQL Server", "Persistent feature state")
 }
-System_Boundary(app, "Sycapooke.Application + Sycapooke.Domain") {
-  Component(cmds, "MediatR handlers", "Commands", "RegisterMember, VerifyEmail, UploadListingPhoto, CreateListingDraft, PublishListing")
-  Component(domain, "Member, Listing, ListingPhoto, OutboxMessage", "Domain", "Size lock, category, publish and photo rules")
-}
-System_Boundary(infra, "Sycapooke.Infrastructure + Sycapooke.Migrator") {
-  Component(db, "SycapookeDbContext", "EF Core SQL Server", "ConnectionStrings__Sycapooke")
-  Component(pipeline, "SkiaPhotoProcessor + SkiaImageInspector", "SkiaSharp", "Strips metadata, WebP + JPEG at 400/800/1600")
-  Component(store, "FileSystemPhotoStorage", "IPhotoStorage", "PhotoStorage:RootPath (public/, private/)")
-  Component(migrator, "MigratorApp.ApplyMigrations", "Shared migration code", "Also used by Sycapooke.Migrator")
-}
-ContainerDb(sql, "Sycapooke database", "SQL Server / LocalDB")
-Rel(dev, program, "dotnet Sycapooke.Cli.dll seed --reset")
-Rel(program, args, "Parses")
-Rel(program, guard, "Before reset")
-Rel(program, reset, "reset")
-Rel(program, seeder, "seed")
-Rel(reset, schema, "Rebuild")
-Rel(schema, migrator, "Applies every migration")
-Rel(reset, store, "Deletes RootPath contents")
-Rel(seeder, catalogue, "Reads")
-Rel(seeder, photos, "Reads bytes")
-Rel(seeder, clock, "Sets time per step")
-Rel(seeder, cmds, "ISender.Send")
-Rel(cmds, domain, "Applies rules")
-Rel(cmds, pipeline, "Uploads")
-Rel(cmds, store, "Saves versions and originals")
-Rel(cmds, db, "SaveChanges")
-Rel(migrator, db, "Migrate()")
-Rel(db, sql, "SQL")
+Rel(entry, handler, "Dispatches validated action")
+Rel(handler, entity, "Reads or applies rules")
+Rel(handler, db, "Queries or saves atomically", "EF Core")
 @enduml

@@ -2,9 +2,9 @@
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. The *catalog* is the public grid of items that are currently for sale, and it is the home page of Sycapooke (`/`). This feature covers browsing that grid: loading the first page of listing cards, loading further pages, and showing the right state when there is nothing to show, when the request fails, or when the device is offline.
+Sycapooke is the founder's shop for antiques and vintage treasures jewelry, clothing, housewares and electronics. The *catalog* is the public grid of items that are currently for sale, and it is the home page of Sycapooke (`/`). This feature covers browsing that grid: loading the first page of listing cards, loading further pages, and showing the right state when there is nothing to show, when the request fails, or when the device is offline.
 
-A *listing* is one item a seller offers for sale. A listing has a status, and only two statuses are visible in the catalog:
+A *listing* is one item the founder offers for sale. A listing has a status, and only two statuses are visible in the catalog:
 
 > **Active listing** — published listing that a buyer may start checkout for
 
@@ -18,6 +18,8 @@ Keyword search, filters and sort run through the same endpoint and page componen
 
 ## Description
 
+This design targets the founder-only shop under [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing descriptions identify reusable parts, not evidence that revised acceptance criteria pass. The configured founder alone manages inventory, fulfilment and support; customers have private buying accounts.
+
 The slice runs from the catalog page in `Sycapooke Web` through `Sycapooke API` to the `Sycapooke database`; photos come from the public photo origin (`/photos`, the CDN origin once one exists). The screens and copy come from `docs/mocks/pages/catalog/` (states `default`, `guest`, `category`, `loading`, `empty`, `error`, `offline`). The screen is composed as listed in `docs/screen-composition.md`.
 
 ### Frontend — `Sycapooke Web`
@@ -28,7 +30,7 @@ Feature library `@sycapooke/catalog` (`src/frontend/projects/catalog/src/lib/`),
 - **`CatalogPage`** (`catalog/catalog-page`) — renders the hero ("Treasures with a *story.*" and the lead "Vintage jewelry, clothing, housewares and electronics, every piece at least 20 years old, from families downsizing a lifetime of treasures.") at `/`, or a page header with the category name and a large `sy-size-tag` on a category page; then the toolbar with the polite item count and the grid. It reads all state from `CatalogStore` and renders exactly one view:
   - `loading` — `sy-listing-grid` with 8 skeleton cards (`aria-busy="true"`, label "Loading listings"); the count shows a text skeleton.
   - `loaded` — the grid, the count "1,284 items" and `sy-load-more`.
-  - `empty` — `sy-empty-state` "Nothing listed yet", "Be the first to list a pair of 12s or something in L.", primary link "Sell an item" to `/sell`; the count reads "0 items".
+  - `empty`: the shared empty state explains that the collection has no available treasures and offers browsing categories or returning later. It never invites customers to sell.
   - `error` — `sy-empty-state` in the error tone: "Couldn’t load items", "Something went wrong on our side. Ref {ref}", "Try again" repeats the request.
   - `offline` — warning `sy-alert` banner "You’re offline. Showing items from your last visit." at the top of `main`, the saved cards and the count "{n} saved items"; no Load more.
 - **`CatalogStore`** — signal store provided by the page. `load(category)` fetches page 1 and replaces the cards; `retry()` repeats it; `loadMore()` fetches the next page and appends cards whose `id` is not shown yet (offset paging can repeat a card when newer listings are published between requests). When a next page fails, the cards stay and a danger `sy-alert` "Couldn’t load more items" with the reference and a Try again link is shown. After a successful first page of `/` it writes the cards to `localStorage` key `sycapooke.catalog.snapshot.v1` (public listing data only); when page 1 fails with status 0 while `navigator.onLine` is false, that snapshot is shown. Storage failures are ignored and only disable the offline view.
@@ -82,13 +84,21 @@ Feature library `@sycapooke/catalog` (`src/frontend/projects/catalog/src/lib/`),
 | `VALIDATION_FAILED` | 400 | `page` or `pageSize` is below 1, or the category is unknown |
 | `INTERNAL_ERROR` | 500 | an unhandled exception; body holds the correlation ID only |
 
+### Implementation evidence
+
+No complete target behavior is counted. Existing paging and browser tests demonstrate reusable catalog mechanics, but the configured-founder predicate and revised empty-state acceptance coverage remain absent.
+
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
+
+### Founder inventory predicate
+
+`BrowseCatalogQueryHandler` filters Active and Reserved inventory by the configured founder ID before paging, counting or building cards. Missing binding returns an empty collection. Existing non-founder listings are not relabelled or made public. Facets and search apply the same predicate.
+
 ## Requirements
 
-The feature realizes the following level-2 (L2) requirements. Each L2 requirement refines a level-1 (L1) requirement, cited by identifier.
-
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-022` | `L1-005` | The catalog shall show Active and Reserved listings only, as cards with cover photo, title, brand, size, condition and price, sorted newest first by default and paged 24 at a time. Reserved listings shall be marked "Reserved". Anonymous visitors shall be able to browse the catalog. |
+| --- | --- | --- |
+| `L2-022` | `L1-005` | The catalog shall show Active and Reserved listings only, as cards with cover photo, title, brand, size, condition and price, sorted newest first by default and paged 24 at a time. Reserved listings shall be marked "Reserved". Anonymous visitors shall be able to browse the catalog. Each category has its own page, titled "{Category} · Sycapooke", at `/jewelry`, `/clothing`, `/housewares` and `/electronics`. |
 | `L2-059` | `L1-015` | Photos shall be served from a CDN in WebP with a JPEG fallback, sized to the space they fill using `srcset`, with explicit width and height to avoid layout shift. Photos below the first screen shall be lazy loaded. Photo URLs shall be content-addressed and cached for at least one year. |
 | `L2-061` | `L1-016` | Every page and dialog shall render without horizontal scrolling from 320px wide upwards. The layout shall adapt at these breakpoints: extra small (<576px), small (>=576px), medium (>=768px), large (>=992px) and extra large (>=1200px). |
 

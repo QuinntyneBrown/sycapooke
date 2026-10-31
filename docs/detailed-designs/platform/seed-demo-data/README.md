@@ -1,231 +1,97 @@
-# Seed demo data
+# Seed founder demo inventory
 
 ## Overview
 
-Sycapooke is a marketplace made only for vintage jewelry, clothing, housewares and electronics. A fresh local
-install has no members and no listings, so every catalog page is empty until someone
-registers, verifies, uploads photos and publishes by hand. This feature, part of the
-`platform` subsystem, adds `Sycapooke.Cli`, a developer tool with two commands: `reset`
-gives an empty, fully migrated database and an empty photo store; `seed` loads a small
-demo catalogue of members and Active listings of vintage pieces with real product photographs in every
-category. `seed --reset` does both. It refines `L1-019` through `L2-072` to `L2-077`.
+The local CLI produces a repeatable founder shop demonstration. One founder owns every treasure and eight private customers demonstrate shopping.
 
-Terms used below:
-
-- **demo catalogue** — the fixed set of 8 members and 48 listings in `DemoCatalogue`
-- **photo store** — the folder `FileSystemPhotoStorage` writes to, `PhotoStorage:RootPath`
-  (`public/` versions, `private/` originals)
-- **seed photos** — the 24 committed photographs under
-  `src/backend/Sycapooke.Cli/SeedPhotos/{Jewelry,Clothing,Housewares,Electronics}/`
-- **reset guard** — the check that `reset` runs only in Development or with `--force`
-  (`L2-073`)
-- **seed clock** — the `TimeProvider` the seeder moves back in time per step
-
-Who uses it: a developer on their own machine. It has no UI, adds no API endpoint, changes
-nothing in the Angular app or the vintage rule, and is never run by the API, the Worker or CI
-against a database ([ADR-0010](../../../adr/platform/0010-sycapooke-cli-for-demo-seeding.md)).
-The demo set is not a load or scale fixture
-([ADR general/0002](../../../adr/general/0002-no-load-or-scale-tests.md)).
+Sycapooke is the shop of one older Caribbean woman, its sole seller. Her jewelry, clothing, housewares and electronics are at least 20 years old. This design refines [ADR general/0010](../../../adr/general/0010-founder-only-shop.md). Existing names identify reusable code; Description identifies target additions.
 
 ## Description
 
-### Project and composition (`src/backend/Sycapooke.Cli`)
+### Existing developer tool
 
-A console project (`OutputType Exe`) in `Sycapooke.sln`, referencing `Sycapooke.Application`,
-`Sycapooke.Infrastructure` and `Sycapooke.Migrator`, plus `Microsoft.Extensions.Configuration.*`
-and `Microsoft.Extensions.DependencyInjection`. `SeedPhotos/**` is copied to the output
-folder.
+`Sycapooke.Cli`, `CliApp`, `CliArguments`, `ResetGuard`, `DemoReset`, `DemoSeeder`, `DemoCatalogue` and the seed clock remain. The tool supports reset, seed and seed --reset for local development. Existing reset guards, sanitized target preview, documented exit codes and idempotent no-op on an existing demo set remain. It is never run by deployment or CI against a database.
 
-- **`Program`** — builds `IConfiguration` from `appsettings.json`,
-  `appsettings.{environment}.json` and environment variables, reads the environment from
-  `DOTNET_ENVIRONMENT` (`Production` when unset, as the .NET host does) and calls
-  `CliApp.RunAsync`.
-- **`CliApp.RunAsync(args, output, configuration, environmentName, configureServices)`** —
-  parses the arguments, builds a `ServiceProvider` with `AddApplication()` and
-  `AddInfrastructure(configuration)` (the same composition as the API and the Worker),
-  replaces `TimeProvider` with a `SeedClock`, registers `IDatabaseSchema`
-  (`MigratedSchema`), `DemoReset` and `DemoSeeder`, then applies `configureServices`.
-  Tests use that last hook to put SQLite in-memory, a fake `IPhotoStorage` and
-  `EnsureCreatedSchema` in place; production passes nothing. Every exception from a
-  command is caught, printed in one line and mapped to an exit code.
-- **`CliArguments.Parse(args)`** — plain parsing, no `System.CommandLine`: the first
-  argument is the command (`help`, `reset`, `seed`; `--help`, `-h` or none mean help), the
-  rest are flags. `reset` takes `--force`; `seed` takes `--reset` and `--force`. Anything
-  else is a usage error.
+### Target account set and local founder binding
 
-### Exit codes (`L2-077`)
+`DemoCatalogue` defines one founder and eight private customers, each with a verified reserved `.test` email and the documented local-only password. Customer accounts use registration and verification commands with email dispatch suppressed. The founder uses the trusted operator binding through process-local `ShopOptions` and the local singleton `ShopIdentity`. This local override cannot rewrite production configuration and is refused outside Development, even when the reset-only --force flag is supplied.
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success, help, or `seed` found the demo data already there |
-| 1 | Unknown command or option; usage is printed |
-| 2 | `ConnectionStrings__Sycapooke` is not set |
-| 3 | The reset guard refused |
-| 4 | A seed photo folder or file is missing |
-| 5 | The database cannot be reached, or a migration or seed step failed |
+### Inventory and publish clock
 
-### Reset (`L2-072`, `L2-073`)
+Seed 48 Active founder listings, twelve in each of the existing four categories, with 1 to 4 committed category photographs. All inventory belongs to the founder; no customer owns listings or has a public page. The founder public rating remains No reviews yet. No real payment account or order is created.
 
-1. **`ResetGuard.DescribeTarget(connectionString)`** reads `Data Source`/`Server` and
-   `Initial Catalog`/`Database` with `SqlConnectionStringBuilder` and prints
-   `Target: server …, database …`. Passwords and user IDs are never printed.
-2. **`ResetGuard.Allows(environmentName, force)`** — true for `Development` (ignoring case)
-   or `--force`. Otherwise the tool prints why and exits 3 before touching anything.
-3. **`DemoReset.Run`** — `IDatabaseSchema.Rebuild(db, output)` then empties the photo
-   store by deleting `RootPath/public` and `RootPath/private`. It prints each step.
-4. **`MigratedSchema`** — `db.Database.EnsureDeleted()` then
-   `MigratorApp.ApplyMigrations(db, output)`. `ApplyMigrations` is the method
-   `MigratorApp.Run` now calls, so `Sycapooke.Migrator` and the CLI share one migration path.
+Draft, upload and publication commands enforce the same founder, Vintage, condition, photo and price rules as the application. The seed clock spaces publication across enough UTC days to respect `Selling:PublishesPerDay`, including one listing per day. A fixed thirty-day window no longer distributes inventory between multiple sellers or bypasses the limit.
 
-The migrations hold SQL Server SQL, so tests cannot run them on SQLite. Tests use
-`EnsureCreatedSchema` (`EnsureDeleted` then `EnsureCreated`) behind the same
-`IDatabaseSchema` seam, and `reset` against LocalDB is checked by hand. `MigratorTests`
-keeps covering the migration list.
+Reset completes before founder provisioning. A second seed returns exit 0 without mutations; seed --reset reproduces the same identities, titles, categories, prices and photographs. Tests use in-memory database substitutes and fake ports, not a real database, Redis or payment provider.
 
-### Seed (`L2-074` to `L2-076`)
+### Implementation and verification boundary
 
-**`DemoSeeder.SeedAsync(output)`** runs in this order:
+Application code and HTML mocks still require alignment with the revised requirements. UI implementation first aligns mocks, design-system components and screen composition. Backend verification uses fake ports and in-memory substitutes. Browser verification uses the built Angular app and intercepted API responses. No external system runs in tests.
 
-1. **Photos present** — every file named by the demo catalogue must exist under
-   `Seed:PhotosPath` (default `{AppContext.BaseDirectory}/SeedPhotos`). A missing folder
-   or file stops the seed before any write: exit 4, naming the path.
-2. **Already seeded** — when the first demo member's email is registered, print "Demo data
-   already exists. Run `seed --reset` for a fresh demo." and exit 0 (`L2-076`).
-3. **Members** — for each demo member, with the seed clock 31 days back:
-   `RegisterMemberCommand` (all `L2-001` rules, including the breached-password check),
-   then the token is read from the queued `EmailVerification` outbox message's link and
-   sent with `VerifyEmailCommand` (`L2-002`), then that outbox message is claimed and
-   suppressed ("Demo member verified by Sycapooke.Cli") so the Worker never sends it. A
-   failed command result stops the seed with exit 5 and its error code.
-4. **Listings** — in catalogue order (oldest first), listing *i* of *n* is created and
-   published with the seed clock at `now − 30 days + i × (30 days ÷ n)`. For each:
-   `UploadListingPhotoCommand` per photo file (the full upload pipeline: type sniffing,
-   800 px rule, metadata strip, WebP and JPEG at 400/800/1600, content-addressed keys),
-   `CreateListingDraftCommand` with the photo IDs, then `PublishListingCommand`. The size comes from the category, as for every listing
-   (`L2-013`).
-5. Print "Seeded 8 members and 48 listings." and exit 0.
+### Implementation evidence
 
-**Daily publish limit.** `PublishListingCommandHandler` counts the seller's listings with
-`PublishedAt` on or after the seed clock's UTC day. Because listings are published oldest
-first and 48 listings are spread over 30 days across 8 sellers, each seller publishes at
-most one listing per day, so the limit is never reached, even at `PublishesPerDay = 1`.
-The rule itself is unchanged.
+Completed behavior evidence: `reset-local-demo` in `src/backend/Sycapooke.Cli/DemoReset.cs` and `tests/Sycapooke.Cli.Tests/ResetTests.cs`. 1 of 3 target behaviors are counted. Remaining target behavior and acceptance checks are not counted merely because older marketplace tests pass.
 
-**Photo reuse.** Each listing uploads its own photo rows (a photo belongs to one listing),
-but versions are keyed by the content hash, so the 24 files are stored once each and
-served by `/photos/{hash}/{file}` like any upload.
-
-### Demo catalogue (`DemoCatalogue`)
-
-All demo members share the password `Sycapooke-demo-only-2026`, documented in
-`src/backend/Sycapooke.Cli/README.md` as for local use only. Emails use the reserved `.test`
-domain. No member is an administrator, onboarded for payouts or the author of any review,
-report or order.
-
-| Display name | Email |
-|--------------|-------|
-| `attic_treasures` | `tessa@demo.sycapooke.test` |
-| `BroochBoxTara` | `tara@demo.sycapooke.test` |
-| `HeirloomHana` | `hana@demo.sycapooke.test` |
-| `PyrexPia` | `pia@demo.sycapooke.test` |
-| `RadioDaysRosa` | `rosa@demo.sycapooke.test` |
-| `LinenPressLily` | `lily@demo.sycapooke.test` |
-| `PearlStrandPenny` | `penny@demo.sycapooke.test` |
-| `CamelCoatCleo` | `cleo@demo.sycapooke.test` |
-
-48 listings, 12 per category. They are published with the categories alternating, and each
-category's two listings that share a cover photo are published six apart, so a catalog page
-does not show the same photo side by side. Sellers take turns. Every listing is Vintage (the server sets the size from the category). Each has a subcategory from the
-`L2-011` table, a title, a description of at least 20 characters, a brand from
-`Selling:SuggestedBrands`, one of the five conditions (every `Used - Fair` listing names its
-flaws), a price from $18 to $420 and shipping from $0 to $15.
-
-| Category | Subcategories used | Seed photos (each the cover of 2 listings; 1 to 4 photos per listing) |
-|----------|--------------------|------------------------------------------------------------|
-| Jewelry | Necklaces, Brooches and pins, Earrings, Bracelets, Watches | `gold-filigree-brooch`, `triple-strand-pearl-necklace`, `rhinestone-clip-earrings`, `bakelite-bangle-bracelet`, `enamel-flower-pin`, `gold-tone-dress-watch` |
-| Clothing | Dresses, Coats and jackets, Knitwear, Hats and accessories | `floral-shirtwaist-day-dress`, `camel-wool-overcoat`, `fair-isle-cardigan`, `tweed-hacking-jacket`, `silk-head-scarf`, `wool-felt-cloche-hat` |
-| Housewares | Tableware, Glassware, Ceramics and pottery, Lighting | `bone-china-tea-set`, `pyrex-primary-mixing-bowls`, `teal-drip-glaze-vase`, `amber-glass-tumblers`, `brass-desk-lamp`, `stoneware-casserole-dish` |
-| Electronics | Radios, Cameras, Audio, Telephones, Clocks | `walnut-transistor-radio`, `35mm-film-camera`, `portable-record-player`, `rotary-dial-telephone`, `flip-clock-radio`, `instant-camera` |
-
-A listing's first photo is its cover and matches its title; extra photos are other items
-of the same category, so a buyer sees a gallery. Photo sources and licences are in
-`SeedPhotos/ATTRIBUTION.md` (CC BY 2.0, Open Images).
-
-### Tests (`tests/Sycapooke.Cli.Tests`)
-
-xUnit, SQLite in-memory through the `configureServices` hook, a fake `IPhotoStorage`
-(dictionary) and `EnsureCreatedSchema`; the reset tests point `PhotoStorage:RootPath` at a
-temporary folder. No SQL Server, LocalDB, Docker or connection string to a live database.
-The real SkiaSharp pipeline runs on the committed photos. Each test file starts with the
-`// Traces to:` header of `L2.md`:
-
-- `CliArgumentsTests`, `HelpAndExitCodeTests` — `L2-077`.
-- `ResetTests` — `L2-072`, `L2-073` (guard, target output without password, rows and
-  files gone).
-- `SeedMembersTests` — `L2-074` (verified, `.test`, sign-in with the demo password, no
-  pending email).
-- `SeedListingsTests` — `L2-075` (counts, sizes, photos and versions, brands in the API's
-  `appsettings.json`, cover photo hashes, one publish per seller per day, catalog query per
-  category, every detail query).
-- `RepeatableSeedTests` — `L2-076`.
-- `SeedLimitsTests` — `L2-075` (`PublishesPerDay = 1`), `L2-077` (missing photos, exit 4,
-  nothing written, checked before `--reset` acts) and that every photo is committed,
-  attributed and under 400 KB.
-
-### Configuration values
-
-| Setting | Value | Source |
-|---------|-------|--------|
-| `ConnectionStrings__Sycapooke` | Required; the same setting as `Sycapooke.Migrator` | Environment |
-| `DOTNET_ENVIRONMENT` | `Development` to allow `reset`; `Production` when unset | Environment |
-| `PhotoStorage:RootPath` | Same as the API (default `{temp}/sycapooke-photos`) | `PhotoStorageOptions` |
-| `Selling:PublishesPerDay` | 20, unchanged | `SellingOptions` |
-| `Seed:PhotosPath` | `{AppContext.BaseDirectory}/SeedPhotos` | `DemoSeeder` |
-| Demo password | `Sycapooke-demo-only-2026` | `DemoCatalogue`, CLI README |
+Effort in the matching estimate is the full target feature effort in developer-days, not remaining work. Completion counts whole verified behaviors and rounds to the nearest ten percent. Source and existing acceptance tests supply the evidence; this documentation refresh does not execute new target tests.
 
 ## Requirements
 
 | L2 ID | Refines (L1) | Requirement |
-|-------|--------------|-------------|
-| `L2-072` | `L1-019` | `reset` drops the database, applies every migration through the migrator's code and empties the photo store. |
-| `L2-073` | `L1-019` | `reset` runs only in Development or with `--force`, and prints the target server and database first. |
-| `L2-074` | `L1-019` | `seed` creates 6 to 10 verified demo members through the account commands, with a documented demo password. |
-| `L2-075` | `L1-019` | `seed` creates 40 to 80 Active vintage listings in every category through the listing and photo commands, without breaking the daily publish limit. |
-| `L2-076` | `L1-019` | `seed` is repeatable and `seed --reset` gives the same fresh demo. |
-| `L2-077` | `L1-019` | Usage, exit codes and one-line failure messages. |
-
-Related requirements applied without restating them: `L2-071` (the verify command builds
-and tests the CLI), `L2-001`, `L2-002`, `L2-006` (accounts), `L2-011` to `L2-019`
-(categories, vintage lock, listing and photo rules), `L2-022`, `L2-025` (catalog and detail),
-`L2-040` (no reviews), `L2-051` (daily limit), `L2-059` (photo delivery).
+| --- | --- | --- |
+| `L2-003` | `L1-001` | Public registration shall create customer accounts only. A trusted operator shall provision one founder account through a protected deployment or operator process outside public registration. The server shall bind management access to that account's immutable identity, never a display name, email supplied by the client or Google claim. Provisioning shall not create a second founder. Only the verified founder shall manage listings, photos, sales, shipping and customer problems. Customers shall have no selling links, public profile creation or management navigation. |
+| `L2-011` | `L1-003` | Sycapooke shall accept only the categories and sizes in this table. The list is held on the server and served to the client.<br><br>\| Category \| Subcategories \| Accepted size \|<br>\| --- \| --- \| --- \|<br>\| Jewelry \| Necklaces, Brooches and pins, Earrings, Bracelets, Rings, Watches \| Vintage \|<br>\| Clothing \| Dresses, Coats and jackets, Knitwear, Shirts and blouses, Skirts and trousers, Hats and accessories \| Vintage \|<br>\| Housewares \| Tableware, Glassware, Ceramics and pottery, Lighting, Linens, Decor \| Vintage \|<br>\| Electronics \| Radios, Cameras, Audio, Telephones, Clocks, Typewriters and office \| Vintage \|<br><br>Vintage is a vintage lock, not a fit: every piece is at least 20 years old, whatever its category ([ADR general/0006](../../../adr/general/0006-vintage-only.md)). |
+| `L2-013` | `L1-003` | Only authorised founder requests may reach listing validation (L2-010). The API shall be the source of truth for the size rule. It shall reject any listing create or update request whose size does not match the accepted size for its category, whatever the client sends. The stored size shall always be set by the server from the category. |
+| `L2-017` | `L1-004` | A listing shall have 1 to 8 photos. Each photo shall be JPEG, PNG or WebP, at most 10 MB, and at least 800 pixels on its shortest side. The file type shall be checked from the file's content, not its name. The server shall strip all metadata (including GPS location), re-encode the image and produce thumbnail (400px), medium (800px) and large (1600px) versions. The first photo is the cover and the founder can reorder photos. |
+| `L2-019` | `L1-004` | A listing shall have one of these statuses: Draft, Active, Reserved, Sold or Removed. The founder shall be able to save an incomplete listing as a Draft and publish it later. Only Active and Reserved listings appear in the catalog. Validation rules L2-015 to L2-018 apply when publishing; drafts only need a category, and any field a draft does contain must be within its limits. |
+| `L2-040` | `L1-009` | Only the founder shall have a public rating summary. It and the public reviews section shall show "No reviews yet" under the existing deferral. Customers shall have no public ratings or review sections. No sample reviews or calculated star rating shall imply reviews already exist. |
+| `L2-051` | `L1-013` | The API shall limit requests to 120 per minute per IP address for anonymous callers and 300 per minute per member, with stricter limits for sign-in (L2-007), registration (5 per hour per IP) and listing creation (20 published listings by the founder per UTC day; saving drafts is not limited). Callers over a limit shall receive HTTP 429 with a `Retry-After` header. |
+| `L2-072` | `L1-019` | A developer tool, `Sycapooke.Cli`, shall offer a `reset` command that drops the database named by `ConnectionStrings__Sycapooke`, recreates it by applying every EF Core migration through the same migration code `Sycapooke.Migrator` runs, and deletes every file in the photo store (`PhotoStorage:RootPath`, originals and versions). The tool is for a developer's own machine; no deployment, worker, API or CI job runs it against a database. Its tests use an in-memory substitute only, as for every backend test (`L2-071`). |
+| `L2-073` | `L1-019` | `reset`, and `seed --reset`, shall refuse to run unless the environment (`DOTNET_ENVIRONMENT`, `Production` when unset) is `Development` or `--force` is passed. Before acting, and also when refusing, the tool shall print the target server and database read from the connection string, never the password or any other credential. |
+| `L2-074` | `L1-019` | In a local Development install only, `seed` shall create exactly one demo founder through the trusted operator provisioning path of L2-003 and between 6 and 10 private demo customers through the registration and verification commands of L2-001 and L2-002. Every demo email shall be verified, use the reserved `.test` domain and have its queued verification email suppressed. All demo accounts shall use the documented local-only demo password in `src/backend/Sycapooke.Cli/README.md`. The founder alone shall have management access and a public story; customers shall have neither. No real payment-provider account or order shall be created, and the founder summary shall say "No reviews yet" (L2-040). Demo provisioning shall never run in deployment or CI against a database. |
+| `L2-075` | `L1-019` | In local Development, `seed` shall create between 48 and 80 Active listings, all belonging to the demo founder, with at least 8 in each category of L2-011. It shall use the founder-authorised draft and publish commands so L2-013 and L2-015 to L2-018 apply. Every listing shall have 1 to 4 photos uploaded from `src/backend/Sycapooke.Cli/SeedPhotos/{category}/` through the normal photo command and served by `/photos/{hash}/{file}` (L2-017, L2-059). Brands shall come from `Selling:SuggestedBrands`. Publish timestamps shall be spread across as many days before seeding as required to respect `Selling:PublishesPerDay` for the single founder, including when that limit is 1; no fixed 30-day window shall force a rate-limit bypass. No customer shall own any seeded listing. |
+| `L2-076` | `L1-019` | `seed` shall be safe to run twice: when the demo data already exists, it shall print that it exists, suggest `seed --reset`, write nothing and exit 0. `seed --reset` shall run `reset` (with its guard, `L2-073`) and then `seed`, so it always gives the same fresh demo: the same members, listing titles, categories, prices and photo files. |
+| `L2-077` | `L1-019` | `Sycapooke.Cli` shall print usage for `help`, `--help` or no command and exit 0, and shall exit non-zero with a one-line message naming the problem on failure: 1 for an unknown command or option, 2 when `ConnectionStrings__Sycapooke` is not set, 3 when the reset guard refuses (`L2-073`), 4 when a seed photo folder or file is missing, and 5 when the database cannot be reached or a migration or seed step fails. |
 
 ## Diagrams
 
+### System context
+
+The context identifies the developer and the systems used by this feature.
+
+![System context for seed founder demo inventory](diagrams/c4-context.png)
+
+### Containers
+
+The container view separates the delivery surface, application boundary and feature storage. External integrations remain behind their ports.
+
+![Containers for seed founder demo inventory](diagrams/c4-container.png)
+
 ### Components
 
-The CLI composes the same Application and Infrastructure services as the API; seeding goes
-through MediatR and the photo pipeline, and reset goes through the migrator's code.
+The component view connects `CLI environment guard` with `DemoSeeder` and the relevant feature state.
 
-![C4 component view for seeding demo data](diagrams/c4-component.png)
+![Components for seed founder demo inventory](diagrams/c4-component.png)
 
-### Behaviour — reset
+### Class structure
 
-![Sequence diagram for reset](diagrams/sequence-reset.png)
+The class view identifies the relevant fields, operation responsibilities and dependencies. It is a target responsibility model, not a claim that each addition already exists.
 
-### Behaviour — seed
+![Class structure for seed founder demo inventory](diagrams/class-structure.png)
 
-![Sequence diagram for seed](diagrams/sequence-seed.png)
+### Behaviour - Reset permitted local target
 
-## Open questions
+Empty migrated local install or guard refusal. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
 
-- The photos are CC BY 2.0 from Open Images because Unsplash, Pexels and Wikimedia were
-  unreachable when the feature was built. Swapping in CC0 or Unsplash-licensed photos needs
-  only new files and a new `ATTRIBUTION.md`.
-- `reset` against SQL Server is verified by hand on a developer machine; tests rebuild the
-  schema with `EnsureCreated` on SQLite. The environment that built this feature had no SQL
-  Server or LocalDB (and could not install one), so its hand check seeded a SQLite file
-  through `CliApp` with the real file-system photo store, served it through `Sycapooke.Api`
-  and the Angular dev server, and confirmed the home, category and detail pages and a demo
-  sign-in. The `reset` run against LocalDB on Windows on Arm is still owed.
-- A seed interrupted half way leaves a partial demo; `seed --reset` is the documented
-  recovery.
+![Reset permitted local target](diagrams/sequence-reset-local-demo.png)
+
+### Behaviour - Create founder and private demo customers
+
+Nine demo accounts with one founder and no external messages. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
+
+![Create founder and private demo customers](diagrams/sequence-seed-founder-demo.png)
+
+### Behaviour - Publish founder collection through commands
+
+48 Active listings; no customer sellers; repeat seed writes nothing. The sequence shows the boundary that enforces this outcome and the significant failure alternative.
+
+![Publish founder collection through commands](diagrams/sequence-publish-demo-inventory.png)

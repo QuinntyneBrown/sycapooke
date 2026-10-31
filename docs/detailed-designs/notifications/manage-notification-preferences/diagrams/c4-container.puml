@@ -1,18 +1,18 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Containers — Manage notification preferences
-
-Person(member, "Member or email recipient", "Changes settings or unsubscribes")
-System_Boundary(sycapooke, "Sycapooke") {
-  Container(web, "Sycapooke Web", "Angular", "NotificationSettingsPageComponent at /account/emails; UnsubscribePageComponent at /emails/unsubscribe")
-  Container(api, "Sycapooke API", "ASP.NET Core", "Preference endpoints and anonymous unsubscribe endpoint")
-  Container(worker, "Sycapooke Worker", ".NET worker service", "Checks preferences before each send")
-  ContainerDb(db, "Sycapooke database", "SQL Server", "NotificationPreferences")
+title Containers - Manage notification preferences
+Person(user, "Customer or founder")
+System_Boundary(shop, "Sycapooke") {
+  Container(web, "Sycapooke Web", "Angular", "Role-aware feature UI")
+  Container(api, "Sycapooke API", "ASP.NET Core", "Server authorization and feature commands")
+  Container(worker, "Sycapooke Worker", ".NET", "Due jobs and durable retries")
+  ContainerDb(db, "Sycapooke database", "SQL Server", "Account, inventory, order and outbox state")
 }
-
-Rel(member, web, "Uses", "HTTPS")
-Rel(web, api, "GET/PUT /api/me/notification-preferences, POST /api/notifications/unsubscribe", "JSON/HTTPS")
-Rel(api, db, "Reads and writes preferences", "EF Core")
-Rel(worker, db, "Reads preferences at dispatch", "EF Core")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls typed client", "JSON/HTTPS")
+Rel(api, db, "Reads and commits feature state", "EF Core")
+Rel(worker, db, "Processes due work", "EF Core")
+System_Ext(provider, "Email provider")
+Rel(api, provider, "Calls port; validates responses", "HTTPS")
 @enduml

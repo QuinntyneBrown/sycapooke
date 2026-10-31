@@ -1,5 +1,9 @@
-"""Checkout, orders, purchases and sales (L1-007, L1-008, L1-009)."""
+"""Checkout, orders, purchases and sales (L1-007, L1-008, L1-009). The founder is the only seller (ADR general/0010)."""
 from mk import *
+
+IDA = PEOPLE[FOUNDER]["name"]            # the founder, as customers see her
+TESSA = PEOPLE[ME]["name"]              # the signed-in customer
+PIA = PEOPLE["pia_collects"]["name"]    # the customer on the shop sales
 
 # ---------------------------------------------------------------------------
 # Shared pieces
@@ -174,9 +178,9 @@ oc = screen("order-confirmation", "page", "Order confirmed", route="/orders/{id}
 @oc.state("default", "Payment confirmed: what happens next and where to follow the order.")
 def _():
     steps = ('<ol class="next-steps">'
-             '<li><b>the_brooch_box ships it</b><span>Within 5 business days. We’ll email the tracking.</span></li>'
-             '<li><b>You get it</b><span>Confirm it arrived, or tell us within 3 days if something’s wrong.</span></li>'
-             '<li><b>Confirm it arrived</b><span>The order completes and the seller is paid.</span></li></ol>')
+             f'<li><b>{IDA} ships it</b><span>Within 5 business days. We’ll email the tracking.</span></li>'
+             f'<li><b>You get it</b><span>Confirm it arrived, or tell {IDA} within 3 days if something’s wrong.</span></li>'
+             '<li><b>Confirm it arrived</b><span>The order is complete. Your payment went straight to the shop.</span></li></ol>')
     main = (f'<div class="confirm"><div class="confirm__mark" aria-hidden="true">{ic("check")}</div>'
             f'<p class="eyebrow">Order SY-48377</p><h1>It’s yours.</h1>'
             f'<div class="confirm__item">{item_row(BUY, f"Paid {money(BUY_TOTAL)} · {CARD[0]} ending {CARD[1]}")}</div>'
@@ -203,7 +207,8 @@ def _():
 # ---------------------------------------------------------------------------
 def order_li(oid: str, other: str, href: str, status_label: str | None = None) -> str:
     o = ORDERS[oid]
-    return (f'<li><a href="{href}">{item_row(o["item"], f"{other} · {o["date"]}")}'
+    meta = f"{other} · {o['date']}" if other else o["date"]
+    return (f'<li><a href="{href}">{item_row(o["item"], meta)}'
             f'<span class="order-list__end"><span class="price">{money(o["total"])}</span>{status(status_label or o["status"])}</span></a></li>')
 
 
@@ -217,10 +222,10 @@ def list_skeleton(n: int = 3) -> str:
 pu = screen("purchases", "page", "Purchases", route="/account/purchases", reqs=["L2-037"])
 
 
-@pu.state("default", "Three purchases, newest first, with seller, total, status and date.")
+@pu.state("default", "Three purchases, newest first: item, total, status and date (no seller: it is always the founder).")
 def _():
-    lis = (order_li("SY-48213", "from margarets_china", P("order-detail")) + order_li("SY-48140", "from margarets_china", P("order-detail", "delivered")) +
-           order_li("SY-47790", "from rosas_workshop", P("order-detail", "completed")))
+    lis = (order_li("SY-48213", "", P("order-detail")) + order_li("SY-48140", "", P("order-detail", "delivered")) +
+           order_li("SY-47790", "", P("order-detail", "completed")))
     return Page(main=page_head("Purchases", sub="1 on the way · 1 to confirm") + f'<ul class="order-list">{lis}</ul>', account="purchases")
 
 
@@ -239,29 +244,29 @@ def _():
     return Page(main=page_head("Purchases") + empty("refresh", "Couldn’t load purchases", '<span class="ref">Ref 51ce-0a92</span>', btn("Try again", "primary", icon="refresh"), cls="empty--error"), account="purchases")
 
 
-sa = screen("sales", "page", "Sales", route="/account/sales", reqs=["L2-037", "L2-033"])
+sa = screen("sales", "page", "Sales", route="/shop/sales", reqs=["L2-037", "L2-033"])
 
 
-@sa.state("default", "Two sales: one to ship by Friday, one completed and paid out.")
+@sa.state("default", "Two shop orders: one to ship by Friday, one completed. Founder only.")
 def _():
-    lis = (order_li("SY-48302", "to pia_collects · ship by Fri 30 Oct", P("sale-detail"), "Paid") +
-           order_li("SY-47511", "to pia_collects", P("sale-detail", "completed")))
-    return Page(main=page_head("Sales", sub="1 to ship") + f'<ul class="order-list">{lis}</ul>', account="sales")
+    lis = (order_li("SY-48302", f"{PIA} · ship by Fri 30 Oct", P("sale-detail"), "Paid") +
+           order_li("SY-47511", PIA, P("sale-detail", "completed")))
+    return Page(main=page_head("Sales", sub="1 to ship") + f'<ul class="order-list">{lis}</ul>', user="founder", account="sales")
 
 
 @sa.state("loading", "Skeleton rows in the list layout.")
 def _():
-    return Page(main=page_head("Sales") + list_skeleton(2), account="sales")
+    return Page(main=page_head("Sales") + list_skeleton(2), user="founder", account="sales")
 
 
-@sa.state("empty", "No sales yet: one action, list an item.")
+@sa.state("empty", "No orders in the shop yet: one action, add an item.")
 def _():
-    return Page(main=page_head("Sales") + empty("tag", "No sales yet", "Sold items show up here with what to do next.", btn("Sell an item", "primary", P("sell"))), account="sales")
+    return Page(main=page_head("Sales") + empty("tag", "No sales yet", "Orders show up here with what to do next.", btn("Sell an item", "primary", P("sell"))), user="founder", account="sales")
 
 
 @sa.state("error", "Sales failed to load; the account navigation stays.")
 def _():
-    return Page(main=page_head("Sales") + empty("refresh", "Couldn’t load sales", '<span class="ref">Ref 6d10-77fe</span>', btn("Try again", "primary", icon="refresh"), cls="empty--error"), account="sales")
+    return Page(main=page_head("Sales") + empty("refresh", "Couldn’t load sales", '<span class="ref">Ref 6d10-77fe</span>', btn("Try again", "primary", icon="refresh"), cls="empty--error"), user="founder", account="sales")
 
 
 # ---------------------------------------------------------------------------
@@ -288,9 +293,12 @@ def tracking(o: dict) -> str:
 
 def order_page(oid: str, *, head: str, body: str, side_extra: str = "", party: str = "seller", eyebrow: str | None = None, account: str = "purchases") -> Page:
     o = ORDERS[oid]
-    other = o["seller"] if party == "seller" else o["buyer"]
-    who = (f'<div class="seller" style="padding-top: var(--space-6);">{avatar(other)}<div class="stack" style="gap: var(--space-1);">'
-           f'<span class="text-caption">{"Seller" if party == "seller" else "Buyer"}</span><a class="seller__name" href="{P("profile")}">{other}</a></div></div>')
+    if party == "seller":    # customer view: the seller is always the founder
+        who = (f'<div class="seller" style="padding-top: var(--space-6);">{avatar(FOUNDER)}<div class="stack" style="gap: var(--space-1);">'
+               f'<span class="text-caption">Sold by</span><a class="seller__name" href="{P("profile")}">{IDA}</a></div></div>')
+    else:                    # founder view: the customer is private, so just a name
+        who = (f'<div class="seller" style="padding-top: var(--space-6);">{avatar(o["buyer"])}<div class="stack" style="gap: var(--space-1);">'
+               f'<span class="text-caption">Customer</span><span class="seller__name">{PEOPLE[o["buyer"]]["name"]}</span></div></div>')
     crumbs = (f'<nav aria-label="Breadcrumb" style="margin-top: var(--space-6);"><ol class="breadcrumb"><li><a href="{P(account)}">{account.title()}</a></li>'
               f'<li aria-current="page">{oid}</li></ol></nav>')
     eb = eyebrow if eyebrow is not None else f"Order {oid} · {o['date']}"
@@ -299,7 +307,7 @@ def order_page(oid: str, *, head: str, body: str, side_extra: str = "", party: s
     rows = [("Item", money(it["price"])), ("Shipping", money(it["ship"])), ("Sales tax", money(o["tax"]))]
     side = (f'<aside class="panel stack stack--lg" aria-label="Order summary">{item_row(o["item"])}{totals(rows, ("Total", money(o["total"])))}'
             f'{side_extra}{who}</aside>')
-    return Page(main=f'{crumbs}<div class="split" style="margin-top: var(--space-8);">{left}{side}</div>')
+    return Page(main=f'{crumbs}<div class="split" style="margin-top: var(--space-8);">{left}{side}</div>', user="founder" if party == "buyer" else "member")
 
 
 SHIP_DATES = {"Paid": "Thu 22 Oct", "Shipped": "Fri 23 Oct"}
@@ -317,24 +325,24 @@ def _():
     return order_page("SY-48213", head="On its way", body=body)
 
 
-@od.state("paid", "Paid, not shipped yet: the buyer can ask the seller to cancel.")
+@od.state("paid", "Paid, not shipped yet: the customer can ask the founder to cancel.")
 def _():
-    body = (timeline("Paid", {"Paid": "Thu 22 Oct"}) + '<p class="text-muted">margarets_china ships by Thu 29 Oct. If not, you’re refunded automatically.</p>'
+    body = (timeline("Paid", {"Paid": "Thu 22 Oct"}) + f'<p class="text-muted">{IDA} ships by Thu 29 Oct.</p>'
             f'<div>{btn("Ask to cancel", href=D("request-cancellation"))}</div>')
     return order_page("SY-48213", head="Waiting to ship", body=body)
 
 
-@od.state("cancel-requested", "Paid, and the buyer asked to cancel: the seller has not answered, so the request cannot be sent again.")
+@od.state("cancel-requested", "Paid, and the customer asked to cancel: the founder has not answered, so the request cannot be sent again.")
 def _():
-    body = (timeline("Paid", {"Paid": "Thu 22 Oct"}) + '<p class="text-muted">margarets_china ships by Thu 29 Oct. If not, you’re refunded automatically.</p>'
-            '<p>You asked margarets_china to cancel. They haven’t answered yet.</p>')
+    body = (timeline("Paid", {"Paid": "Thu 22 Oct"}) + f'<p class="text-muted">{IDA} ships by Thu 29 Oct.</p>'
+            f'<p>You asked {IDA} to cancel. She hasn’t answered yet.</p>')
     return order_page("SY-48213", head="Waiting to ship", body=body)
 
 
-@od.state("cancel-declined", "Paid, and the seller declined the buyer’s request: the order goes ahead and cannot be asked about again.")
+@od.state("cancel-declined", "Paid, and the founder declined the customer’s request: the order goes ahead and cannot be asked about again.")
 def _():
-    body = (timeline("Paid", {"Paid": "Thu 22 Oct"}) + '<p class="text-muted">margarets_china ships by Thu 29 Oct. If not, you’re refunded automatically.</p>'
-            '<p>margarets_china declined to cancel. They still ship by Thu 29 Oct.</p>')
+    body = (timeline("Paid", {"Paid": "Thu 22 Oct"}) + f'<p class="text-muted">{IDA} ships by Thu 29 Oct.</p>'
+            f'<p>{IDA} declined to cancel. She still ships by Thu 29 Oct.</p>')
     return order_page("SY-48213", head="Waiting to ship", body=body)
 
 
@@ -352,29 +360,54 @@ def _():
     return order_page("SY-47790", head="Completed", body=body)
 
 
-@od.state("cancelled", "Cancelled by the seller before shipping: full refund and the seller’s reason.")
+@od.state("cancelled", "Cancelled by the founder before shipping: full refund and her reason.")
 def _():
     body = (alert("info", "Refunded in full", f"{money(94.72)} back to {CARD[0]} ending {CARD[1]}. Allow 5–10 days.") +
-            '<blockquote class="quote quote--sm"><p>“Found a tear in the lining while packing. Sorry about this.”</p><cite>margarets_china</cite></blockquote>'
+            f'<blockquote class="quote quote--sm"><p>“Found a tear in the lining while packing. I’m sorry about this.”</p><cite>{IDA}</cite></blockquote>'
             f'<div>{btn("Shop similar items", "primary", P("catalog", "category"))}</div>')
     return order_page("SY-48213", head="Cancelled", body=body)
 
 
-@od.state("refunded", "Problem resolved in the buyer’s favour: order refunded.")
+@od.state("refunded", "Problem resolved in the customer’s favour: the founder authorised a full refund and explained why.")
 def _():
-    body = (alert("success", "Refunded in full", f"Our team reviewed the problem. {money(94.72)} is on its way back to {CARD[0]} ending {CARD[1]}.") +
-            '<p class="text-muted text-sm">Resolved Sat 24 Oct by Sycapooke support. No need to send the dress back.</p>'
+    body = (alert("success", "Refunded in full", f"{IDA} refunded {money(94.72)} to {CARD[0]} ending {CARD[1]}. Allow 5–10 days.") +
+            f'<blockquote class="quote quote--sm"><p>“You’re right, the fading should have been in the photos. Please keep the dress, with my apologies.”</p><cite>{IDA} · Sat 24 Oct</cite></blockquote>'
             f'<div>{btn("Back to purchases", href=P("purchases"))}</div>')
     return order_page("SY-48213", head="Refunded", body=body)
 
 
-@od.state("problem", "Open problem: the reason, the seller’s reply, and the payout held until Sycapooke resolves it.")
+PROBLEM_CLAIM = ('<div class="thread__item"><span class="text-caption">You · Sat 24 Oct</span><p>The fabric is sun-faded down one side and the hem has been let down. '
+                 'The listing didn’t say.</p></div>')
+
+
+@od.state("problem", "Open problem: the reason, and completion paused while the founder looks into it.")
 def _():
-    body = (alert("warning", "Problem open · Not as described", "We’re holding the seller’s payout until our team decides. Usually within 2 business days.", icon="flag") +
-            '<div class="thread">'
-            '<div class="thread__item"><span class="text-caption">You · Sat 24 Oct</span><p>The fabric is sun-faded down one side and the hem has been let down. The listing didn’t say.</p></div>'
-            '<div class="thread__item"><span class="text-caption">margarets_china · Sun 25 Oct</span><p>I photographed it indoors and missed the fading. Happy to take it back.</p></div></div>')
+    body = (alert("warning", "Problem open · Not as described", f"Completion is paused while {IDA} looks into it. She will reply here and by email.", icon="flag") +
+            f'<div class="thread">{PROBLEM_CLAIM}</div>')
     return order_page("SY-48213", head="We’re on it", body=body)
+
+
+@od.state("founder-replied", "The founder replied to the problem; completion is still paused until she resolves it.")
+def _():
+    body = (alert("warning", "Problem open · Not as described", f"{IDA} has replied. Completion stays paused until she resolves the problem.", icon="flag") +
+            f'<div class="thread">{PROBLEM_CLAIM}'
+            f'<div class="thread__item"><span class="text-caption">{IDA} · Sun 25 Oct</span><p>I photographed it indoors and missed the fading. I’m so sorry. I’ll sort this out for you today.</p></div></div>')
+    return order_page("SY-48213", head="We’re on it", body=body)
+
+
+@od.state("closed-no-refund", "Problem closed without a refund: her decision and explanation are shown and the order is Completed.")
+def _():
+    body = (timeline("Completed", {"Paid": "Mon 19 Oct", "Shipped": "Tue 20 Oct", "Delivered": "Sat 24 Oct", "Completed": "Sun 25 Oct"}) +
+            alert("info", "Problem closed without a refund", f"{IDA} looked into it and closed the problem. The order is now complete.", icon="flag") +
+            f'<blockquote class="quote quote--sm"><p>“The fading and the let-down hem were both in the listing notes and photo 4. I’m sorry it isn’t what you hoped for.”</p><cite>{IDA} · Sun 25 Oct</cite></blockquote>')
+    return order_page("SY-48213", head="Completed", body=body)
+
+
+@od.state("refund-pending", "Refund authorised and waiting for the payment provider to confirm; never shown as refunded until it does.")
+def _():
+    body = (alert("warning", "Refund pending", f"{IDA} authorised a full refund of {money(94.72)}. We’re waiting for the payment provider to confirm it, then you’ll get an email.", icon="clock") +
+            f'<blockquote class="quote quote--sm"><p>“You’re right, the fading should have been in the photos. Please keep the dress, with my apologies.”</p><cite>{IDA} · Sat 24 Oct</cite></blockquote>')
+    return order_page("SY-48213", head="Refund on its way", body=body)
 
 
 @od.state("loading", "Order skeleton in the two-column layout.")
@@ -397,65 +430,62 @@ def ship_to(oid: str = "SY-48302") -> str:
 
 def sale_page(oid: str, head: str, body: str, eyebrow: str | None = None) -> Page:
     pg = order_page(oid, head=head, body=body, party="buyer", eyebrow=eyebrow, account="sales")
-    pg.account = ""
+    pg.account = "sales"
     return pg
 
 
-sd = screen("sale-detail", "page", "Sale (seller)", route="/sales/{id}", reqs=["L2-031", "L2-032", "L2-033", "L2-035", "L2-036", "L2-037"],
-            na={"empty": "A sale always has an item, a buyer and a status."})
+sd = screen("sale-detail", "page", "Sale (founder)", route="/shop/sales/{id}", reqs=["L2-032", "L2-033", "L2-035", "L2-036", "L2-037"],
+            na={"empty": "A sale always has an item, a customer and a status."})
 
 
-@sd.state("default", "New sale: ship by Friday, buyer’s address, add tracking.")
+@sd.state("default", "New order: ship by Friday, the customer’s address, add tracking.")
 def _():
     body = (f'<p class="lead">Ship by <strong>Fri 30 Oct</strong>.</p>{ship_to()}'
             f'<div class="cluster">{btn("Add tracking", "primary", D("add-tracking"), icon="truck")}{btn("Cancel order", "ghost", D("cancel-order"))}</div>')
-    pg = sale_page("SY-48302", "You made a sale", body)
-    pg.notes = note("No tracking after 3 business days: reminder email. After 5: order cancelled and buyer refunded.", "top: 7rem; right: 1rem;")
+    pg = sale_page("SY-48302", "New order", body)
+    pg.notes = note("No tracking after 3 business days: reminder email to the founder.", "top: 7rem; right: 1rem;")
     return pg
 
 
 @sd.state("shipped", "Tracking added: the order is on its way, nothing to do.")
 def _():
-    o = dict(ORDERS["SY-48213"])
     body = timeline("Shipped", {"Paid": "Sat 24 Oct", "Shipped": "Sun 25 Oct"}) + tracking({"carrier": "USPS", "tracking": "9400 1118 9922 3456 1204 77"}) + ship_to()
     return sale_page("SY-48302", "Shipped", body)
 
 
-@sd.state("cancel-requested", "The buyer asked to cancel before shipping: accept or decline.")
+@sd.state("cancel-requested", "The customer asked to cancel before shipping: accept or decline.")
 def _():
-    body = ('<blockquote class="quote quote--sm"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>pia_collects</cite></blockquote>'
+    body = (f'<blockquote class="quote quote--sm"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>{PIA}</cite></blockquote>'
             f'<div>{btn("Respond", "primary", D("respond-cancellation"))}</div>{ship_to()}')
-    return sale_page("SY-48302", "Buyer asked to cancel", body)
+    return sale_page("SY-48302", "Customer asked to cancel", body)
 
 
-@sd.state("problem", "The buyer reported a problem: payout held, seller can reply once.")
+@sd.state("problem", "The customer reported a problem: completion paused, the founder replies and resolves it.")
 def _():
-    body = (alert("warning", "Problem reported · Not as described", "Your payout is on hold while our team reviews this.", icon="flag") +
-            '<div class="thread"><div class="thread__item"><span class="text-caption">pia_collects · Sat 24 Oct</span><p>There’s a hairline crack inside the neck that wasn’t in the photos.</p></div></div>' +
-            field("reply", "Your reply", '<textarea class="textarea" id="reply" rows="3"{db}></textarea>', help="Visible to the buyer and to Sycapooke.") +
+    body = (alert("warning", "Problem reported · Not as described", "Completion is paused until you resolve it.", icon="flag",
+                  actions=btn("Resolve the problem", href=P("problem-detail"))) +
+            f'<div class="thread"><div class="thread__item"><span class="text-caption">{PIA} · Sat 24 Oct</span><p>There’s a hairline crack inside the neck that wasn’t in the photos.</p></div></div>' +
+            field("reply", "Your reply", '<textarea class="textarea" id="reply" rows="3"{db}></textarea>', help="Visible to the customer.") +
             f'<div>{btn("Send reply", "primary")}</div>')
     return sale_page("SY-48302", "Problem reported", body)
 
 
-@sd.state("completed", "Completed sale: payout after the Sycapooke fee, released to the bank.")
+@sd.state("completed", "Completed order: the money already reached the shop account when it was paid.")
 def _():
-    o = ORDERS["SY-47511"]
-    pay = totals([("Item and shipping", money(53)), ("Sycapooke fee (10%)", "−" + money(o["fee"]))], ("Your payout", money(o["payout"])))
-    body = (timeline("Completed", {"Paid": "Fri 2 Oct", "Shipped": "Sat 3 Oct", "Delivered": "Tue 6 Oct", "Completed": "Wed 7 Oct"}) +
-            f'<div class="panel panel--sunken stack"><h2 class="panel__title">Payout</h2>{pay}<p class="text-caption">Sent Wed 7 Oct to Chase ending 6610.</p></div>')
-    return sale_page("SY-47511", "Paid out", body)
+    body = timeline("Completed", {"Paid": "Fri 2 Oct", "Shipped": "Sat 3 Oct", "Delivered": "Tue 6 Oct", "Completed": "Wed 7 Oct"})
+    return sale_page("SY-47511", "Completed", body)
 
 
-@sd.state("address-hidden", "More than 30 days after completion the buyer’s address is no longer shown.")
+@sd.state("address-hidden", "More than 30 days after completion the customer’s address is no longer shown.")
 def _():
     body = (timeline("Completed", {"Paid": "Fri 2 Oct", "Shipped": "Sat 3 Oct", "Delivered": "Tue 6 Oct", "Completed": "Wed 7 Oct"}) +
             f'<div class="stack stack--sm"><h2 class="panel__title">Ship to</h2><p class="text-muted text-sm">{ic("eye-off", "icon icon--sm")} Removed 30 days after the order ended.</p></div>')
     return sale_page("SY-47511", "Completed", body, eyebrow="Order SY-47511 · Fri 2 Oct")
 
 
-@sd.state("cancelled", "Cancelled sale: buyer refunded, listing stays off the catalog until relisted.")
+@sd.state("cancelled", "Cancelled order: customer refunded, item stays off the catalog until relisted.")
 def _():
-    body = (alert("info", "Cancelled · Buyer refunded in full", "The listing stays off the catalog until you relist it.") +
+    body = (alert("info", "Cancelled · Customer refunded in full", "The item stays off the catalog until you relist it.") +
             f'<div>{btn("Relist item", "primary", D("relist"))}</div>')
     return sale_page("SY-48302", "Cancelled", body)
 
@@ -497,40 +527,40 @@ at = screen("add-tracking", "dialog", "Add tracking", opens_from="sale-detail", 
 
 @at.state("default", "Carrier and tracking number; saving marks the order Shipped and emails the buyer.")
 def _():
-    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body(), foot("Mark as shipped"), desc="We’ll email pia_collects the tracking link."))
+    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body(), foot("Mark as shipped"), desc=f"We’ll email {PIA} the tracking link."))
 
 
 @at.state("invalid", "Malformed tracking number: inline error, input kept.")
 def _():
-    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body("9400 1118", "That doesn’t look like a USPS tracking number. It’s usually 22 digits."), foot("Mark as shipped"), desc="We’ll email pia_collects the tracking link."))
+    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body("9400 1118", "That doesn’t look like a USPS tracking number. It’s usually 22 digits."), foot("Mark as shipped"), desc=f"We’ll email {PIA} the tracking link."))
 
 
 @at.state("busy", "Saving: button busy, inputs kept.")
 def _():
-    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body("9400 1118 9922 3456 1204 77", af=False), foot("Mark as shipped", busy=True, disabled_cancel=True), desc="We’ll email pia_collects the tracking link."))
+    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body("9400 1118 9922 3456 1204 77", af=False), foot("Mark as shipped", busy=True, disabled_cancel=True), desc=f"We’ll email {PIA} the tracking link."))
 
 
 @at.state("failed", "Save failed: error at the top, inputs kept, retry.")
 def _():
-    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body("9400 1118 9922 3456 1204 77", af=False), foot("Try again"), desc="We’ll email pia_collects the tracking link.", top=failed()))
+    return Dialog(bg=("sale-detail", "default"), html=dialog("Add tracking", tracking_body("9400 1118 9922 3456 1204 77", af=False), foot("Try again"), desc=f"We’ll email {PIA} the tracking link.", top=failed()))
 
 
 # Cancel order (seller) -----------------------------------------------------
-REASONS = ["Item damaged", "No longer have it", "Listed by mistake", "Buyer asked me to cancel"]
+REASONS = ["Item damaged", "No longer have it", "Listed by mistake", "Customer asked me to cancel"]
 
 
 def reason_body(err: bool = False, chosen: str = "", af: bool = True) -> str:
     opts = "".join(f'<label class="choice"><input type="radio" name="reason"{" checked" if r == chosen else ""}{" aria-invalid=\"true\"" if err else ""}{" autofocus" if af and i == 0 and not chosen else ""}><span>{r}</span></label>' for i, r in enumerate(REASONS))
     e = '<span class="field__error" id="reason-error">Choose a reason</span>' if err else ""
     db = ' aria-describedby="reason-error"' if err else ""
-    return f'<fieldset{db}><legend>Reason</legend>{opts}{e}</fieldset>' + field("cnote", "Note to buyer", '<textarea class="textarea" id="cnote" rows="2"{db}></textarea>', optional=True)
+    return f'<fieldset{db}><legend>Reason</legend>{opts}{e}</fieldset>' + field("cnote", "Note to the customer", '<textarea class="textarea" id="cnote" rows="2"{db}></textarea>', optional=True)
 
 
 co = screen("cancel-order", "dialog", "Cancel order", opens_from="sale-detail", reqs=["L2-035"])
-CO_DESC = "pia_collects is refunded $79.48 in full. The listing stays off the catalog until you relist."
+CO_DESC = f"{PIA} is refunded $79.48 in full. The item stays off the catalog until you relist it."
 
 
-@co.state("default", "Seller cancels before shipping: reason required, full refund explained.")
+@co.state("default", "The founder cancels before shipping: reason required, full refund explained.")
 def _():
     return Dialog(bg=("sale-detail", "default"), html=dialog("Cancel this sale?", reason_body(), foot("Cancel sale", "Keep sale", danger=True), desc=CO_DESC, icon="alert", icon_kind="danger"))
 
@@ -553,8 +583,8 @@ def _():
 # Respond to cancellation request -------------------------------------------
 rc = screen("respond-cancellation", "dialog", "Respond to cancellation", opens_from="sale-detail", reqs=["L2-035"],
             na={"invalid": "Two buttons, no inputs to validate."})
-RC_BODY = '<blockquote class="quote quote--sm"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>pia_collects</cite></blockquote>'
-RC_DESC = "Accepting refunds $79.48 in full. Declining keeps the order — you still ship by Fri 30 Oct."
+RC_BODY = f'<blockquote class="quote quote--sm"><p>“Ordered the wrong colour, sorry. Can we cancel?”</p><cite>{PIA}</cite></blockquote>'
+RC_DESC = "Accepting refunds $79.48 in full. Declining keeps the order, and you still ship by Fri 30 Oct."
 
 
 def rc_foot(busy=False):
@@ -564,17 +594,17 @@ def rc_foot(busy=False):
 
 @rc.state("default", "Accept (cancel and refund) or decline (order stays Paid).")
 def _():
-    return Dialog(bg=("sale-detail", "cancel-requested"), html=dialog("pia_collects asked to cancel", RC_BODY, rc_foot(), desc=RC_DESC))
+    return Dialog(bg=("sale-detail", "cancel-requested"), html=dialog(f"{PIA} asked to cancel", RC_BODY, rc_foot(), desc=RC_DESC))
 
 
 @rc.state("busy", "Accepting: refund in progress.")
 def _():
-    return Dialog(bg=("sale-detail", "cancel-requested"), html=dialog("pia_collects asked to cancel", RC_BODY, rc_foot(True), desc=RC_DESC))
+    return Dialog(bg=("sale-detail", "cancel-requested"), html=dialog(f"{PIA} asked to cancel", RC_BODY, rc_foot(True), desc=RC_DESC))
 
 
 @rc.state("failed", "The response failed to save: retry.")
 def _():
-    return Dialog(bg=("sale-detail", "cancel-requested"), html=dialog("pia_collects asked to cancel", RC_BODY, rc_foot(), desc=RC_DESC, top=failed()))
+    return Dialog(bg=("sale-detail", "cancel-requested"), html=dialog(f"{PIA} asked to cancel", RC_BODY, rc_foot(), desc=RC_DESC, top=failed()))
 
 
 # Relist --------------------------------------------------------------------
@@ -599,13 +629,13 @@ rq = screen("request-cancellation", "dialog", "Ask to cancel", opens_from="order
 
 def rq_body(af=True):
     a = " autofocus" if af else ""
-    return field("rq-note", "Message to margarets_china", f'<textarea class="textarea" id="rq-note" rows="3"{a}{{db}}></textarea>', optional=True)
+    return field("rq-note", "Message to the founder", f'<textarea class="textarea" id="rq-note" rows="3"{a}{{db}}></textarea>', optional=True)
 
 
-RQ_DESC = "If margarets_china accepts, you’re refunded in full. Until then the order stays as is."
+RQ_DESC = f"If {IDA} accepts, you’re refunded in full. Until then the order stays as is."
 
 
-@rq.state("default", "Buyer asks the seller to cancel before shipping.")
+@rq.state("default", "The customer asks the founder to cancel before shipping.")
 def _():
     return Dialog(bg=("order-detail", "paid"), html=dialog("Ask to cancel?", rq_body(), foot("Send request", "Keep order"), desc=RQ_DESC))
 
@@ -622,11 +652,11 @@ def _():
 
 # Confirm receipt -------------------------------------------------------------
 cr = screen("confirm-receipt", "dialog", "Confirm receipt", opens_from="order-detail", reqs=["L2-034"], na={"invalid": "A single confirmation; no inputs."})
-CR_DESC = "This completes the order and pays margarets_china. You can’t report a problem afterwards."
+CR_DESC = "This completes the order. You can’t report a problem afterwards."
 CR_BODY = item_row("pyrex-bowls")
 
 
-@cr.state("default", "Confirming completes the order and releases the payout.")
+@cr.state("default", "Confirming completes the order.")
 def _():
     return Dialog(bg=("order-detail", "delivered"), html=dialog("Got it and all good?", CR_BODY, foot("Yes, complete order", "Not yet"), desc=CR_DESC, size="sm"))
 
@@ -658,24 +688,24 @@ def problem_body(chosen: str = "", text: str = "", errs: dict | None = None, pho
 
 
 rp = screen("report-problem", "dialog", "Report a problem", opens_from="order-detail", reqs=["L2-036"])
-RP_DESC = "Open until Tue 27 Oct. We hold the seller’s payout while our team looks into it."
+RP_DESC = f"Open until Tue 27 Oct. {IDA} will reply, and the order won’t complete while she looks into it."
 
 
 @rp.state("default", "Reason, description and up to 4 photos.")
 def _():
-    return Dialog(bg=("order-detail", "delivered"), html=dialog("Report a problem", problem_body(), foot("Send to Sycapooke"), desc=RP_DESC))
+    return Dialog(bg=("order-detail", "delivered"), html=dialog("Report a problem", problem_body(), foot("Send to the founder"), desc=RP_DESC))
 
 
 @rp.state("invalid", "No reason and no description: both marked inline.")
 def _():
     errs = {"reason": "Choose what’s wrong", "desc": "Tell us what happened"}
-    return Dialog(bg=("order-detail", "delivered"), html=dialog("Report a problem", problem_body(errs=errs, af=False), foot("Send to Sycapooke"), desc=RP_DESC,
+    return Dialog(bg=("order-detail", "delivered"), html=dialog("Report a problem", problem_body(errs=errs, af=False), foot("Send to the founder"), desc=RP_DESC,
                                                                 top=error_summary([("prob-error", errs["reason"]), ("prob-desc", errs["desc"])])))
 
 
 @rp.state("busy", "Uploading photos and opening the problem.")
 def _():
-    return Dialog(bg=("order-detail", "delivered"), html=dialog("Report a problem", problem_body("Not as described", "Two of the four bowls have chips on the rim that weren’t in the photos.", photos=2, af=False), foot("Send to Sycapooke", busy=True, disabled_cancel=True), desc=RP_DESC))
+    return Dialog(bg=("order-detail", "delivered"), html=dialog("Report a problem", problem_body("Not as described", "Two of the four bowls have chips on the rim that weren’t in the photos.", photos=2, af=False), foot("Send to the founder", busy=True, disabled_cancel=True), desc=RP_DESC))
 
 
 @rp.state("failed", "Sending failed: everything kept, retry.")
