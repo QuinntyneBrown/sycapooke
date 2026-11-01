@@ -41,6 +41,11 @@ PICTURES = {
         "tracking": ("dialogs/add-tracking/default", None, []),  # a dialog sits in the top layer, above any ring
         "support": ("pages/support/default", None, []),
     },
+    "02-co-founder-four-jobs": {
+        "card-fields": ("pages/checkout/default", ".hosted-field", [".hosted-field"]),
+        "declined": ("pages/checkout/declined", None, []),
+        "sell-button": ("pages/my-listings/default", None, [".topbar__sell"]),
+    },
 }
 SHOT_W, SHOT_H = 1440, 720
 RING_CSS = ("position:fixed;z-index:99999;pointer-events:none;border:8px solid #d9a441;border-radius:22px;"
@@ -278,7 +283,26 @@ def main():
         ms = int(s * 1000)
         filt.append(f"[{i}:a]aresample=48000,adelay={ms}|{ms}[a{i}]")
     filt.append("".join(f"[a{i}]" for i in range(len(starts))) +
-                f"amix=inputs={len(starts)}:normalize=0,apad,atrim=0:{total:.3f},volume=1.6,alimiter=limit=0.95[aout]")
+                f"amix=inputs={len(starts)}:normalize=0,apad,atrim=0:{total:.3f},volume=1.6,alimiter=limit=0.95" +
+                ("[aout]" if not (folder / "music.json").exists() else "[voice]"))
+    if (folder / "music.json").exists():
+        # Optional music bed (music.json: {"file": path relative to the folder, "gain_db": -20}): the track is
+        # looped with crossfades, faded in and out, and ducked under the narration by a sidechain compressor.
+        spec = json.loads((folder / "music.json").read_text(encoding="utf-8"))
+        track = (folder / spec["file"]).resolve()
+        xf, tlen = 4.0, dur(track)
+        copies = max(1, int(total // (tlen - xf)) + 1)
+        base = len(starts)
+        inputs += [x for _ in range(copies) for x in ("-i", str(track))]
+        prev = f"{base}:a"
+        for c in range(1, copies):
+            filt.append(f"[{prev}][{base + c}:a]acrossfade=d={xf}:c1=tri:c2=tri[m{c}]")
+            prev = f"m{c}"
+        filt.append(f"[{prev}]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{total:.3f},"
+                    f"afade=t=in:d=2,afade=t=out:st={total - 4:.3f}:d=4,volume={spec.get('gain_db', -20)}dB[bed]")
+        filt.append("[voice]aformat=channel_layouts=stereo,asplit=2[v1][v2]")
+        filt.append("[bed][v2]sidechaincompress=threshold=0.02:ratio=4:attack=30:release=700[duck]")
+        filt.append("[v1][duck]amix=inputs=2:normalize=0,alimiter=limit=0.95[aout]")
     mp3 = folder / f"{name}.mp3"
     subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", ";".join(filt),
                            "-map", "[aout]", "-c:a", "libmp3lame", "-b:a", "128k", str(mp3)])

@@ -28,3 +28,12 @@ for guide videos, and the only video folder (`docs/mocks/_build/video/`) builds 
 - Screens shown are the mocks, not the live app; when a mock changes, run `--pictures` and rebuild.
 - Each video MP4 (about 12 MB for 8 minutes) is committed like the pitch video.
 - Facts about third parties (Stripe fees and screens) are dated in the script and must be re-checked before a rebuild.
+
+## Amendment 2026-11-01: co-founder videos and background music
+
+- Videos for the technical co-founder (from 02) use the same folder and builder; their slides may show short code and
+  config excerpts (`.code`, `.mono` in `assets/slides.css`).
+- A video may have a background track: `music.json` (`file`, `gain_db`) points at a royalty-free track in
+  `assets/music/`, recorded with its source and license in `assets/music/ATTRIBUTION.md`. The builder loops it with
+  4 s crossfades, fades it in and out and ducks it under the narration with a sidechain compressor. Video 02 uses an
+  instrumental soca track from Pixabay (Pixabay Content License) at -16 dB.

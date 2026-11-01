@@ -6,11 +6,14 @@ The pitch video on `/welcome` is separate and built from `docs/mocks/_build/vide
 | # | Video | Runtime | Audience |
 | --- | --- | --- | --- |
 | 01 | [Next steps to selling on Sycapooke](01-next-steps-to-selling/README.md) | ~8.5 min | The founder |
+| 02 | [Your four jobs: taking the shop live](02-co-founder-four-jobs/README.md) | ~8.5 min | The technical co-founder |
 
 Each folder holds `script.md` (narration), `slides.html` (one `<section>` per slide, cued to a script phrase),
 `README.md` (outline), `pronunciations.json`, `pictures/` (ringed screenshots of the mocks), the `.mp4` with a soft
 caption track and the `.vtt` captions. The `.mp3` is a git-ignored build output. Shared slide styles and runtime are in
-`assets/`; the builder is `_build/build_video.py` (Kokoro voice `af_heart`, model cached in `.cache/kokoro/`).
+`assets/`; the builder is `_build/build_video.py` (Kokoro voice `af_heart`, model cached in `.cache/kokoro/`). A folder's optional
+`music.json` names a background track in `assets/music/` (sources in its `ATTRIBUTION.md`); it is looped, faded and
+ducked under the voice.
 
 ```bash
 python -I docs/videos/_build/build_video.py docs/videos/NN-topic --check        # cues and estimated timing

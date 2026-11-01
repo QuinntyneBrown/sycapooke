@@ -1,0 +1,289 @@
+WEBVTT
+
+00:00:01.500 --> 00:00:04.723
+This video is for you, the technical co-founder.
+
+00:00:04.723 --> 00:00:07.005
+The founder has watched video one.
+
+00:00:07.005 --> 00:00:14.257
+She is photographing treasures and opening a Stripe account, and she will invite you into it as a Developer.
+
+00:00:14.257 --> 00:00:20.232
+Your part is step three: four jobs that turn the deployed shop into one that takes money.
+
+00:00:20.232 --> 00:00:24.059
+Every path I mention is in the README next to this video.
+
+00:00:25.459 --> 00:00:29.353
+Production already runs at app dot sycapooke dot com.
+
+00:00:29.353 --> 00:00:35.892
+But three pieces are still stand-ins, and you can see all of them in DependencyInjection.
+
+00:00:35.892 --> 00:00:38.317
+cs in the Infrastructure project.
+
+00:00:38.317 --> 00:00:46.252
+The payment port is UnconfiguredPaymentProvider, which throws, so checkout stops safely at the address step.
+
+00:00:46.252 --> 00:00:52.497
+Email is LoggingEmailSender, which writes every message to the log and sends nothing.
+
+00:00:52.497 --> 00:01:00.799
+And Shop__FounderMemberId in the server's env file is empty, so nobody can sell, and the public catalog is empty.
+
+00:01:01.599 --> 00:01:09.691
+So your four jobs are: connect Stripe, switch on real email, make the founder the owner, and run a real test sale.
+
+00:01:09.691 --> 00:01:12.885
+One piece of advice on order. Do email first.
+
+00:01:12.885 --> 00:01:20.055
+It is the smallest job, and the founder cannot verify her account without it, which blocks job three.
+
+00:01:21.455 --> 00:01:23.558
+Start by accepting her invite.
+
+00:01:23.558 --> 00:01:29.729
+You get Developer access, so you never need her password, and she never sends you a key.
+
+00:01:29.729 --> 00:01:32.674
+Stay in Stripe's test mode until job four.
+
+00:01:33.474 --> 00:01:39.798
+On the server, the whole provider sits behind one port: IPaymentProvider, in Ports.
+
+00:01:39.798 --> 00:01:42.083
+cs in the Application project.
+
+00:01:42.083 --> 00:01:51.379
+It has four methods, and the Stripe adapter replaces UnconfiguredPaymentProvider in the Payments folder of Infrastructure.
+
+00:01:51.379 --> 00:01:53.436
+No handler or page changes.
+
+00:01:54.236 --> 00:02:03.755
+CreatePaymentAsync creates a Stripe PaymentIntent for the amount in cents and confirms it with the payment method from the browser.
+
+00:02:03.755 --> 00:02:15.018
+Put Sycapooke's payment ID in the intent's metadata, and pass the request's idempotency key as Stripe's idempotency key, so a retried request charges once.
+
+00:02:15.018 --> 00:02:16.689
+Return the intent's ID.
+
+00:02:16.689 --> 00:02:19.233
+The result does not come back here.
+
+00:02:19.233 --> 00:02:21.267
+It arrives later by webhook.
+
+00:02:22.067 --> 00:02:36.102
+ReadWebhook verifies the signature over the raw body with the webhook secret, then maps payment intent succeeded and payment intent failed to a PaymentEvent, reading the payment ID back from the metadata.
+
+00:02:36.102 --> 00:02:41.262
+The card brand and last four digits are the only card details it may carry.
+
+00:02:42.062 --> 00:02:43.741
+Here is the one surprise.
+
+00:02:43.741 --> 00:02:48.106
+PaymentWebhookController reads a header called Payment-Signature.
+
+00:02:48.106 --> 00:02:51.531
+Stripe signs with a header called Stripe-Signature.
+
+00:02:51.531 --> 00:02:58.717
+So change the controller to read Stripe's header, or every real webhook will be refused as a bad signature.
+
+00:02:59.517 --> 00:03:05.359
+RefundAsync creates a refund for the intent, again with the idempotency key.
+
+00:03:05.359 --> 00:03:08.204
+QuoteTaxAsync is a business decision.
+
+00:03:08.204 --> 00:03:13.969
+Use Stripe Tax if the founder's accountant says she must collect sales tax.
+
+00:03:13.969 --> 00:03:15.660
+Otherwise return zero.
+
+00:03:15.660 --> 00:03:18.273
+Either way, it must stop throwing.
+
+00:03:19.073 --> 00:03:26.264
+In the browser, the card fields come from PAYMENT_FIELDS in the api library, in payment-fields.
+
+00:03:26.264 --> 00:03:26.491
+ts.
+
+00:03:26.491 --> 00:03:31.941
+Today its factory makes TestModePaymentFields, a dropdown of test cards.
+
+00:03:31.941 --> 00:03:34.287
+Write a Stripe factory instead.
+
+00:03:34.287 --> 00:03:44.278
+It loads Stripe dot js from Stripe's own site, mounts the card element in the host, and returns the payment method ID from tokenize.
+
+00:03:44.278 --> 00:03:49.500
+Card numbers are typed into Stripe's frame and never touch Sycapooke.
+
+00:03:50.300 --> 00:03:51.720
+Then configuration.
+
+00:03:51.720 --> 00:04:03.302
+Three secrets go in the env file on the server, never in git: PaymentProvider__ApiKey, PaymentProvider__WebhookSecret, and PaymentProvider__PublishableKey.
+
+00:04:03.302 --> 00:04:06.814
+Only the publishable key may reach the browser.
+
+00:04:06.814 --> 00:04:18.247
+In the Stripe dashboard, add a webhook endpoint at app dot sycapooke dot com slash api slash payments slash webhook, for the succeeded and failed events.
+
+00:04:19.047 --> 00:04:20.667
+Keep the tests offline.
+
+00:04:20.667 --> 00:04:24.190
+The API tests already swap in FakePaymentProvider.
+
+00:04:24.190 --> 00:04:30.038
+Test your adapter against sample Stripe payloads, and never let a test call Stripe.
+
+00:04:31.438 --> 00:04:35.543
+The port is IEmailSender, and its contract is strict.
+
+00:04:35.543 --> 00:04:41.429
+Throw HttpRequestException or TimeoutException for a failure worth retrying.
+
+00:04:41.429 --> 00:04:47.238
+Throw EmailRejectedException when the provider refuses an address for good.
+
+00:04:47.238 --> 00:04:56.223
+Pass the message's idempotency key through, and send its extra headers, such as List-Unsubscribe on marketing email.
+
+00:04:56.223 --> 00:05:03.193
+The worker's email dispatch job already retries with back off for up to twenty four hours.
+
+00:05:03.993 --> 00:05:11.292
+Pick a transactional email service with an HTTP API, and replace LoggingEmailSender with it.
+
+00:05:11.292 --> 00:05:19.463
+There is no sender address setting yet, so add one next to the API key, on a sycapooke dot com address.
+
+00:05:19.463 --> 00:05:29.459
+Then, at Namecheap, add the SPF, DKIM and DMARC records the service gives you, or the founder's sale emails will land in spam.
+
+00:05:30.259 --> 00:05:33.226
+To check it, join the shop with your own address.
+
+00:05:33.226 --> 00:05:37.223
+The verification email should reach your inbox within two minutes.
+
+00:05:38.623 --> 00:05:40.964
+The shop has exactly one founder.
+
+00:05:40.964 --> 00:05:44.015
+Follow Provision the founder in deployment.
+
+00:05:44.015 --> 00:05:44.228
+md.
+
+00:05:45.028 --> 00:05:49.607
+First, she joins and verifies her email, like any customer.
+
+00:05:49.607 --> 00:05:53.409
+Next, look up her member ID in the Members table.
+
+00:05:53.409 --> 00:05:59.773
+Set Shop__FounderMemberId to that ID in the env file in slash opt slash sycapooke.
+
+00:06:00.573 --> 00:06:01.460
+Now a trap.
+
+00:06:01.460 --> 00:06:05.652
+Docker compose restart does not reread the env file.
+
+00:06:05.652 --> 00:06:12.828
+Recreate the containers instead, with docker compose up, dash d, no deps, api and worker.
+
+00:06:13.628 --> 00:06:22.921
+Then run the migrator once with the provision founder flag: docker compose run, dash dash rm, migrator, dash dash provision founder.
+
+00:06:22.921 --> 00:06:28.624
+Running it again with the same ID changes nothing, and a different ID is refused.
+
+00:06:28.624 --> 00:06:30.313
+Tell her when it's done.
+
+00:06:30.313 --> 00:06:34.749
+She will see a new button at the top of the page: Sell an item.
+
+00:06:36.149 --> 00:06:38.349
+Do it twice. First, in test mode.
+
+00:06:38.349 --> 00:06:44.418
+Use Stripe's test keys and pay with the card number four two four two, repeated four times.
+
+00:06:44.418 --> 00:06:55.822
+Check that the order is paid, that the buyer's confirmation and the founder's You made a sale email both arrive within two minutes, and that the order appears under Sales.
+
+00:06:55.822 --> 00:07:01.357
+Then try Stripe's declined test card and check that the buyer sees a clear message.
+
+00:07:02.157 --> 00:07:03.073
+Then go live.
+
+00:07:03.073 --> 00:07:09.129
+Swap in the live keys, and remember that the live webhook endpoint has its own secret.
+
+00:07:09.129 --> 00:07:12.157
+Buy a low priced treasure with a real card.
+
+00:07:12.157 --> 00:07:18.917
+Have the founder add tracking, because a problem can only be reported once an order has shipped.
+
+00:07:18.917 --> 00:07:25.466
+Then report a problem on it as the buyer, and have the founder resolve it with a full refund.
+
+00:07:25.466 --> 00:07:29.902
+Watch the refund appear in Stripe, and the refund email arrive.
+
+00:07:31.302 --> 00:07:34.175
+Carrier tracking is still a stand-in too.
+
+00:07:34.175 --> 00:07:41.252
+UnconfiguredCarrierTracking accepts tracking numbers, but nothing detects delivery automatically yet.
+
+00:07:41.252 --> 00:07:48.259
+And check that Privacy__FieldEncryptionKeys is set, with the keys backed up apart from the database.
+
+00:07:48.259 --> 00:07:52.814
+Lose them, and the shipping addresses they sealed cannot be read.
+
+00:07:54.214 --> 00:07:55.591
+Things to remember.
+
+00:07:55.591 --> 00:07:58.854
+Email first, because it unblocks the founder.
+
+00:07:58.854 --> 00:08:04.436
+Stripe is one adapter, one header fix, one browser factory and three secrets.
+
+00:08:04.436 --> 00:08:08.134
+Recreate the containers after editing the env file.
+
+00:08:08.134 --> 00:08:11.831
+Run the whole sale in test mode before you go live.
+
+00:08:11.831 --> 00:08:16.616
+And never take a key from the founder: Developer access is enough.
+
+00:08:17.416 --> 00:08:19.068
+When you are done, tell her.
+
+00:08:19.068 --> 00:08:21.839
+Her next step is to publish her first treasure.
+
+00:08:21.839 --> 00:08:23.195
+Thank you for watching.

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video 02 Slides</title>
+<link rel="stylesheet" href="../assets/slides.css">
+</head>
+<body data-video-number="02" data-video-title="Your four jobs: taking the shop live" data-logo="../../design-system/assets/logo.svg" data-logo-dark="../../design-system/assets/logo-dark.svg"
+      data-parts="Welcome|Where the shop stands|Job 1 · Stripe|Job 2 · Email|Job 3 · Owner|Job 4 · Test sale|Also on your list|Recap">
+
+<section id="title" data-part="0">
+  <div class="two">
+    <div>
+      <img class="logo" src="../../design-system/assets/logo.svg" alt="Sycapooke">
+      <h1>Your four <em>jobs.</em></h1>
+      <p class="lead">For the technical co-founder</p>
+    </div>
+    <div class="photos"><img src="../../../src/frontend/projects/sycapooke/public/media/sycapooke-hero.jpg" alt=""></div>
+  </div>
+</section>
+
+<section id="jobs" data-part="0" data-cue="Your part is step three">
+  <h2>Step 3 is <em>yours</em></h2>
+  <div class="tiles">
+    <div class="tile"><span class="n">1</span><span class="e">💳</span><b>Stripe</b></div>
+    <div class="tile"><span class="n">2</span><span class="e">✉️</span><b>Email</b></div>
+    <div class="tile"><span class="n">3</span><span class="e">👑</span><b>Owner</b></div>
+    <div class="tile"><span class="n">4</span><span class="e">🧪</span><b>Test sale</b></div>
+  </div>
+</section>
+
+<section id="stand-ins" data-part="1" data-cue="But three pieces are still stand-ins">
+  <h2>Three <em>stand-ins</em></h2>
+  <div class="card">
+    <div class="row"><span class="e">💳</span><span class="mono">UnconfiguredPaymentProvider</span>&nbsp;<span class="muted">throws</span></div>
+    <div class="row"><span class="e">✉️</span><span class="mono">LoggingEmailSender</span>&nbsp;<span class="muted">log only</span></div>
+    <div class="row"><span class="e">👑</span><span class="mono">Shop__FounderMemberId=</span>&nbsp;<span class="muted">empty</span></div>
+  </div>
+  <p class="lead small mono">src/backend/Sycapooke.Infrastructure/DependencyInjection.cs</p>
+</section>
+
+<section id="order" class="band" data-part="1" data-cue="One piece of advice on order.">
+  <div class="path">
+    <div class="step"><span class="e">✉️</span><b>Email</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">👑</span><b>Owner</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">💳</span><b>Stripe</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">🧪</span><b>Test</b></div>
+  </div>
+  <p class="lead">Email first: she can’t verify without it</p>
+</section>
+
+<section id="invite" data-part="2" data-cue="Start by accepting her invite.">
+  <div class="big">🧑‍💻🔑</div>
+  <h2>Developer access. <em>No</em> shared keys.</h2>
+  <p class="lead">Test mode until job 4</p>
+</section>
+
+<section id="port" data-part="2" data-cue="On the server, the whole provider sits behind one port">
+  <pre class="code"><span class="c">// Sycapooke.Application/Abstractions/Ports.cs</span>
+<span class="k">public interface</span> IPaymentProvider
+{
+    Task&lt;decimal&gt; QuoteTaxAsync(...);
+    Task&lt;string&gt;  CreatePaymentAsync(PaymentRequest request, ...);
+    Task&lt;string&gt;  RefundAsync(string providerPaymentId, ...);
+    PaymentEvent? ReadWebhook(string body, string? signature);
+}</pre>
+  <p class="lead small">One adapter in <span class="mono">Infrastructure/Payments/</span> · no handler or page changes</p>
+</section>
+
+<section id="create" data-part="2" data-cue="CreatePaymentAsync creates a Stripe PaymentIntent">
+  <h2>Create a <em>PaymentIntent</em></h2>
+  <div class="card">
+    <div class="row"><span class="e">💲</span>Amount in cents · confirm with the token</div>
+    <div class="row"><span class="e">🏷️</span>Metadata: Sycapooke payment ID</div>
+    <div class="row"><span class="e">🔁</span>Idempotency key → charges once</div>
+    <div class="row"><span class="e">📨</span>Result arrives by webhook</div>
+  </div>
+</section>
+
+<section id="webhook" data-part="2" data-cue="ReadWebhook verifies the signature">
+  <div class="path">
+    <div class="step"><span class="e">✍️</span><b>Verify raw body</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">🔀</span><b>succeeded · failed</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">🧾</span><b>PaymentEvent</b></div>
+  </div>
+  <p class="lead">Card brand and last four only</p>
+</section>
+
+<section id="surprise" data-part="2" data-cue="Here is the one surprise.">
+  <h2>The one <em>surprise</em></h2>
+  <pre class="code"><span class="c">// Sycapooke.Api/Controllers/PaymentWebhookController.cs</span>
+<span class="k">public const string</span> SignatureHeader = <span class="x">"Payment-Signature"</span>;
+<span class="c">// Stripe signs with:</span>                     <span class="k">"Stripe-Signature"</span></pre>
+</section>
+
+<section id="refund-tax" data-part="2" data-cue="RefundAsync creates a refund for the intent">
+  <div class="tiles">
+    <div class="tile"><span class="e">↩️</span><b>RefundAsync</b><small>Refund + idempotency key</small></div>
+    <div class="tile"><span class="e">🧮</span><b>QuoteTaxAsync</b><small>Stripe Tax, or zero</small></div>
+  </div>
+  <p class="lead">Either way: stop throwing</p>
+</section>
+
+<section id="browser" class="with-cap" data-part="2" data-cue="In the browser, the card fields come from PAYMENT_FIELDS">
+  <h2><span class="mono" style="font-size:72px">PAYMENT_FIELDS</span> → Stripe</h2>
+  <div class="screen"><div class="bar"><i></i><i></i><i></i><span>app.sycapooke.com/checkout</span></div><img src="pictures/card-fields.png" alt=""></div>
+</section>
+
+<section id="secrets" data-part="2" data-cue="Then configuration.">
+  <pre class="code"><span class="c"># /opt/sycapooke/.env  (never in git)</span>
+PaymentProvider__ApiKey=<span class="k">sk_…</span>
+PaymentProvider__WebhookSecret=<span class="k">whsec_…</span>
+PaymentProvider__PublishableKey=<span class="k">pk_…</span>  <span class="c"># browser may see this one</span></pre>
+</section>
+
+<section id="endpoint" class="forest" data-part="2" data-cue="In the Stripe dashboard, add a webhook endpoint">
+  <h2>Webhook <em>endpoint</em></h2>
+  <p class="lead mono">https://app.sycapooke.com/api/payments/webhook</p>
+  <p class="lead">payment_intent.succeeded · payment_intent.payment_failed</p>
+</section>
+
+<section id="offline" data-part="2" data-cue="Keep the tests offline.">
+  <div class="big">🧪🚫🌐</div>
+  <h2>Tests never call <em>Stripe</em></h2>
+  <p class="lead"><span class="mono">FakePaymentProvider</span> · sample payloads</p>
+</section>
+
+<section id="email-port" data-part="3" data-cue="The port is IEmailSender">
+  <pre class="code"><span class="k">IEmailSender</span>.SendAsync(EmailMessage message, ...)
+
+<span class="c">// retry  →</span> HttpRequestException, TimeoutException
+<span class="c">// give up →</span> EmailRejectedException
+<span class="c">// pass on →</span> IdempotencyKey, Headers (List-Unsubscribe)</pre>
+  <p class="lead small">The worker retries with back-off for 24 hours</p>
+</section>
+
+<section id="dns" data-part="3" data-cue="Pick a transactional email service">
+  <div class="path">
+    <div class="step"><span class="e">✉️</span><b>HTTP API service</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">📮</span><b>@sycapooke.com</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">🛡️</span><b>SPF · DKIM · DMARC</b></div>
+  </div>
+  <p class="lead">Or sale emails land in spam</p>
+</section>
+
+<section id="inbox" data-part="3" data-cue="To check it, join the shop">
+  <div class="big">📥⏱️</div>
+  <h2>In your inbox within <em>2 minutes</em></h2>
+</section>
+
+<section id="provision" data-part="4" data-cue="The shop has exactly one founder.">
+  <h2>One <em>founder</em></h2>
+  <div class="card">
+    <div class="row"><span class="e">1</span>She joins and verifies</div>
+    <div class="row"><span class="e">2</span><span class="mono">SELECT Id FROM Members WHERE Email = …</span></div>
+    <div class="row"><span class="e">3</span><span class="mono">Shop__FounderMemberId=&lt;GUID&gt;</span></div>
+  </div>
+  <p class="lead small mono">docs/deployment.md#provision-the-founder</p>
+</section>
+
+<section id="trap" class="band" data-part="4" data-cue="Now a trap.">
+  <h2><span class="mono" style="font-size:64px">restart</span> ignores <em>.env</em></h2>
+  <pre class="code">docker compose up -d --no-deps api worker</pre>
+</section>
+
+<section id="migrator" data-part="4" data-cue="Then run the migrator once">
+  <pre class="code">docker compose run --rm migrator --provision-founder</pre>
+  <p class="lead">Same ID again: no-op · a different ID: refused</p>
+</section>
+
+<section id="sell-button" class="with-cap" data-part="4" data-cue="Tell her when it's done.">
+  <h2>She sees <em>Sell an item</em></h2>
+  <div class="screen"><div class="bar"><i></i><i></i><i></i><span>app.sycapooke.com</span></div><img src="pictures/sell-button.png" alt=""></div>
+</section>
+
+<section id="test-mode" data-part="5" data-cue="First, in test mode.">
+  <h2>Test mode <em>first</em></h2>
+  <div class="card">
+    <div class="row"><span class="e">💳</span><span class="mono">4242 4242 4242 4242</span></div>
+    <div class="row"><span class="e">✅</span>Order paid</div>
+    <div class="row"><span class="e">✉️</span>Two emails within 2 minutes</div>
+    <div class="row"><span class="e">📋</span>Order under Sales</div>
+  </div>
+</section>
+
+<section id="declined" class="with-cap" data-part="5" data-cue="Then try Stripe's declined test card">
+  <h2>A <em>declined</em> card</h2>
+  <div class="screen"><div class="bar"><i></i><i></i><i></i><span>app.sycapooke.com/checkout</span></div><img src="pictures/declined.png" alt=""></div>
+</section>
+
+<section id="live" class="forest" data-part="5" data-cue="Then go live.">
+  <h2>Live: own keys, own <em>webhook secret</em></h2>
+  <div class="path">
+    <div class="step"><span class="e">🛒</span><b>Buy</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">📦</span><b>Ship</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">🙋</span><b>Problem</b></div><span class="arrow">→</span>
+    <div class="step"><span class="e">↩️</span><b>Refund</b></div>
+  </div>
+</section>
+
+<section id="also" data-part="6" data-cue="Carrier tracking is still a stand-in too.">
+  <h2>Also on your <em>list</em></h2>
+  <div class="card">
+    <div class="row"><span class="e">🚚</span><span class="mono">UnconfiguredCarrierTracking</span>&nbsp;<span class="muted">no auto delivery</span></div>
+    <div class="row"><span class="e">🔐</span><span class="mono">Privacy__FieldEncryptionKeys</span>&nbsp;<span class="muted">set + backed up</span></div>
+  </div>
+</section>
+
+<section id="recap" data-part="7" data-cue="Things to remember.">
+  <h2>Things to <em>remember</em></h2>
+  <ul class="checks">
+    <li><span class="box"></span><span class="e">✉️</span>Email first</li>
+    <li><span class="box"></span><span class="e">💳</span>Adapter · header · browser · 3 secrets</li>
+    <li><span class="box"></span><span class="e">🔄</span>Recreate after editing .env</li>
+    <li><span class="box"></span><span class="e">🧪</span>Test mode, then live</li>
+    <li><span class="box"></span><span class="e">🔑</span>Never take her keys</li>
+  </ul>
+</section>
+
+<section id="thanks" class="band" data-part="7" data-cue="When you are done, tell her.">
+  <div class="two">
+    <div><h1>Over to <em>her.</em></h1><p class="lead">Her first treasure is next.</p></div>
+    <div class="photos"><img src="../../../src/frontend/projects/sycapooke/public/media/sycapooke-founder.jpg" alt=""></div>
+  </div>
+</section>
+
+<script src="../assets/slides.js"></script>
+</body>
+</html>
