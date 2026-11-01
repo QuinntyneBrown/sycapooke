@@ -101,6 +101,7 @@ sycapooke/
 │   ├── detailed-designs/        {subsystem}/{feature}/README.md + diagrams/
 │   ├── estimates/               README.md + one file per subsystem
 │   ├── prompts/                 ready-to-run implementation prompts, NN-journey.md in build order
+│   ├── videos/                  founder guide videos: NN-topic/ (script.md, slides.html, README.md, pictures/, mp4, vtt), assets/ slide styles, _build/ builder (ADR general/0011)
 │   └── adr/                     {category}/NNNN-title.md
 ├── src/
 │   ├── backend/                 .NET solution, namespace prefix Sycapooke

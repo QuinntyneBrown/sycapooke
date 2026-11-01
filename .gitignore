@@ -17,3 +17,6 @@ obj/
 *.suo
 __pycache__/
 .deploy-secrets/
+
+# Guide video narration (built by docs/videos/_build/build_video.py)
+docs/videos/*/*.mp3

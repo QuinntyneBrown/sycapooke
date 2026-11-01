@@ -1,0 +1,112 @@
+/* Shared stylesheet for docs/videos/NN-topic/slides.html decks: 1920x1080, one slide visible at a time.
+   Heirloom tokens by value (docs/design-system/tokens/tokens.css): Paper #f6f0e4, Cream #fbf7ef, Ink #2b2118,
+   Muted #665748, Terracotta #a04228, Forest #2f4a3a, Mustard #d9a441; Fraunces headings, Source Sans 3 body.
+   Decks for the founder are picture-first: a few large words per slide, never paragraphs. */
+@font-face { font-family: Fraunces; font-weight: 100 900; src: url(../../../src/frontend/projects/sycapooke/public/fonts/fraunces-latin.woff2) format('woff2'); }
+@font-face { font-family: Fraunces; font-style: italic; font-weight: 100 900; src: url(../../../src/frontend/projects/sycapooke/public/fonts/fraunces-italic-latin.woff2) format('woff2'); }
+@font-face { font-family: 'Source Sans 3'; font-weight: 200 900; src: url(../../../src/frontend/projects/sycapooke/public/fonts/source-sans-3-latin.woff2) format('woff2'); }
+
+:root {
+  --paper: #f6f0e4; --cream: #fbf7ef; --ink: #2b2118; --muted: #665748;
+  --terracotta: #a04228; --forest: #2f4a3a; --mustard: #d9a441; --line: #e4d9c5;
+  --serif: Fraunces, Georgia, serif; --sans: 'Source Sans 3', system-ui, sans-serif;
+  --emoji: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #1d1712; }
+body { font-family: var(--sans); color: var(--ink); }
+
+section {
+  display: none; position: relative; width: 1920px; height: 1080px; overflow: hidden;
+  background: var(--paper); padding: 150px 140px 110px; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center; margin: 0 auto;
+}
+section.active { display: flex; }
+section.band { background: var(--terracotta); color: var(--cream); }
+section.forest { background: var(--forest); color: var(--cream); }
+
+/* Header: part label and progress bar from data-parts. */
+.deck-head { position: absolute; left: 0; right: 0; top: 0; height: 96px; display: flex; align-items: center; gap: 28px; padding: 0 64px; }
+.deck-head img { height: 56px; }
+.deck-head .part { font: 600 32px var(--sans); color: var(--forest); }
+.band .deck-head .part, .forest .deck-head .part { color: var(--cream); }
+.deck-progress { position: absolute; left: 0; bottom: 0; height: 12px; background: var(--mustard); }
+
+h1 { font: 600 120px/1.05 var(--serif); letter-spacing: -.02em; margin: 0; }
+h2 { font: 600 92px/1.08 var(--serif); letter-spacing: -.02em; margin: 0 0 48px; }
+h1 em, h2 em { font-style: italic; color: var(--terracotta); }
+.band em, .forest em { color: var(--mustard); }
+.lead { font: 400 54px/1.3 var(--sans); color: var(--muted); margin: 36px 0 0; }
+.band .lead, .forest .lead { color: rgb(251 247 239 / .88); }
+.kicker { font: 600 36px var(--sans); color: var(--forest); margin: 0 0 32px; }
+
+/* A huge picture made of an emoji. */
+.big { font: 300px/1 var(--emoji); margin: 0 0 40px; }
+.big.sm { font-size: 220px; }
+
+/* Rows of picture tiles: emoji or photo above one or two words. */
+.tiles { display: flex; justify-content: center; gap: 48px; width: 100%; }
+.tile { flex: 1; max-width: 420px; background: var(--cream); border-radius: 32px; padding: 44px 24px 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.band .tile, .forest .tile { background: rgb(251 247 239 / .12); }
+.tile .e { font: 150px/1 var(--emoji); }
+.tile .n { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; border: 5px solid currentColor; font: 600 46px var(--serif); }
+.tile b { font: 600 50px/1.1 var(--serif); }
+.tile small { font: 400 36px/1.2 var(--sans); color: var(--muted); }
+.band .tile small, .forest .tile small { color: rgb(251 247 239 / .8); }
+.tiles.five .tile { padding: 36px 16px; }
+.tiles.five .tile .e { font-size: 120px; }
+.tiles.five .tile b { font-size: 44px; }
+
+/* Photos. */
+.photos { display: flex; justify-content: center; gap: 40px; }
+.photos img { width: 380px; height: 380px; object-fit: cover; border-radius: 32px; display: block; }
+.photos.lg img { width: 560px; height: 560px; }
+.photo-frame { position: relative; }
+.pill { position: absolute; left: 24px; top: 24px; background: var(--cream); color: var(--ink); border-radius: 999px; padding: 12px 30px; font: 600 40px var(--sans); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: center; width: 100%; text-align: left; }
+.two .photos img { width: 640px; height: 640px; }
+.two .big { margin: 0; text-align: center; }
+
+/* A screen of the real shop inside a simple browser frame. */
+.screen { width: 1500px; border-radius: 28px; overflow: hidden; background: var(--cream); box-shadow: 0 30px 80px rgb(43 33 24 / .22); }
+.screen .bar { height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 28px; background: #ece3d3; }
+.screen .bar i { width: 20px; height: 20px; border-radius: 50%; background: #d4c6ae; }
+.screen .bar span { margin-left: 24px; flex: 1; max-width: 700px; background: var(--cream); border-radius: 999px; padding: 8px 28px; font: 600 30px var(--sans); color: var(--muted); text-align: left; }
+.screen img { display: block; width: 100%; }
+.with-cap { gap: 0; padding-top: 110px; padding-bottom: 60px; }
+.with-cap h2 { margin-bottom: 36px; font-size: 76px; }
+.with-cap .screen { width: 1280px; }
+
+/* A drawn card (note card, form, money sum). */
+.card { background: var(--cream); border-radius: 32px; padding: 56px 72px; text-align: left; box-shadow: 0 20px 60px rgb(43 33 24 / .12); color: var(--ink); }
+.card .row { display: flex; align-items: center; gap: 32px; font: 400 48px/1.25 var(--sans); padding: 14px 0; }
+.card .row .e { font: 64px/1 var(--emoji); width: 80px; text-align: center; }
+.card .row b { font-weight: 700; }
+.card .btn { display: inline-block; background: var(--terracotta); color: var(--cream); border-radius: 999px; padding: 18px 56px; font: 600 48px var(--sans); }
+.card .field { border: 3px solid var(--line); border-radius: 16px; padding: 16px 28px; font: 400 44px var(--sans); background: #fff; min-width: 760px; }
+.card .ok { color: var(--forest); font-weight: 700; }
+
+/* A path of steps joined by arrows. */
+.path { display: flex; align-items: center; justify-content: center; gap: 28px; }
+.path .step { background: var(--cream); border-radius: 28px; padding: 36px 32px; display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 300px; color: var(--ink); }
+.path .step .e { font: 120px/1 var(--emoji); }
+.path .step b { font: 600 46px/1.1 var(--serif); }
+.path .arrow { font: 700 90px/1 var(--sans); color: var(--terracotta); }
+.band .path .arrow, .forest .path .arrow { color: var(--mustard); }
+
+/* Money sum. */
+.sum { font: 600 150px/1 var(--serif); }
+.sum em { font-style: normal; color: var(--forest); }
+
+/* Checklist for the recap. */
+.checks { list-style: none; margin: 0; padding: 0; text-align: left; display: grid; gap: 34px; }
+.checks li { display: flex; align-items: center; gap: 40px; font: 600 64px/1.15 var(--serif); }
+.checks li .e { font: 100px/1 var(--emoji); width: 130px; text-align: center; }
+.checks li .box { width: 76px; height: 76px; border: 6px solid currentColor; border-radius: 16px; flex: none; }
+
+.no { position: relative; display: inline-block; }
+.no::after { content: ''; position: absolute; left: -6%; top: 47%; width: 112%; height: 22px; background: #c0392b; transform: rotate(-24deg); border-radius: 11px; }
+
+.logo { width: 560px; margin-bottom: 48px; }
+.muted { color: var(--muted); }
+.small { font-size: 36px; }
