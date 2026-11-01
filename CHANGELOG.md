@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Founder guide video 01, *Next steps to selling on Sycapooke* (`docs/videos/01-next-steps-to-selling/`): an 8.5-minute, picture-first narrated walkthrough of photographing treasures, opening Stripe, the technical partner's remaining jobs, publishing, shipping and getting paid, with its builder in `docs/videos/_build/` ([ADR general/0011](docs/adr/general/0011-founder-guide-videos.md)).
 - HTTP hardening: security headers on every API response, an exception handler that returns problem details, and per-address rate limits with `Retry-After` for sign-in, registration and password reset.
 - Shipping addresses are sealed at rest with AES-256-GCM under a rotating key ring (`Privacy__FieldEncryptionKeys`).
 - The privacy page, terms, shop policies (`/rules`) and server error page; CI audits npm and NuGet dependencies.
